@@ -4,13 +4,37 @@ theory utp_blocks
   imports utp_rel
 begin
 
+subsection \<open> Extra Symmetric Lens Properties \<close>
+
+text \<open> The following result is needed to demonstrate the combination of the view and co-view
+  covers all of the statespace. \<close>
+
+context psym_lens
+begin
+
+lemma put_region_coregion_cover: "put\<^bsub>\<V>\<^esub> (put\<^bsub>\<C>\<^esub> s\<^sub>1 v\<^sub>1) v\<^sub>2 = put\<^bsub>\<V>\<^esub> (put\<^bsub>\<C>\<^esub> s\<^sub>2 v\<^sub>1) v\<^sub>2"
+proof -
+  have "\<And> \<sigma> \<rho> v\<^sub>1 v\<^sub>2. put\<^bsub>\<V> +\<^sub>L \<C>\<^esub> \<sigma> (v\<^sub>1, v\<^sub>2) = put\<^bsub>\<V> +\<^sub>L \<C>\<^esub> \<rho> (v\<^sub>1, v\<^sub>2)"
+    by (simp add: pbij_lens.put_det)
+  thus ?thesis
+    by (simp add: lens_defs)
+qed
+
+end
+
 subsection \<open> Extending and Contracting the Statespace \<close>
 
 definition ext_state :: "(<'s\<^sub>1, 'c> \<Longleftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<Rightarrow> 's\<^sub>2)" ("ext\<^bsub>_\<^esub>") where
 [lens_defs]: "ext\<^bsub>\<X>\<^esub> = (\<lambda> s. put\<^bsub>\<V>\<^bsub>\<X>\<^esub>\<^esub> (create\<^bsub>\<C>\<^bsub>\<X>\<^esub>\<^esub> undefined) s)"
 
+lemma ext_state_subst: "psym_lens \<X> \<Longrightarrow> ext\<^bsub>\<X>\<^esub> = \<lparr>\<C>[\<X>] \<leadsto> undefined, \<V>[\<X>] \<leadsto> $\<^bold>v\<rparr>"
+  by (simp add: expr_defs lens_defs fun_eq_iff psym_lens.put_region_coregion_cover)
+
 definition con_state :: "(<'s\<^sub>1, 'c> \<Longleftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>2 \<Rightarrow> 's\<^sub>1)" ("con\<^bsub>_\<^esub>") where
 [lens_defs]: "con\<^bsub>\<X>\<^esub> = (\<lambda> s. get\<^bsub>\<V>\<^bsub>\<X>\<^esub>\<^esub> s)"
+
+lemma con_state_subst: "con\<^bsub>\<X>\<^esub> = \<lparr>\<^bold>v \<leadsto> $\<V>[\<X>]\<rparr>"
+  by (simp add: lens_defs expr_defs)
 
 lemma ext_con: "psym_lens \<X> \<Longrightarrow> con\<^bsub>\<X>\<^esub> (ext\<^bsub>\<X>\<^esub> s) = s"
   by (simp add: lens_defs comp_def id_def)
@@ -62,22 +86,6 @@ lemma "\<lbrakk> psym_lens X; vwb_lens Y \<rbrakk> \<Longrightarrow> psym_lens (
   apply (simp_all)
   using comp_mwb_lens psym_lens.mwb_coregion vwb_lens_mwb apply blast
   oops
-
-text \<open> The following result is needed to demonstrate the combination of the view and co-view
-  covers all of the statespace. \<close>
-
-context psym_lens
-begin
-
-lemma put_region_coregion_cover: "put\<^bsub>\<V>\<^esub> (put\<^bsub>\<C>\<^esub> s\<^sub>1 v\<^sub>1) v\<^sub>2 = put\<^bsub>\<V>\<^esub> (put\<^bsub>\<C>\<^esub> s\<^sub>2 v\<^sub>1) v\<^sub>2"
-proof -
-  have "\<And> \<sigma> \<rho> v\<^sub>1 v\<^sub>2. put\<^bsub>\<V> +\<^sub>L \<C>\<^esub> \<sigma> (v\<^sub>1, v\<^sub>2) = put\<^bsub>\<V> +\<^sub>L \<C>\<^esub> \<rho> (v\<^sub>1, v\<^sub>2)"
-    by (simp add: pbij_lens.put_det)
-  thus ?thesis
-    by (simp add: lens_defs)
-qed
-
-end
 
 subsection \<open> Adding and Deleting Variables \<close>
 
