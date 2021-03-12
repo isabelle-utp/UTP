@@ -6,10 +6,10 @@ begin
 
 subsection \<open> Extending and Contracting the Statespace \<close>
 
-definition ext_state :: "(<'s\<^sub>1, 'c> \<Longleftrightarrow> 's\<^sub>2) \<Rightarrow> _" ("ext\<^bsub>_\<^esub>") where
+definition ext_state :: "(<'s\<^sub>1, 'c> \<Longleftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<Rightarrow> 's\<^sub>2)" ("ext\<^bsub>_\<^esub>") where
 [lens_defs]: "ext\<^bsub>\<X>\<^esub> = (\<lambda> s. put\<^bsub>\<V>\<^bsub>\<X>\<^esub>\<^esub> (create\<^bsub>\<C>\<^bsub>\<X>\<^esub>\<^esub> undefined) s)"
 
-definition con_state :: "(<'s\<^sub>1, 'c> \<Longleftrightarrow> 's\<^sub>2) \<Rightarrow> _" ("con\<^bsub>_\<^esub>") where
+definition con_state :: "(<'s\<^sub>1, 'c> \<Longleftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>2 \<Rightarrow> 's\<^sub>1)" ("con\<^bsub>_\<^esub>") where
 [lens_defs]: "con\<^bsub>\<X>\<^esub> = (\<lambda> s. get\<^bsub>\<V>\<^bsub>\<X>\<^esub>\<^esub> s)"
 
 lemma ext_con: "psym_lens \<X> \<Longrightarrow> con\<^bsub>\<X>\<^esub> (ext\<^bsub>\<X>\<^esub> s) = s"
@@ -20,6 +20,17 @@ lemma con_surj: "psym_lens \<X> \<Longrightarrow> surj con\<^bsub>\<X>\<^esub>"
 
 lemma put_con_in: "\<lbrakk> psym_lens \<X>; x \<subseteq>\<^sub>L \<C>\<^bsub>\<X>\<^esub> \<rbrakk> \<Longrightarrow> con\<^bsub>\<X>\<^esub> (put\<^bsub>x\<^esub> s v) = con\<^bsub>\<X>\<^esub> s"
   by (simp add: con_state_def sublens_pres_indep')
+
+subsection \<open> Open and Close \<close>
+
+definition open_var :: "(<'s\<^sub>1, 'c> \<Longleftrightarrow> 's\<^sub>2) \<Rightarrow> 's\<^sub>1 \<leftrightarrow> 's\<^sub>2" ("open\<^bsub>_\<^esub>") where
+"open_var \<X> = \<langle>ext\<^bsub>\<X>\<^esub>\<rangle> \<^bold>; \<C>[\<X>] := *"
+
+definition close_var :: "(<'s\<^sub>1, 'c> \<Longleftrightarrow> 's\<^sub>2) \<Rightarrow> 's\<^sub>2 \<leftrightarrow> 's\<^sub>1" ("close\<^bsub>_\<^esub>") where
+"close_var \<X> = \<langle>con\<^bsub>\<X>\<^esub>\<rangle>"
+
+lemma "open\<^bsub>\<X>\<^esub> \<^bold>; close\<^bsub>\<X>\<^esub> = II"
+  oops
 
 subsection \<open> Lifting Symmetric Lenses \<close>
 

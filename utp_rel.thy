@@ -13,6 +13,21 @@ notation Id ("II")
 definition assigns :: "('s\<^sub>1, 's\<^sub>2) psubst \<Rightarrow> 's\<^sub>1 \<leftrightarrow> 's\<^sub>2" ("\<langle>_\<rangle>") where
   "assigns \<sigma> = pfun_graph (fun_pfun \<sigma>)"
 
+syntax "_assign" :: "svid \<Rightarrow> logic \<Rightarrow> logic" (infix ":=" 76)
+translations "_assign x e" == "CONST assigns [x \<leadsto> e]"
+
+definition test :: "'s pred \<Rightarrow> 's rel" where
+[expr_defs]: "test P = Id_on (Collect P)"
+
+syntax "_test" :: "logic \<Rightarrow> logic" ("\<questiondown>_?")
+translations "\<questiondown>P?" == "CONST test (P)\<^sub>e"
+
+definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's rel" where
+[expr_defs]: "ndet_assign x = (\<Union> v. x := \<guillemotleft>v\<guillemotright>)"
+
+syntax "_ndet_assign" :: "svid \<Rightarrow> logic" ("_ := *" [75] 76)
+translations "_ndet_assign x" == "CONST ndet_assign x"
+
 definition seq_pred :: "('s\<^sub>1, 's\<^sub>2) rpred \<Rightarrow> ('s\<^sub>2, 's\<^sub>3) rpred \<Rightarrow> ('s\<^sub>1, 's\<^sub>3) rpred" (infixr ";;" 75) where
 [expr_defs]: "seq_pred P Q = (\<lambda> (s\<^sub>1, s\<^sub>2). (s\<^sub>1, s\<^sub>2) \<in> \<lbrakk>P\<rbrakk>\<^sub>u O \<lbrakk>Q\<rbrakk>\<^sub>u)"
 
