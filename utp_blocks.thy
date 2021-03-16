@@ -48,13 +48,13 @@ lemma put_con_in: "\<lbrakk> psym_lens \<X>; x \<subseteq>\<^sub>L \<C>\<^bsub>\
 subsection \<open> Open and Close \<close>
 
 definition open_var :: "(<'s\<^sub>1, 'c> \<Longleftrightarrow> 's\<^sub>2) \<Rightarrow> 's\<^sub>1 \<leftrightarrow> 's\<^sub>2" ("open\<^bsub>_\<^esub>") where
-"open_var \<X> = \<langle>ext\<^bsub>\<X>\<^esub>\<rangle> \<^bold>; \<C>[\<X>] := *"
+[pred]: "open_var \<X> = \<langle>ext\<^bsub>\<X>\<^esub>\<rangle> \<^bold>; \<C>[\<X>] := *"
 
 definition close_var :: "(<'s\<^sub>1, 'c> \<Longleftrightarrow> 's\<^sub>2) \<Rightarrow> 's\<^sub>2 \<leftrightarrow> 's\<^sub>1" ("close\<^bsub>_\<^esub>") where
-"close_var \<X> = \<langle>con\<^bsub>\<X>\<^esub>\<rangle>"
+[pred]: "close_var \<X> = \<langle>con\<^bsub>\<X>\<^esub>\<rangle>"
 
-lemma "open\<^bsub>\<X>\<^esub> \<^bold>; close\<^bsub>\<X>\<^esub> = II"
-  oops
+lemma open_close: "psym_lens \<X> \<Longrightarrow> open\<^bsub>\<X>\<^esub> \<^bold>; close\<^bsub>\<X>\<^esub> = II"
+  by pred_auto
 
 subsection \<open> Lifting Symmetric Lenses \<close>
 
