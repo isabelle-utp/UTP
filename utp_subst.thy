@@ -3,7 +3,7 @@ theory utp_subst
 begin
 
 definition subst_app_pred :: "('s\<^sub>1, 's\<^sub>2) psubst \<Rightarrow> 's\<^sub>2 set \<Rightarrow> 's\<^sub>1 set" 
-  where [pred]: "subst_app_pred \<sigma> P = \<lbrakk>\<sigma> \<dagger> \<lbrakk>P\<rbrakk>\<^sub>P\<rbrakk>\<^sub>u"
+  where [pred_core]: "subst_app_pred \<sigma> P = \<lbrakk>\<sigma> \<dagger> \<lbrakk>P\<rbrakk>\<^sub>P\<rbrakk>\<^sub>u"
 
 adhoc_overloading subst_app subst_app_pred
 

@@ -12,14 +12,14 @@ consts
 abbreviation (input) hseq (infixr ";;\<^sub>h" 61) where
 "hseq \<equiv> (useq :: 'a \<Rightarrow> 'a \<Rightarrow> 'a)"
 
-named_theorems rel_transfer
+named_theorems rel and rel_transfer
 
 type_synonym ('s\<^sub>1, 's\<^sub>2) rpred = "('s\<^sub>1 \<times> 's\<^sub>2) pred"
 
 lemma rel_eq_iff [rel_transfer]: "P = Q \<longleftrightarrow> (\<forall> s s'. \<lbrakk>P\<rbrakk>\<^sub>P (s, s') = \<lbrakk>Q\<rbrakk>\<^sub>P (s, s'))"
   by (simp add: set_eq_iff set_pred_def)
 
-method rel_simp uses add = (simp add: add rel_transfer pred usubst_eval unrest)
+method rel_simp uses add = (simp add: add rel_transfer rel pred_core unrest)
 method rel_auto uses add = (rel_simp add: add; (expr_simp add: add)?; (auto simp add: alpha_splits add)?)
 
 subsection \<open> Operators \<close>
@@ -33,7 +33,7 @@ adhoc_overloading useq relcomp
 abbreviation "true\<^sub>h \<equiv> (true :: 's rel)"
 
 definition cond :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<times> 's\<^sub>2 \<Rightarrow> bool) \<Rightarrow> ('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<leftrightarrow> 's\<^sub>2)" where
-"cond P B Q = (((B)\<^sub>u \<and> P) \<or> ((\<not>B)\<^sub>u \<and> P))" 
+"cond P B Q = (((B)\<^sub>u \<and> P) \<or> ((\<not>B)\<^sub>u \<and> Q))" 
 
 syntax 
   "_cond" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3_ \<lhd> _ \<rhd>/ _)" [52,0,53] 52)
@@ -63,26 +63,51 @@ definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's rel" where
 syntax "_ndet_assign" :: "svid \<Rightarrow> logic" ("_ := *" [75] 76)
 translations "_ndet_assign x" == "CONST ndet_assign x"
 
-definition [pred]: "pre P = \<lbrakk>Domain P\<rbrakk>\<^sub>P"
-definition [pred]: "post P = \<lbrakk>Range P\<rbrakk>\<^sub>P"
+definition pre :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" 
+  where "pre P = \<lbrakk>Domain P\<rbrakk>\<^sub>P"
+
+definition post :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>2 \<Rightarrow> bool)" 
+  where "post P = \<lbrakk>Range P\<rbrakk>\<^sub>P"
 
 subsection \<open> Predicate Semantics \<close>
 
-lemma pred_skip: "\<lbrakk>II\<rbrakk>\<^sub>P = (\<^bold>v\<^sup>> = \<^bold>v\<^sup><)\<^sub>e"
-  by (pred_auto)
+lemma pred_skip [pred]: "\<lbrakk>II\<rbrakk>\<^sub>P = ($\<^bold>v\<^sup>> = $\<^bold>v\<^sup><)\<^sub>e"
+  by expr_auto
 
-lemma pred_seq [pred]: "\<lbrakk>P \<^bold>; Q\<rbrakk>\<^sub>P (s, s') = (\<exists> s\<^sub>0. \<lbrakk>P\<rbrakk>\<^sub>P (s, s\<^sub>0) \<and> \<lbrakk>Q\<rbrakk>\<^sub>P (s\<^sub>0, s'))"
+lemma rel_skip [rel]: "\<lbrakk>II\<rbrakk>\<^sub>P (s, s') = (s = s')"
+  by expr_auto
+
+lemma pred_seq_hom [pred]:
+  "\<lbrakk>P \<^bold>; Q\<rbrakk>\<^sub>P = (\<exists> v\<^sub>0. [ \<^bold>v\<^sup>> \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> ] \<dagger> \<lbrakk>P\<rbrakk>\<^sub>P \<and> [ \<^bold>v\<^sup>< \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> ] \<dagger> \<lbrakk>Q\<rbrakk>\<^sub>P)\<^sub>e"
   by (expr_auto)
 
-lemma pred_seq': 
+lemma pred_seq [pred]: 
   "\<lbrakk>P \<^bold>; Q\<rbrakk>\<^sub>P = (\<exists> v\<^sub>0. \<lparr> \<^bold>v\<^sup>< \<leadsto> $\<^bold>v\<^sup><, \<^bold>v\<^sup>> \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> \<rparr> \<dagger> \<lbrakk>P\<rbrakk>\<^sub>P \<and> \<lparr> \<^bold>v\<^sup>< \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright>, \<^bold>v\<^sup>> \<leadsto> $\<^bold>v\<^sup>> \<rparr> \<dagger> \<lbrakk>Q\<rbrakk>\<^sub>P)\<^sub>e"
   by (expr_auto)
 
-lemma pred_assigns [pred]: "\<lbrakk>\<langle>\<sigma>\<rangle>\<^sub>a\<rbrakk>\<^sub>P (s, s') = (s' = \<sigma> s)"
+lemma rel_seq [rel]: "\<lbrakk>P \<^bold>; Q\<rbrakk>\<^sub>P (s, s') = (\<exists> s\<^sub>0. \<lbrakk>P\<rbrakk>\<^sub>P (s, s\<^sub>0) \<and> \<lbrakk>Q\<rbrakk>\<^sub>P (s\<^sub>0, s'))"
+  by expr_auto
+
+lemma pred_assigns [pred]: "\<lbrakk>\<langle>\<sigma>\<rangle>\<^sub>a\<rbrakk>\<^sub>P = ($\<^bold>v\<^sup>> = \<sigma>\<^sup><)\<^sub>e"
+  by (auto simp add: expr_defs assigns_rel_def lens_defs pfun_entries_pabs pfun_graph_pabs prod.case_eq_if)
+
+lemma rel_assigns [rel]: "\<lbrakk>\<langle>\<sigma>\<rangle>\<^sub>a\<rbrakk>\<^sub>P (s, s') = (s' = \<sigma> s)"
   by (simp add: expr_defs assigns_rel_def pfun_entries_pabs pfun_graph_pabs)
 
-lemma pred_assigns': "\<lbrakk>\<langle>\<sigma>\<rangle>\<^sub>a\<rbrakk>\<^sub>P = ($\<^bold>v\<^sup>> = \<sigma>\<^sup><)\<^sub>e"
-  by (auto simp add: expr_defs assigns_rel_def lens_defs pfun_entries_pabs pfun_graph_pabs prod.case_eq_if)
+lemma rel_rcond [rel]: "\<lbrakk>P \<^bold>\<lhd> b \<^bold>\<rhd> Q\<rbrakk>\<^sub>P (s, s') = (if b s then \<lbrakk>P\<rbrakk>\<^sub>P (s, s') else \<lbrakk>Q\<rbrakk>\<^sub>P (s, s'))"
+  unfolding cond_def by rel_auto
+
+lemma rel_Domain: "Domain P = (\<Union> s. P\<lbrakk>\<guillemotleft>s\<guillemotright>/\<^bold>v\<^sup>>\<rbrakk>) \<down> \<^bold>v\<^sup><"
+  by (pred_auto)
+
+lemma pred_pre [pred]: "pre P = (\<exists> s. \<lbrakk>P\<rbrakk>\<^sub>P \<lbrakk>\<guillemotleft>s\<guillemotright>/\<^bold>v\<^sup>>\<rbrakk>)\<^sub><"
+  by (expr_simp add: pre_def Domain_iff)
+
+lemma pred_pre_liberate: "pre P = (\<lbrakk>P\<rbrakk>\<^sub>P \\ out\<alpha>)\<^sub><"
+  by (expr_auto add: pre_def)
+
+lemma rel_pre [rel_transfer]: "pre P = (\<lambda> s. \<exists> s\<^sub>0. \<lbrakk>P\<rbrakk>\<^sub>P (s, s\<^sub>0))"
+  by (auto simp add: pre_def Domain_iff set_pred_def SEXP_def)
 
 subsection \<open> Algebraic Laws \<close>
 
@@ -104,10 +129,13 @@ lemma postcond_simp: "out\<alpha> \<sharp> P \<Longrightarrow> P ;; true = P"
 lemma "($x\<^sup>< = $x\<^sup>>)\<^sub>u ;; ($x\<^sup>< = $x\<^sup>>)\<^sub>u = ($x\<^sup>< = $x\<^sup>>)\<^sub>u"
   by rel_auto
 
-lemma "\<langle>id\<rangle>\<^sub>a = II"
+lemma assigns_skip: "\<langle>id\<rangle>\<^sub>a = II"
   by rel_auto
 
-lemma "\<langle>\<sigma>\<rangle>\<^sub>a ;; \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<rho> \<circ>\<^sub>s \<sigma>\<rangle>\<^sub>a"
+lemma assigns_comp: "\<langle>\<sigma>\<rangle>\<^sub>a ;; \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<rho> \<circ>\<^sub>s \<sigma>\<rangle>\<^sub>a"
+  by rel_auto
+
+lemma assigns_cond: "\<langle>\<sigma>\<rangle>\<^sub>a \<^bold>\<lhd> b \<^bold>\<rhd> \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<sigma> \<triangleleft> b \<triangleright> \<rho>\<rangle>\<^sub>a"
   by rel_auto
 
 end

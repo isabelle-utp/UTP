@@ -2,7 +2,7 @@ theory utp_unrest
   imports utp_pred
 begin
 
-definition [pred]: "unrest_pred x P = unrest_expr x \<lbrakk>P\<rbrakk>\<^sub>P"
+definition [pred_core]: "unrest_pred x P = unrest_expr x \<lbrakk>P\<rbrakk>\<^sub>P"
 
 adhoc_overloading unrest unrest_pred
 
