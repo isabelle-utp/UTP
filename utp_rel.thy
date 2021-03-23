@@ -69,12 +69,45 @@ definition pre :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<
 definition post :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>2 \<Rightarrow> bool)" 
   where "post P = \<lbrakk>Range P\<rbrakk>\<^sub>P"
 
+definition frame :: "'s scene \<Rightarrow> 's rel \<Rightarrow> 's rel" where
+"frame a P = {(s, s'). s \<approx>\<^sub>S s' on -a \<and> (s, s') \<in> P}"
+
+text \<open> The frame extension operator take a lens @{term a}, and a relation @{term P}. It constructs
+  a relation such that all variables outside of @{term a} are unchanged, and the valuations for
+  @{term a} are drawn from @{term P}. Intuitively, this can be seen as extending the alphabet
+  of @{term P}. \<close>
+
+definition frame_ext :: "('s\<^sub>1 \<Longrightarrow> 's\<^sub>2) \<Rightarrow> 's\<^sub>1 rel \<Rightarrow> 's\<^sub>2 rel" where
+  "frame_ext a P = frame \<lbrakk>a\<rbrakk>\<^sub>\<sim> (P \<up> (a \<times> a))"
+
+syntax 
+  "_frame" :: "salpha \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]")
+  "_frame_ext" :: "svid \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]\<^sub>\<up>")
+
+translations
+  "_frame a P" == "CONST frame a P"
+  "_frame_ext a P" == "CONST frame_ext a P"
+
+text \<open> Promotion takes a partial lens @{term a} and a relation @{term P}. It constructs a relation
+  that firstly restricts the state to valuations where @{term a} is valid (i.e. defined), and 
+  secondly uses the lens to promote @{term P} so that it acts only on the @{term a} region of
+  the state space. \<close>
+
+definition promote :: "'c rel \<Rightarrow> ('c \<Longrightarrow> 's) \<Rightarrow> 's rel" where
+[rel]: "promote P a = \<questiondown>\<^bold>D(a)? ;; a:[P]\<^sub>\<up>"
+
+syntax "_promote" :: "logic \<Rightarrow> svid \<Rightarrow> logic" (infix "\<Up>" 60)
+translations "_promote P a" == "CONST promote P a"
+
 subsection \<open> Predicate Semantics \<close>
 
 lemma pred_skip [pred]: "\<lbrakk>II\<rbrakk>\<^sub>P = ($\<^bold>v\<^sup>> = $\<^bold>v\<^sup><)\<^sub>e"
   by expr_auto
 
 lemma rel_skip [rel]: "\<lbrakk>II\<rbrakk>\<^sub>P (s, s') = (s = s')"
+  by expr_auto
+
+lemma rel_test [rel]: "\<lbrakk>\<questiondown>b?\<rbrakk>\<^sub>P (s, s') = (b s \<and> s = s')"
   by expr_auto
 
 lemma pred_seq_hom [pred]:
@@ -108,6 +141,12 @@ lemma pred_pre_liberate: "pre P = (\<lbrakk>P\<rbrakk>\<^sub>P \\ out\<alpha>)\<
 
 lemma rel_pre [rel_transfer]: "pre P = (\<lambda> s. \<exists> s\<^sub>0. \<lbrakk>P\<rbrakk>\<^sub>P (s, s\<^sub>0))"
   by (auto simp add: pre_def Domain_iff set_pred_def SEXP_def)
+
+lemma rel_frame [rel]: "\<lbrakk>a:[P]\<rbrakk>\<^sub>P (s, s') = (s \<approx>\<^sub>S s' on -a \<and> \<lbrakk>P\<rbrakk>\<^sub>P (s, s'))"
+  by (expr_auto add: frame_def)
+
+lemma rel_frame_ext [rel]: "\<lbrakk>a:[P]\<^sub>\<up>\<rbrakk>\<^sub>P (s, s') = (s \<approx>\<^sub>S s' on (-\<lbrakk>a\<rbrakk>\<^sub>\<sim>) \<and> \<lbrakk>P\<rbrakk>\<^sub>P (get\<^bsub>a\<^esub> s, get\<^bsub>a\<^esub> s'))"
+  by (expr_auto add: frame_ext_def frame_def subst_app_pred_def)
 
 subsection \<open> Algebraic Laws \<close>
 

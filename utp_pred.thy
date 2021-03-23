@@ -1,7 +1,7 @@
 section \<open> UTP Predicates \<close>
 
 theory utp_pred
-    imports "Z_Toolkit.Z_Toolkit" "Shallow-Expressions.Shallow_Expressions" "Total_Recall.Total_Recall"
+    imports "Shallow-Expressions.Shallow_Expressions" "Z_Toolkit.Z_Toolkit"
 begin
 
 subsection \<open> Core Definitions \<close>
@@ -35,12 +35,20 @@ definition [pred_core]: "false_pred = {}"
 adhoc_overloading utrue true_pred and utrue True
 adhoc_overloading ufalse false_pred and ufalse False
 
-purge_notation conj (infixr "\<and>" 35) and disj (infixr "\<or>" 30) and Not ("\<not> _" [40] 40)
-
 consts 
-  uconj :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixr "\<and>" 35)
-  udisj :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" (infixr "\<or>" 30)
-  unot  :: "'a \<Rightarrow> 'a" ("\<not> _" [40] 40)
+  uconj :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"
+  udisj :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" 
+  unot  :: "'a \<Rightarrow> 'a" 
+
+bundle UTP_Logic_Syntax
+begin
+
+no_notation conj (infixr "\<and>" 35) and disj (infixr "\<or>" 30) and Not ("\<not> _" [40] 40)
+notation uconj (infixr "\<and>" 35) and udisj (infixr "\<or>" 30) and unot ("\<not> _" [40] 40)
+
+end
+
+unbundle UTP_Logic_Syntax
 
 definition [pred]: "conj_pred = (\<inter>)"
 definition [pred]: "disj_pred = (\<union>)"
