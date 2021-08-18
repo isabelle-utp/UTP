@@ -19,6 +19,15 @@ type_synonym ('s\<^sub>1, 's\<^sub>2) rpred = "('s\<^sub>1 \<times> 's\<^sub>2) 
 lemma rel_eq_iff [rel_transfer]: "P = Q \<longleftrightarrow> (\<forall> s s'. \<lbrakk>P\<rbrakk>\<^sub>P (s, s') = \<lbrakk>Q\<rbrakk>\<^sub>P (s, s'))"
   by (simp add: set_eq_iff set_pred_def)
 
+lemma rel_unrest_ivar_iff [rel_transfer]: "vwb_lens x \<Longrightarrow> ($x\<^sup>< \<sharp> P) = (\<forall>(s, s')\<in>P. \<forall> v. (put\<^bsub>x\<^esub> s v, s') \<in> P)"
+  by (simp add: unrest_var_pred, auto simp add: lens_defs prod.case_eq_if)
+
+lemma rel_unrest_ovar_iff [rel_transfer]: "vwb_lens x \<Longrightarrow> ($x\<^sup>> \<sharp> P) = (\<forall>(s, s')\<in>P. \<forall> v. (s, put\<^bsub>x\<^esub> s' v) \<in> P)"
+  by (simp add: unrest_var_pred, auto simp add: lens_defs prod.case_eq_if)
+
+lemma in_rel_transfer: "(s, s') \<in> (P)\<^sub>u \<longleftrightarrow> P (s, s')"
+  by (simp add: pred_set_def)
+
 method rel_simp uses add = (simp add: add rel_transfer rel pred_core unrest)
 method rel_auto uses add = (rel_simp add: add; (expr_simp add: add)?; (auto simp add: alpha_splits add)?)
 
@@ -147,6 +156,20 @@ lemma rel_frame [rel]: "\<lbrakk>a:[P]\<rbrakk>\<^sub>P (s, s') = (s \<approx>\<
 
 lemma rel_frame_ext [rel]: "\<lbrakk>a:[P]\<^sub>\<up>\<rbrakk>\<^sub>P (s, s') = (s \<approx>\<^sub>S s' on (-\<lbrakk>a\<rbrakk>\<^sub>\<sim>) \<and> \<lbrakk>P\<rbrakk>\<^sub>P (get\<^bsub>a\<^esub> s, get\<^bsub>a\<^esub> s'))"
   by (expr_auto add: frame_ext_def frame_def subst_app_pred_def)
+
+subsection \<open> Unrestriction Laws \<close>
+
+lemma unrest_iuvar [unrest]: "out\<alpha> \<sharp> ($x\<^sup><)\<^sub>u"
+  by rel_auto
+
+lemma unrest_ouvar [unrest]: "in\<alpha> \<sharp> ($x\<^sup>>)\<^sub>u"
+  by rel_auto
+
+lemma unrest_seq_ivar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>< \<sharp> P \<rbrakk> \<Longrightarrow> $x\<^sup>< \<sharp> P ;; Q"
+  by rel_auto
+
+lemma unrest_seq_ovar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>> \<sharp> Q \<rbrakk> \<Longrightarrow> $x\<^sup>> \<sharp> P ;; Q"
+  by rel_auto
 
 subsection \<open> Algebraic Laws \<close>
 

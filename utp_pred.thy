@@ -1,8 +1,10 @@
 section \<open> UTP Predicates \<close>
 
 theory utp_pred
-    imports "Shallow-Expressions.Shallow_Expressions" "Z_Toolkit.Z_Toolkit"
+    imports "Z_Toolkit.Z_Toolkit" "Shallow-Expressions.Shallow_Expressions" 
 begin
+
+unbundle Expression_Syntax Z_Syntax
 
 subsection \<open> Core Definitions \<close>
 
