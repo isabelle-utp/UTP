@@ -50,10 +50,10 @@ end
 
 unbundle UTP_Logic_Syntax
 
-definition [pred]: "conj_pred = (\<inter>)"
-definition [pred]: "disj_pred = (\<union>)"
-definition [pred]: "not_pred = (uminus :: 'a set \<Rightarrow> 'a set)"
-definition [pred]: "diff_pred = (minus :: 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set)"
+definition [pred_core]: "conj_pred = (\<inter>)"
+definition [pred_core]: "disj_pred = (\<union>)"
+definition [pred_core]: "not_pred = (uminus :: 'a set \<Rightarrow> 'a set)"
+definition [pred_core]: "diff_pred = (minus :: 'a set \<Rightarrow> 'a set \<Rightarrow> 'a set)"
 
 adhoc_overloading 
   uconj conj and uconj conj_pred and
@@ -61,20 +61,20 @@ adhoc_overloading
   unot Not and unot not_pred
 
 definition impl_pred (infixr "\<Rightarrow>" 25) where
-[pred]: "impl_pred P Q = (- P) \<union> Q"
+[pred_core]: "impl_pred P Q = (- P) \<union> Q"
 
 definition iff_pred (infixr "\<Leftrightarrow>" 25) where
-[pred]: "iff_pred P Q = ((P \<Rightarrow> Q) \<and> (Q \<Rightarrow> P))"
+[pred_core]: "iff_pred P Q = ((P \<Rightarrow> Q) \<and> (Q \<Rightarrow> P))"
 
 subsection \<open> Refinement \<close>
 
 definition ref_by :: "'a set \<Rightarrow> 'a set \<Rightarrow> bool" (infix "\<sqsubseteq>" 50) where
-[pred]: "P \<sqsubseteq> Q = (Q \<subseteq> P)"
+[pred_core]: "P \<sqsubseteq> Q = (Q \<subseteq> P)"
 
 abbreviation (input) refines (infix "\<sqsupseteq>" 50) where "Q \<sqsupseteq> P \<equiv> P \<sqsubseteq> Q"
 
 definition sref_by :: "'a set \<Rightarrow> 'a set \<Rightarrow> bool" (infix "\<sqsubset>" 50) where
-[pred]: "P \<sqsubset> Q = (Q \<subset> P)"
+[pred_core]: "P \<sqsubset> Q = (Q \<subset> P)"
 
 abbreviation (input) srefines (infix "\<sqsupset>" 50) where "Q \<sqsupset> P \<equiv> P \<sqsubset> Q"
 
@@ -82,7 +82,7 @@ lemma refined_by_trans [trans]: "\<lbrakk> P \<sqsubseteq> Q; Q \<sqsubseteq> R 
   by (simp add: ref_by_def)
 
 interpretation order "(\<sqsubseteq>)" "(\<sqsubset>)"
-  by (unfold_locales, simp_all add: pred less_le_not_le)
+  by (unfold_locales, simp_all add: pred_core less_le_not_le)
 
 subsection \<open> Proof Strategy \<close>
 
@@ -116,10 +116,10 @@ lemma pred_Int [pred_core]: "\<lbrakk>P \<inter> Q\<rbrakk>\<^sub>P = (\<lbrakk>
   by (simp add: set_pred_def)
 
 lemma pred_conj [pred_core]: "\<lbrakk>P \<and> Q\<rbrakk>\<^sub>P = (\<lbrakk>P\<rbrakk>\<^sub>P \<and> \<lbrakk>Q\<rbrakk>\<^sub>P)\<^sub>e"
-  by (simp add: conj_pred_def pred_core)
+  by (simp add: pred_core)
 
 lemma pred_disj [pred_core]: "\<lbrakk>P \<or> Q\<rbrakk>\<^sub>P = (\<lbrakk>P\<rbrakk>\<^sub>P \<or> \<lbrakk>Q\<rbrakk>\<^sub>P)\<^sub>e"
-  by (simp add: disj_pred_def pred_core)
+  by (simp add: pred_core)
 
 lemma pred_Inter [pred_core]: "\<lbrakk>\<Inter> i \<in> I. P i\<rbrakk>\<^sub>P = (INF i \<in> \<guillemotleft>I\<guillemotright>. \<lbrakk>P i\<rbrakk>\<^sub>P)\<^sub>e"
   by (auto simp add: expr_defs)
@@ -131,18 +131,25 @@ lemma pred_not [pred_core]: "\<lbrakk>\<not> P\<rbrakk>\<^sub>P = (\<not> \<lbra
   by (simp add: not_pred_def set_pred_def)
 
 lemma pred_impl [pred_core]: "\<lbrakk>P \<Rightarrow> Q\<rbrakk>\<^sub>P = (\<lbrakk>P\<rbrakk>\<^sub>P \<longrightarrow> \<lbrakk>Q\<rbrakk>\<^sub>P)\<^sub>e"
-  by (simp add: impl_pred_def pred_core)
+  by (simp add: pred_core)
 
 lemma pred_iff [pred_core]: "\<lbrakk>P \<Leftrightarrow> Q\<rbrakk>\<^sub>P = (\<lbrakk>P\<rbrakk>\<^sub>P \<longleftrightarrow> \<lbrakk>Q\<rbrakk>\<^sub>P)\<^sub>e"
-  by (auto simp add: iff_pred_def pred_core)
+  by (auto simp add: pred_core)
 
 lemma pred_set [pred_core]: "\<lbrakk>\<lbrakk>P\<rbrakk>\<^sub>u\<rbrakk>\<^sub>P = P"
   by (simp add: pred_set_def set_pred_def SEXP_def)
 
 subsection \<open> Laws \<close>
 
+lemma true_false_pred_expr [simp]: "(true)\<^sub>u = true" "(false)\<^sub>u = false"
+  by (simp_all add: SEXP_def pred_set_def true_pred_def false_pred_def)
+
 interpretation pred_ba: boolean_algebra diff_pred not_pred conj_pred "(\<sqsupseteq>)" "(\<sqsupset>)"
   disj_pred false_pred true_pred
   by (unfold_locales; pred_auto)
+
+lemma pred_impl_laws [simp]: 
+  "(true \<Rightarrow> P) = P" "(P \<Rightarrow> true) = true" "(false \<Rightarrow> P) = true" "(P \<Rightarrow> false) = (\<not> P)" "(P \<Rightarrow> P) = true"
+  by pred_simp+
 
 end

@@ -8,10 +8,10 @@ alphabet des_vars =
 type_synonym ('s\<^sub>1, 's\<^sub>2) des_rel = "'s\<^sub>1 des_vars_scheme \<leftrightarrow> 's\<^sub>2 des_vars_scheme"
 
 definition design where
-[pred]: "design P Q = ((ok\<^sup><)\<^sub>u \<and> P \<Rightarrow> (ok\<^sup>>)\<^sub>u \<and> Q)"
+[rel]: "design P Q = ((ok\<^sup><)\<^sub>u \<and> P \<Rightarrow> (ok\<^sup>>)\<^sub>u \<and> Q)"
 
 definition rdesign :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1, 's\<^sub>2) des_rel" where
-[pred]: "rdesign P Q = design (P \<up> more\<^sub>L\<^sup>2) (Q \<up> more\<^sub>L\<^sup>2)"
+[rel]: "rdesign P Q = design (P \<up> more\<^sub>L\<^sup>2) (Q \<up> more\<^sub>L\<^sup>2)"
 
 syntax 
   "_design"  :: "logic \<Rightarrow> logic \<Rightarrow> logic" (infix "\<turnstile>" 85)
@@ -24,7 +24,10 @@ translations
   "p \<turnstile>\<^sub>n Q" == "(p\<^sup><)\<^sub>u \<turnstile>\<^sub>r Q"
 
 lemma "false \<turnstile> true = true"
-  by (pred_auto)
+  by rel_auto
+
+lemma "true \<turnstile> false = (\<not> $ok\<^sup><)\<^sub>u"
+  by rel_auto
 
 theorem design_composition_subst:
   assumes
@@ -37,14 +40,14 @@ proof -
   also have " ...
         = (((P1 \<turnstile> Q1)\<lbrakk>false/ok\<^sup>>\<rbrakk> ;; (P2 \<turnstile> Q2)\<lbrakk>false/ok\<^sup><\<rbrakk>)
             \<or> ((P1 \<turnstile> Q1)\<lbrakk>true/ok\<^sup>>\<rbrakk> ;; (P2 \<turnstile> Q2)\<lbrakk>true/ok\<^sup><\<rbrakk>))"
-    by (rel_auto, (metis (full_types))+)
+    by (rel_auto; metis (full_types))
   also from assms
   have "... = ((((ok\<^sup><)\<^sub>u \<and> P1 \<Rightarrow> Q1\<lbrakk>true/ok\<^sup>>\<rbrakk>) ;; (P2 \<Rightarrow> (ok\<^sup>>)\<^sub>u \<and> Q2\<lbrakk>true/ok\<^sup><\<rbrakk>)) \<or> ((\<not> ((ok\<^sup><)\<^sub>u \<and> P1)) ;; true))"
-    by (rel_auto, blast+)
+    by (simp add: design_def usubst usubst_eval, rel_auto)
   also have "... = (((\<not>ok\<^sup><)\<^sub>u ;; true\<^sub>h) \<or> ((\<not>P1) ;; true) \<or> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> ;; (\<not>P2)) \<or> ((ok\<^sup>>)\<^sub>u \<and> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> ;; Q2\<lbrakk>true/ok\<^sup><\<rbrakk>)))"
     by (rel_auto)
   also have "... = (((\<not> ((\<not> P1) ;; true)) \<and> \<not> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> ;; (\<not> P2))) \<turnstile> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> ;; Q2\<lbrakk>true/ok\<^sup><\<rbrakk>))"
-    by (rel_auto)
+    unfolding design_def by (rel_auto)
   finally show ?thesis .
 qed
 
@@ -59,7 +62,7 @@ theorem rdesign_composition:
   by (simp add: rdesign_def design_composition unrest usubst, rel_auto)
 
 theorem ndesign_composition_wlp:
-  "(p\<^sub>1 \<turnstile>\<^sub>n Q\<^sub>1) ;; (p\<^sub>2 \<turnstile>\<^sub>n Q\<^sub>2) = ((p\<^sub>1 \<and> (Q\<^sub>1 wlp p\<^sub>2)) \<turnstile>\<^sub>n (Q\<^sub>1 ;; Q\<^sub>2))"
-  by (simp add: rdesign_composition unrest, rel_auto, fastforce+)
+  "(p\<^sub>1 \<turnstile>\<^sub>n Q\<^sub>1) ;; (p\<^sub>2 \<turnstile>\<^sub>n Q\<^sub>2) = (p\<^sub>1 \<and> Q\<^sub>1 wlp p\<^sub>2) \<turnstile>\<^sub>n (Q\<^sub>1 ;; Q\<^sub>2)"
+  by (simp add: rdesign_composition unrest, rel_auto)
 
 end
