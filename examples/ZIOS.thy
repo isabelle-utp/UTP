@@ -25,7 +25,7 @@ lemma scene_equiv_outside_pfun:
   assumes "vwb_lens x" "$x \<sharp> (@e)\<^sub>e" "e s\<^sub>1 \<in> pdom (get\<^bsub>x\<^esub> s\<^sub>1)"
   shows "s\<^sub>1 \<approx>\<^sub>S s\<^sub>2 on - \<lbrakk>(x[@e])\<^sub>v\<rbrakk>\<^sub>\<sim> 
         \<longleftrightarrow> 
-        (s\<^sub>1 \<approx>\<^sub>S s\<^sub>2 on - \<lbrakk>x\<rbrakk>\<^sub>\<sim> \<and> - {e s\<^sub>1} \<lhd> get\<^bsub>x\<^esub> s\<^sub>1 = - {e s\<^sub>1} \<lhd> get\<^bsub>x\<^esub> s\<^sub>2)"  
+        (s\<^sub>1 \<approx>\<^sub>S s\<^sub>2 on - \<lbrakk>x\<rbrakk>\<^sub>\<sim> \<and> {e s\<^sub>1} \<Zndres> get\<^bsub>x\<^esub> s\<^sub>1 = {e s\<^sub>1} \<Zndres> get\<^bsub>x\<^esub> s\<^sub>2)"  
   using assms
   apply (auto simp add: scene_equiv_def scene_override_commute unrest)
     apply (simp_all add: unrest_lens)
