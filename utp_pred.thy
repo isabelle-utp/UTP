@@ -83,8 +83,22 @@ abbreviation (input) srefines (infix "\<sqsupset>" 50) where "Q \<sqsupset> P \<
 lemma refined_by_trans [trans]: "\<lbrakk> P \<sqsubseteq> Q; Q \<sqsubseteq> R \<rbrakk> \<Longrightarrow> P \<sqsubseteq> R"
   by (simp add: ref_by_def)
 
-interpretation order "(\<sqsubseteq>)" "(\<sqsubset>)"
+interpretation ref_order: order "(\<sqsubseteq>)" "(\<sqsubset>)"
   by (unfold_locales, simp_all add: pred_core less_le_not_le)
+
+interpretation ref_lattice: complete_lattice "\<Union>" "\<Inter>" "(\<union>)" "(\<sqsubseteq>)" "(\<sqsubset>)" "(\<inter>)" "UNIV" "{}"
+  by (unfold_locales, auto simp: pred_core less_le_not_le)
+
+syntax
+  "_mu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<mu> _ \<bullet> _" [0, 10] 10)
+  "_nu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<nu> _ \<bullet> _" [0, 10] 10)
+
+notation gfp ("\<mu>")
+notation lfp ("\<nu>")
+
+translations
+  "\<nu> X \<bullet> P" == "CONST lfp (\<lambda> X. P)"
+  "\<mu> X \<bullet> P" == "CONST gfp (\<lambda> X. P)"
 
 subsection \<open> Proof Strategy \<close>
 

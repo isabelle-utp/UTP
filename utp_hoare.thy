@@ -1,5 +1,5 @@
 theory utp_hoare
-imports utp_rel
+imports utp_rel utp_recursion
 begin
 
 text \<open>Hoare triples\<close>
@@ -47,8 +47,8 @@ lemma hoare_r_conj [hoare_safe]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^bold>{r\<^bol
   by rel_auto
 
 lemma hoare_r_weaken_pre [hoare]:
-  "\<^bold>{p\<^bold>}Q\<^bold>{r\<^bold>} \<Longrightarrow> \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^bold>{r\<^bold>}"
-  "\<^bold>{q\<^bold>}Q\<^bold>{r\<^bold>} \<Longrightarrow> \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^bold>{r\<^bold>}"
+  "\<^bold>{p\<^bold>}Q\<^bold>{r\<^bold>} \<Longrightarrow> \<^bold>{p \<and> q\<^bold>}Q\<^bold>{r\<^bold>}"
+  "\<^bold>{q\<^bold>}Q\<^bold>{r\<^bold>} \<Longrightarrow> \<^bold>{p \<and> q\<^bold>}Q\<^bold>{r\<^bold>}"
   by rel_auto+
 
 lemma pre_str_hoare_r:
@@ -65,13 +65,13 @@ lemma hoare_r_conseq: "\<lbrakk> \<^bold>{p\<^sub>2\<^bold>}S\<^bold>{q\<^sub>2\
   by rel_auto
 
 lemma hoare_r_cut:
-  assumes "\<^bold>{b\<^bold>}P\<^bold>{b\<^bold>}" "\<^bold>{(b \<and> c)\<^sub>e\<^bold>}P\<^bold>{c\<^bold>}"
-  shows "\<^bold>{(b \<and> c)\<^sub>e\<^bold>}P\<^bold>{(b \<and> c)\<^sub>e\<^bold>}"
+  assumes "\<^bold>{b\<^bold>}P\<^bold>{b\<^bold>}" "\<^bold>{b \<and> c\<^bold>}P\<^bold>{c\<^bold>}"
+  shows "\<^bold>{b \<and> c\<^bold>}P\<^bold>{b \<and> c\<^bold>}"
   using assms by rel_auto
 
 lemma hoare_r_cut_simple: 
   assumes "\<^bold>{b\<^bold>}P\<^bold>{b\<^bold>}" "\<^bold>{c\<^bold>}P\<^bold>{c\<^bold>}"
-  shows "\<^bold>{(b \<and> c)\<^sub>e\<^bold>}P\<^bold>{(b \<and> c)\<^sub>e\<^bold>}"
+  shows "\<^bold>{b \<and> c\<^bold>}P\<^bold>{b \<and> c\<^bold>}"
   using assms by rel_auto
 
 subsection \<open> Sequence Laws \<close>
@@ -80,21 +80,21 @@ lemma seq_hoare_r: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{s\<^bold>} ; 
   by (rel_force)
  
 lemma seq_hoare_invariant [hoare_safe]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{p\<^bold>} ; \<^bold>{p\<^bold>}Q\<^sub>2\<^bold>{p\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{p\<^bold>}"
-  by (rel_auto, fastforce)
+  by (rel_force)
 
 lemma seq_hoare_stronger_pre_1 [hoare_safe]: 
-  "\<lbrakk> \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^sub>1\<^bold>{(p \<and> q)\<^sub>e\<^bold>} ; \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^sub>2\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{q\<^bold>}"
-  by (rel_auto, fastforce)
+  "\<lbrakk> \<^bold>{p \<and> q\<^bold>}Q\<^sub>1\<^bold>{p \<and> q\<^bold>} ; \<^bold>{p \<and> q\<^bold>}Q\<^sub>2\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p \<and> q\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{q\<^bold>}"
+  using seq_hoare_r by blast
 
 lemma seq_hoare_stronger_pre_2 [hoare_safe]: 
-  "\<lbrakk> \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^sub>1\<^bold>{(p \<and> q)\<^sub>e\<^bold>} ; \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^sub>2\<^bold>{p\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{p\<^bold>}"
-  by (rel_auto, fastforce)
+  "\<lbrakk> \<^bold>{p \<and> q\<^bold>}Q\<^sub>1\<^bold>{p \<and> q\<^bold>} ; \<^bold>{p \<and> q\<^bold>}Q\<^sub>2\<^bold>{p\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p \<and> q\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{p\<^bold>}"
+  using seq_hoare_r by blast
     
 lemma seq_hoare_inv_r_2 [hoare]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{q\<^bold>} ; \<^bold>{q\<^bold>}Q\<^sub>2\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{q\<^bold>}"
-  by (rel_auto, fastforce)
+  using seq_hoare_r by blast
 
 lemma seq_hoare_inv_r_3 [hoare]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{p\<^bold>} ; \<^bold>{p\<^bold>}Q\<^sub>2\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{q\<^bold>}"
-  by (rel_auto, fastforce)
+  using seq_hoare_r by blast
 
 subsection \<open> Assignment Laws \<close>
 
@@ -140,8 +140,8 @@ lemma cond_hoare_r_wp:
   using assms unfolding cond_def by rel_simp pred_auto
 
 lemma cond_hoare_r_sp:
-  assumes "\<^bold>{(b \<and> p)\<^bold>}S\<^bold>{q\<^bold>}" and "\<^bold>{(\<not>b \<and> p)\<^sub>e\<^bold>}T\<^bold>{s\<^bold>}"
-  shows "\<^bold>{p\<^bold>}S \<^bold>\<lhd> b \<^bold>\<rhd> T\<^bold>{(q \<or> s)\<^sub>e\<^bold>}"
+  assumes "\<^bold>{(b \<and> p)\<^bold>}S\<^bold>{q\<^bold>}" and "\<^bold>{\<not>b \<and> p\<^bold>}T\<^bold>{s\<^bold>}"
+  shows "\<^bold>{p\<^bold>}S \<^bold>\<lhd> b \<^bold>\<rhd> T\<^bold>{q \<or> s\<^bold>}"
   using assms unfolding cond_def by rel_simp pred_auto
 
 lemma hoare_ndet [hoare_safe]: 
@@ -158,27 +158,27 @@ lemma hoare_UINF [hoare_safe]:
   assumes "\<And>i. i \<in> A \<Longrightarrow> \<^bold>{p\<^bold>}P(i)\<^bold>{q\<^bold>}"
   shows "\<^bold>{p\<^bold>}(\<Union> {P(i)|i. i\<in>A})\<^bold>{q\<^bold>}"
   using assms by (rel_auto, meson hoare_meaning)
+
+
 subsection \<open> Recursion Laws \<close>
 
 lemma nu_hoare_r_partial: 
-  assumes induct_step: "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}F P\<^bold>{q\<^bold>}"   
-  shows "\<^bold>{p\<^bold>}\<nu> F\<^bold>{q\<^bold>}"  
-  oops
+  assumes induct_step: "\<And>P st. \<^bold>{p\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}F P\<^bold>{q\<^bold>}"   
+  shows "\<^bold>{p\<^bold>}\<nu> F\<^bold>{q\<^bold>}"
+  using induct_step by (rel_simp add: lfp_lowerbound)
 
 lemma mu_hoare_r:
   assumes WF: "wf R"
   assumes M:"mono F"  
   assumes induct_step:
-    "\<And> st P. \<^bold>{(p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>)\<^sub>e\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{(p \<and> e = \<guillemotleft>st\<guillemotright>)\<^sub>e\<^bold>}F P\<^bold>{q\<^bold>}"   
-  shows "\<^bold>{p\<^bold>}\<mu> F \<^bold>{q\<^bold>}"  
-  unfolding hoare_r_def
-    oops
-  (*proof (rule mu_rec_total_utp_rule[OF WF M , of _ e ], goal_cases)
+    "\<And> st P. \<^bold>{p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p \<and> e = \<guillemotleft>st\<guillemotright>\<^bold>}F P\<^bold>{q\<^bold>}"   
+  shows "\<^bold>{p\<^bold>}\<mu> F \<^bold>{q\<^bold>}" 
+  proof (rule mu_rec_total_utp_rule[OF WF M , of _ e ])
   case (1 st)
   then show ?case 
     using induct_step[unfolded hoare_r_def, of "(\<lceil>p\<rceil>\<^sub>< \<and> (\<lceil>e\<rceil>\<^sub><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<Rightarrow> \<lceil>q\<rceil>\<^sub>>)" st]
     by (simp add: alpha)    
-qed*)
+qed
     
 lemma mu_hoare_r':
   assumes WF: "wf R"
