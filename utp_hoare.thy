@@ -4,167 +4,173 @@ begin
 
 text \<open>Hoare triples\<close>
 
-definition hoare_r :: "('s \<Rightarrow> bool) \<Rightarrow> 's rel \<Rightarrow> ('s \<Rightarrow> bool) \<Rightarrow> bool" ("\<lbrace>_\<rbrace>/ _/ \<lbrace>_\<rbrace>") where
-[rel]: "\<lbrace>p\<rbrace>Q\<lbrace>r\<rbrace> = ((p\<^sup>< \<longrightarrow> r\<^sup>>)\<^sub>u \<sqsubseteq> Q)"
+definition hoare_r :: "('s \<Rightarrow> bool) \<Rightarrow> 's rel \<Rightarrow> ('s \<Rightarrow> bool) \<Rightarrow> bool" where
+[rel]: "hoare_r p Q r = ((p\<^sup>< \<longrightarrow> r\<^sup>>)\<^sub>u \<sqsubseteq> Q)"
+
+syntax "_hoare_r" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("\<^bold>{_\<^bold>}/ _/ \<^bold>{_\<^bold>}")
+translations "_hoare_r P S Q" == "CONST hoare_r (P)\<^sub>e S (Q)\<^sub>e"
 
 named_theorems hoare and hoare_safe
 
-lemma hoare_meaning: "\<lbrace>p\<rbrace>Q\<lbrace>r\<rbrace> = (\<forall> s s'. p s \<and> (s, s') \<in> Q \<longrightarrow> r s')"
-  by rel_auto
+thm relcomp_unfold Id_on_iff
 
-lemma hoare_alt_def: "\<lbrace>b\<rbrace>P\<lbrace>c\<rbrace> = (P ;; \<questiondown>c? \<sqsubseteq> \<questiondown>b? ;; P)"
-  by (rel_auto add: hoare_meaning)
+lemma relcomp_iff: "(a, b) \<in> P O Q \<longleftrightarrow> (\<exists> c. (a, c) \<in> P \<and> (c, b) \<in> Q)"
+  by (simp add: relcomp_unfold)
 
-lemma hoare_assume: "\<lbrace>P\<rbrace>S\<lbrace>Q\<rbrace> \<Longrightarrow> \<questiondown>P? ;; S = \<questiondown>P? ;; S ;; \<questiondown>Q?"
+lemma hoare_meaning: "\<^bold>{p\<^bold>}Q\<^bold>{r\<^bold>} = (\<forall> s s'. p s \<and> (s, s') \<in> Q \<longrightarrow> r s')"
   by (rel_auto)
 
-lemma hoare_pre_assume_1: "\<lbrace>(b \<and> c)\<^sub>e\<rbrace>P\<lbrace>d\<rbrace> = \<lbrace>c\<rbrace>\<questiondown>b? ;; P\<lbrace>d\<rbrace>"
-  by (rel_auto add: hoare_meaning)
+lemma hoare_alt_def: "\<^bold>{b\<^bold>}P\<^bold>{c\<^bold>} = (P ;; \<questiondown>c? \<sqsubseteq> \<questiondown>b? ;; P)"
+  by (rel_auto)
 
-lemma hoare_pre_assume_2: "\<lbrace>(b \<and> c)\<^sub>e\<rbrace>P\<lbrace>d\<rbrace> = \<lbrace>b\<rbrace>\<questiondown>c? ;; P\<lbrace>d\<rbrace>"
-  by (rel_auto add: hoare_meaning)
+lemma hoare_assume: "\<^bold>{P\<^bold>}S\<^bold>{Q\<^bold>} \<Longrightarrow> \<questiondown>P? ;; S = \<questiondown>P? ;; S ;; \<questiondown>Q?"
+  by (rel_auto)
+
+lemma hoare_pre_assume_1: "\<^bold>{b \<and> c\<^bold>}P\<^bold>{d\<^bold>} = \<^bold>{c\<^bold>}\<questiondown>b? ;; P\<^bold>{d\<^bold>}"
+  by (rel_auto)
+
+lemma hoare_pre_assume_2: "\<^bold>{b \<and> c\<^bold>}P\<^bold>{d\<^bold>} = \<^bold>{b\<^bold>}\<questiondown>c? ;; P\<^bold>{d\<^bold>}"
+  by rel_auto
                                
-lemma hoare_test [hoare_safe]: "`p \<and> b \<longrightarrow> q` \<Longrightarrow> \<lbrace>p\<rbrace>\<questiondown>b?\<lbrace>q\<rbrace>"
+lemma hoare_test [hoare_safe]: "`p \<and> b \<longrightarrow> q` \<Longrightarrow> \<^bold>{p\<^bold>}\<questiondown>b?\<^bold>{q\<^bold>}"
   by rel_auto
 
-(*lemma hoare_gcmd [hoare_safe]: "\<lbrace>p \<and> b\<rbrace>P\<lbrace>q\<rbrace> \<Longrightarrow> \<lbrace>p\<rbrace>b \<longrightarrow> P\<lbrace>q\<rbrace>"
-  by (rel_auto)*)
+lemma hoare_gcmd' [hoare_safe]: "\<^bold>{p \<and> b\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}\<questiondown>b? ;; P\<^bold>{q\<^bold>}"
+  by rel_auto
 
-lemma hoare_r_conj [hoare_safe]: "\<lbrakk> \<lbrace>p\<rbrace>Q\<lbrace>r\<rbrace>; \<lbrace>p\<rbrace>Q\<lbrace>s\<rbrace> \<rbrakk> \<Longrightarrow> \<lbrace>p\<rbrace>Q\<lbrace>(r \<and> s)\<^sub>e\<rbrace>"
+(*
+lemma hoare_gcmd [hoare_safe]: "\<^bold>{p \<and> b\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}b \<longrightarrow> P\<^bold>{q\<^bold>}"
+  by (rel_auto)
+*)
+
+lemma hoare_r_conj [hoare_safe]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^bold>{r\<^bold>}; \<^bold>{p\<^bold>}Q\<^bold>{s\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^bold>{r \<and> s\<^bold>}"
   by rel_auto
 
 lemma hoare_r_weaken_pre [hoare]:
-  "\<lbrace>p\<rbrace>Q\<lbrace>r\<rbrace> \<Longrightarrow> \<lbrace>(p \<and> q)\<^sub>e\<rbrace>Q\<lbrace>r\<rbrace>"
-  "\<lbrace>q\<rbrace>Q\<lbrace>r\<rbrace> \<Longrightarrow> \<lbrace>(p \<and> q)\<^sub>e\<rbrace>Q\<lbrace>r\<rbrace>"
+  "\<^bold>{p\<^bold>}Q\<^bold>{r\<^bold>} \<Longrightarrow> \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^bold>{r\<^bold>}"
+  "\<^bold>{q\<^bold>}Q\<^bold>{r\<^bold>} \<Longrightarrow> \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^bold>{r\<^bold>}"
   by rel_auto+
 
 lemma pre_str_hoare_r:
-  assumes "`p\<^sub>1 \<longrightarrow> p\<^sub>2`" and "\<lbrace>p\<^sub>2\<rbrace>C\<lbrace>q\<rbrace>"
-  shows "\<lbrace>p\<^sub>1\<rbrace>C\<lbrace>q\<rbrace>"
+  assumes "`p\<^sub>1 \<longrightarrow> p\<^sub>2`" and "\<^bold>{p\<^sub>2\<^bold>}C\<^bold>{q\<^bold>}"
+  shows "\<^bold>{p\<^sub>1\<^bold>}C\<^bold>{q\<^bold>}"
   using assms by rel_auto
     
 lemma post_weak_hoare_r:
-  assumes "\<lbrace>p\<rbrace>C\<lbrace>q\<^sub>2\<rbrace>" and "`q\<^sub>2 \<longrightarrow> q\<^sub>1`"
-  shows "\<lbrace>p\<rbrace>C\<lbrace>q\<^sub>1\<rbrace>" 
+  assumes "\<^bold>{p\<^bold>}C\<^bold>{q\<^sub>2\<^bold>}" and "`q\<^sub>2 \<longrightarrow> q\<^sub>1`"
+  shows "\<^bold>{p\<^bold>}C\<^bold>{q\<^sub>1\<^bold>}" 
   using assms by rel_auto
 
-lemma hoare_r_conseq: "\<lbrakk> \<lbrace>p\<^sub>2\<rbrace>S\<lbrace>q\<^sub>2\<rbrace>; `p\<^sub>1 \<longrightarrow> p\<^sub>2`; `q\<^sub>2 \<longrightarrow> q\<^sub>1` \<rbrakk> \<Longrightarrow> \<lbrace>p\<^sub>1\<rbrace>S\<lbrace>q\<^sub>1\<rbrace>"
+lemma hoare_r_conseq: "\<lbrakk> \<^bold>{p\<^sub>2\<^bold>}S\<^bold>{q\<^sub>2\<^bold>}; `p\<^sub>1 \<longrightarrow> p\<^sub>2`; `q\<^sub>2 \<longrightarrow> q\<^sub>1` \<rbrakk> \<Longrightarrow> \<^bold>{p\<^sub>1\<^bold>}S\<^bold>{q\<^sub>1\<^bold>}"
   by rel_auto
 
 lemma hoare_r_cut:
-  assumes "\<lbrace>b\<rbrace>P\<lbrace>b\<rbrace>" "\<lbrace>(b \<and> c)\<^sub>e\<rbrace>P\<lbrace>c\<rbrace>"
-  shows "\<lbrace>(b \<and> c)\<^sub>e\<rbrace>P\<lbrace>(b \<and> c)\<^sub>e\<rbrace>"
+  assumes "\<^bold>{b\<^bold>}P\<^bold>{b\<^bold>}" "\<^bold>{(b \<and> c)\<^sub>e\<^bold>}P\<^bold>{c\<^bold>}"
+  shows "\<^bold>{(b \<and> c)\<^sub>e\<^bold>}P\<^bold>{(b \<and> c)\<^sub>e\<^bold>}"
   using assms by rel_auto
 
 lemma hoare_r_cut_simple: 
-  assumes "\<lbrace>b\<rbrace>P\<lbrace>b\<rbrace>" "\<lbrace>c\<rbrace>P\<lbrace>c\<rbrace>"
-  shows "\<lbrace>(b \<and> c)\<^sub>e\<rbrace>P\<lbrace>(b \<and> c)\<^sub>e\<rbrace>"
+  assumes "\<^bold>{b\<^bold>}P\<^bold>{b\<^bold>}" "\<^bold>{c\<^bold>}P\<^bold>{c\<^bold>}"
+  shows "\<^bold>{(b \<and> c)\<^sub>e\<^bold>}P\<^bold>{(b \<and> c)\<^sub>e\<^bold>}"
   using assms by rel_auto
 
 subsection \<open> Sequence Laws \<close>
 
-lemma seq_hoare_r: "\<lbrakk> \<lbrace>p\<rbrace>Q\<^sub>1\<lbrace>s\<rbrace> ; \<lbrace>s\<rbrace>Q\<^sub>2\<lbrace>r\<rbrace> \<rbrakk> \<Longrightarrow> \<lbrace>p\<rbrace>Q\<^sub>1 ;; Q\<^sub>2\<lbrace>r\<rbrace>"
-  by (rel_auto, fastforce)
-
-lemma seq_hoare_invariant [hoare_safe]: "\<lbrakk> \<lbrace>p\<rbrace>Q\<^sub>1\<lbrace>p\<rbrace> ; \<lbrace>p\<rbrace>Q\<^sub>2\<lbrace>p\<rbrace> \<rbrakk> \<Longrightarrow> \<lbrace>p\<rbrace>Q\<^sub>1 ;; Q\<^sub>2\<lbrace>p\<rbrace>"
+lemma seq_hoare_r: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{s\<^bold>} ; \<^bold>{s\<^bold>}Q\<^sub>2\<^bold>{r\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{r\<^bold>}"
+  by (rel_force)
+ 
+lemma seq_hoare_invariant [hoare_safe]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{p\<^bold>} ; \<^bold>{p\<^bold>}Q\<^sub>2\<^bold>{p\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{p\<^bold>}"
   by (rel_auto, fastforce)
 
 lemma seq_hoare_stronger_pre_1 [hoare_safe]: 
-  "\<lbrakk> \<lbrace>(p \<and> q)\<^sub>e\<rbrace>Q\<^sub>1\<lbrace>(p \<and> q)\<^sub>e\<rbrace> ; \<lbrace>(p \<and> q)\<^sub>e\<rbrace>Q\<^sub>2\<lbrace>q\<rbrace> \<rbrakk> \<Longrightarrow> \<lbrace>(p \<and> q)\<^sub>e\<rbrace>Q\<^sub>1 ;; Q\<^sub>2\<lbrace>q\<rbrace>"
+  "\<lbrakk> \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^sub>1\<^bold>{(p \<and> q)\<^sub>e\<^bold>} ; \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^sub>2\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{q\<^bold>}"
   by (rel_auto, fastforce)
 
 lemma seq_hoare_stronger_pre_2 [hoare_safe]: 
-  "\<lbrakk> \<lbrace>(p \<and> q)\<^sub>e\<rbrace>Q\<^sub>1\<lbrace>(p \<and> q)\<^sub>e\<rbrace> ; \<lbrace>(p \<and> q)\<^sub>e\<rbrace>Q\<^sub>2\<lbrace>p\<rbrace> \<rbrakk> \<Longrightarrow> \<lbrace>(p \<and> q)\<^sub>e\<rbrace>Q\<^sub>1 ;; Q\<^sub>2\<lbrace>p\<rbrace>"
+  "\<lbrakk> \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^sub>1\<^bold>{(p \<and> q)\<^sub>e\<^bold>} ; \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^sub>2\<^bold>{p\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{(p \<and> q)\<^sub>e\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{p\<^bold>}"
   by (rel_auto, fastforce)
     
-lemma seq_hoare_inv_r_2 [hoare]: "\<lbrakk> \<lbrace>p\<rbrace>Q\<^sub>1\<lbrace>q\<rbrace> ; \<lbrace>q\<rbrace>Q\<^sub>2\<lbrace>q\<rbrace> \<rbrakk> \<Longrightarrow> \<lbrace>p\<rbrace>Q\<^sub>1 ;; Q\<^sub>2\<lbrace>q\<rbrace>"
+lemma seq_hoare_inv_r_2 [hoare]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{q\<^bold>} ; \<^bold>{q\<^bold>}Q\<^sub>2\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{q\<^bold>}"
   by (rel_auto, fastforce)
 
-lemma seq_hoare_inv_r_3 [hoare]: "\<lbrakk> \<lbrace>p\<rbrace>Q\<^sub>1\<lbrace>p\<rbrace> ; \<lbrace>p\<rbrace>Q\<^sub>2\<lbrace>q\<rbrace> \<rbrakk> \<Longrightarrow> \<lbrace>p\<rbrace>Q\<^sub>1 ;; Q\<^sub>2\<lbrace>q\<rbrace>"
+lemma seq_hoare_inv_r_3 [hoare]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{p\<^bold>} ; \<^bold>{p\<^bold>}Q\<^sub>2\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{q\<^bold>}"
   by (rel_auto, fastforce)
 
 subsection \<open> Assignment Laws \<close>
 
-lemma assigns_hoare_r [hoare_safe]: "`p \<longrightarrow> \<sigma> \<dagger> q` \<Longrightarrow> \<lbrace>p\<rbrace>\<langle>\<sigma>\<rangle>\<^sub>a\<lbrace>q\<rbrace>"
-  apply rel_auto
-  by (metis SEXP_def rel_assigns set_pred_def)
-
+lemma assigns_hoare_r [hoare_safe]: "`p \<longrightarrow> \<sigma> \<dagger> q` \<Longrightarrow> \<^bold>{p\<^bold>}\<langle>\<sigma>\<rangle>\<^sub>a\<^bold>{q\<^bold>}"
+  by rel_auto
+  
 lemma assigns_backward_hoare_r: 
-  "\<lbrace>\<sigma> \<dagger> p\<rbrace>\<langle>\<sigma>\<rangle>\<^sub>a\<lbrace>p\<rbrace>"
-  apply rel_auto
-  by (metis SEXP_def rel_assigns set_pred_def)
+  "\<^bold>{\<sigma> \<dagger> p\<^bold>}\<langle>\<sigma>\<rangle>\<^sub>a\<^bold>{p\<^bold>}"
+  by rel_auto
 
 lemma assign_floyd_hoare_r:
   assumes "vwb_lens x"
-  shows "\<lbrace>p\<rbrace> x := e \<lbrace>(\<exists> v . p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> \<and> $x = e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>)\<^sub>e\<rbrace>"
+  shows "\<^bold>{p\<^bold>} x := e \<^bold>{\<exists> v . p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> \<and> $x = e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>\<^bold>}"
   using assms
-  apply rel_auto
-  by (smt (verit, best) SEXP_def mem_Collect_eq mwb_lens_def
-      rel_assigns set_pred_def vwb_lens.put_eq vwb_lens_def weak_lens.put_get)
+  by (rel_auto, metis lens_override_def lens_override_idem)
 
 lemma assigns_init_hoare [hoare_safe]:
-  "\<lbrakk> vwb_lens x; $x \<sharp> p; $x \<sharp> v; \<lbrace>($x = v \<and> p)\<^sub>e\<rbrace>S\<lbrace>q\<rbrace> \<rbrakk> \<Longrightarrow> \<lbrace>p\<rbrace>(x := v) ;; S\<lbrace>q\<rbrace>"
-  apply rel_auto
-  by (smt (z3) SEXP_def basic_trans_rules(31) mem_Collect_eq mwb_lens_weak prod.sel(1) prod.sel(2)
-      rel_assigns set_pred_def vwb_lens_mwb weak_lens.put_get)
+  "\<lbrakk> vwb_lens x; $x \<sharp> p; $x \<sharp> v; \<^bold>{$x = v \<and> p\<^bold>}S\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}(x := v) ;; S\<^bold>{q\<^bold>}"
+  by rel_auto
 
 lemma assigns_init_hoare_general:
-  "\<lbrakk> vwb_lens x; \<And> x\<^sub>0. \<lbrace>($x = v\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk> \<and> p\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk>)\<^sub>e\<rbrace>S\<lbrace>q\<rbrace> \<rbrakk> \<Longrightarrow> \<lbrace>p\<rbrace>(x := v) ;; S\<lbrace>q\<rbrace>"
+  "\<lbrakk> vwb_lens x; \<And> x\<^sub>0. \<^bold>{$x = v\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk> \<and> p\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk>\<^bold>}S\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}(x := v) ;; S\<^bold>{q\<^bold>}"
   by (rule seq_hoare_r, rule assign_floyd_hoare_r, simp, rel_auto)
 
 lemma assigns_final_hoare [hoare_safe]:
-  "\<lbrace>p\<rbrace>S\<lbrace>\<sigma> \<dagger> q\<rbrace> \<Longrightarrow> \<lbrace>p\<rbrace>S ;; \<langle>\<sigma>\<rangle>\<^sub>a\<lbrace>q\<rbrace>"
-  apply (rel_auto)
-  by (smt (z3) SEXP_def fst_conv in_mono mem_Collect_eq rel_assigns set_pred_def snd_conv)
+  "\<^bold>{p\<^bold>}S\<^bold>{\<sigma> \<dagger> q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}S ;; \<langle>\<sigma>\<rangle>\<^sub>a\<^bold>{q\<^bold>}"
+  by (rel_auto)
 
-lemma skip_hoare_r [hoare_safe]: "\<lbrace>p\<rbrace>II\<lbrace>p\<rbrace>"
+lemma skip_hoare_r [hoare_safe]: "\<^bold>{p\<^bold>}II\<^bold>{p\<^bold>}"
   by rel_auto
 
-lemma skip_hoare_impl_r [hoare_safe]: "`p \<longrightarrow> q` \<Longrightarrow> \<lbrace>p\<rbrace>II\<lbrace>q\<rbrace>"
+lemma skip_hoare_impl_r [hoare_safe]: "`p \<longrightarrow> q` \<Longrightarrow> \<^bold>{p\<^bold>}II\<^bold>{q\<^bold>}"
   by rel_auto  
 
 subsection \<open> Conditional Laws \<close>
 
-lemma cond_hoare_r [hoare_safe]: "\<lbrakk> \<lbrace>(b \<and> p)\<^sub>e\<rbrace>S\<lbrace>q\<rbrace> ; \<lbrace>(\<not>b \<and> p)\<^sub>e\<rbrace>T\<lbrace>q\<rbrace> \<rbrakk> \<Longrightarrow> \<lbrace>p\<rbrace>S \<^bold>\<lhd> b \<^bold>\<rhd> T\<lbrace>q\<rbrace>"
+lemma cond_hoare_r [hoare_safe]: "\<lbrakk> \<^bold>{b \<and> p\<^bold>}S\<^bold>{q\<^bold>} ; \<^bold>{\<not>b \<and> p\<^bold>}T\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}S \<^bold>\<lhd> b \<^bold>\<rhd> T\<^bold>{q\<^bold>}"
   unfolding cond_def by rel_simp pred_auto
 
 lemma cond_hoare_r_wp: 
-  assumes "\<lbrace>p'\<rbrace>S\<lbrace>q\<rbrace>" and "\<lbrace>p''\<rbrace>T\<lbrace>q\<rbrace>"
-  shows "\<lbrace>((b \<and> p') \<or> (\<not>b \<and> p''))\<^sub>e\<rbrace> S \<^bold>\<lhd> b \<^bold>\<rhd> T \<lbrace>q\<rbrace>"
+  assumes "\<^bold>{p'\<^bold>}S\<^bold>{q\<^bold>}" and "\<^bold>{p''\<^bold>}T\<^bold>{q\<^bold>}"
+  shows "\<^bold>{(b \<and> p') \<or> (\<not>b \<and> p'')\<^bold>} S \<^bold>\<lhd> b \<^bold>\<rhd> T \<^bold>{q\<^bold>}"
   using assms unfolding cond_def by rel_simp pred_auto
 
 lemma cond_hoare_r_sp:
-  assumes "\<lbrace>(b \<and> p)\<rbrace>S\<lbrace>q\<rbrace>" and "\<lbrace>(\<not>b \<and> p)\<^sub>e\<rbrace>T\<lbrace>s\<rbrace>"
-  shows "\<lbrace>p\<rbrace>S \<^bold>\<lhd> b \<^bold>\<rhd> T\<lbrace>(q \<or> s)\<^sub>e\<rbrace>"
+  assumes "\<^bold>{(b \<and> p)\<^bold>}S\<^bold>{q\<^bold>}" and "\<^bold>{(\<not>b \<and> p)\<^sub>e\<^bold>}T\<^bold>{s\<^bold>}"
+  shows "\<^bold>{p\<^bold>}S \<^bold>\<lhd> b \<^bold>\<rhd> T\<^bold>{(q \<or> s)\<^sub>e\<^bold>}"
   using assms unfolding cond_def by rel_simp pred_auto
 
 lemma hoare_ndet [hoare_safe]: 
-  assumes "\<lbrace>p\<rbrace>P\<lbrace>q\<rbrace>" "\<lbrace>p\<rbrace>Q\<lbrace>q\<rbrace>"
-  shows "\<lbrace>p\<rbrace>(P \<union> Q)\<lbrace>q\<rbrace>"
+  assumes "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>}" "\<^bold>{p\<^bold>}Q\<^bold>{q\<^bold>}"
+  shows "\<^bold>{p\<^bold>}(P \<union> Q)\<^bold>{q\<^bold>}"
   using assms by (rel_auto)
 
 lemma hoare_disj [hoare_safe]: 
-  assumes "\<lbrace>p\<rbrace>P\<lbrace>q\<rbrace>" "\<lbrace>p\<rbrace>Q\<lbrace>q\<rbrace>"
-  shows "\<lbrace>p\<rbrace>(P \<or> Q)\<lbrace>q\<rbrace>"
+  assumes "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>}" "\<^bold>{p\<^bold>}Q\<^bold>{q\<^bold>}"
+  shows "\<^bold>{p\<^bold>}(P \<or> Q)\<^bold>{q\<^bold>}"
   using assms by (rel_auto)
 
 lemma hoare_UINF [hoare_safe]:
-  assumes "\<And>i. i \<in> A \<Longrightarrow> \<lbrace>p\<rbrace>P(i)\<lbrace>q\<rbrace>"
-  shows "\<lbrace>p\<rbrace>(\<Union> {P(i)|i. i\<in>A})\<lbrace>q\<rbrace>"
+  assumes "\<And>i. i \<in> A \<Longrightarrow> \<^bold>{p\<^bold>}P(i)\<^bold>{q\<^bold>}"
+  shows "\<^bold>{p\<^bold>}(\<Union> {P(i)|i. i\<in>A})\<^bold>{q\<^bold>}"
   using assms by (rel_auto, meson hoare_meaning)
 subsection \<open> Recursion Laws \<close>
 
 lemma nu_hoare_r_partial: 
-  assumes induct_step: "\<lbrace>p\<rbrace>P\<lbrace>q\<rbrace> \<Longrightarrow> \<lbrace>p\<rbrace>F P\<lbrace>q\<rbrace>"   
-  shows "\<lbrace>p\<rbrace>\<nu> F\<lbrace>q\<rbrace>"  
+  assumes induct_step: "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}F P\<^bold>{q\<^bold>}"   
+  shows "\<^bold>{p\<^bold>}\<nu> F\<^bold>{q\<^bold>}"  
   oops
 
 lemma mu_hoare_r:
   assumes WF: "wf R"
   assumes M:"mono F"  
   assumes induct_step:
-    "\<And> st P. \<lbrace>(p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>)\<^sub>e\<rbrace>P\<lbrace>q\<rbrace> \<Longrightarrow> \<lbrace>(p \<and> e = \<guillemotleft>st\<guillemotright>)\<^sub>e\<rbrace>F P\<lbrace>q\<rbrace>"   
-  shows "\<lbrace>p\<rbrace>\<mu> F \<lbrace>q\<rbrace>"  
+    "\<And> st P. \<^bold>{(p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>)\<^sub>e\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{(p \<and> e = \<guillemotleft>st\<guillemotright>)\<^sub>e\<^bold>}F P\<^bold>{q\<^bold>}"   
+  shows "\<^bold>{p\<^bold>}\<mu> F \<^bold>{q\<^bold>}"  
   unfolding hoare_r_def
     oops
   (*proof (rule mu_rec_total_utp_rule[OF WF M , of _ e ], goal_cases)
@@ -178,31 +184,31 @@ lemma mu_hoare_r':
   assumes WF: "wf R"
   assumes M:"mono F"  
   assumes induct_step:
-    "\<And> st P. \<lbrace>(p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>)\<^sub>e\<rbrace> P \<lbrace>q\<rbrace> \<Longrightarrow> \<lbrace>(p \<and> e = \<guillemotleft>st\<guillemotright>)\<^sub>e\<rbrace> F P \<lbrace>q\<rbrace>" 
+    "\<And> st P. \<^bold>{(p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>)\<^sub>e\<^bold>} P \<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{(p \<and> e = \<guillemotleft>st\<guillemotright>)\<^sub>e\<^bold>} F P \<^bold>{q\<^bold>}" 
   assumes I0: "`p' \<longrightarrow> p`"  
-  shows "\<lbrace>p'\<rbrace> \<mu> F \<lbrace>q\<rbrace>"
+  shows "\<^bold>{p'\<^bold>} \<mu> F \<^bold>{q\<^bold>}"
   oops(*by (meson I0 M WF induct_step mu_hoare_r pre_str_hoare_r)*)
 
 subsection \<open> Iteration Rules \<close>
 
-lemma iter_hoare_r [hoare_safe]: "\<lbrace>P\<rbrace>S\<lbrace>P\<rbrace> \<Longrightarrow> \<lbrace>P\<rbrace>S\<^sup>\<star>\<lbrace>P\<rbrace>"
+lemma iter_hoare_r [hoare_safe]: "\<^bold>{P\<^bold>}S\<^bold>{P\<^bold>} \<Longrightarrow> \<^bold>{P\<^bold>}S\<^sup>\<star>\<^bold>{P\<^bold>}"
   by (rel_simp', metis (mono_tags, hide_lams) mem_Collect_eq rtrancl_induct)
 
 lemma while_hoare_r [hoare_safe]:
-  assumes "\<lbrace>p \<and> b\<rbrace>S\<lbrace>p\<rbrace>"
-  shows "\<lbrace>p\<rbrace>while b do S od\<lbrace>\<not>b \<and> p\<rbrace>"
+  assumes "\<^bold>{p \<and> b\<^bold>}S\<^bold>{p\<^bold>}"
+  shows "\<^bold>{p\<^bold>}while b do S od\<^bold>{\<not>b \<and> p\<^bold>}"
   using assms
   by (simp add: while_top_def hoare_r_def, rule_tac lfp_lowerbound) (rel_auto)
 
 lemma while_invr_hoare_r [hoare_safe]:
-  assumes "\<lbrace>p \<and> b\<rbrace>S\<lbrace>p\<rbrace>" "`pre \<Rightarrow> p`" "`(\<not>b \<and> p) \<Rightarrow> post`"
-  shows "\<lbrace>pre\<rbrace>while b invr p do S od\<lbrace>post\<rbrace>"
+  assumes "\<^bold>{p \<and> b\<^bold>}S\<^bold>{p\<^bold>}" "`pre \<Rightarrow> p`" "`(\<not>b \<and> p) \<Rightarrow> post`"
+  shows "\<^bold>{pre\<^bold>}while b invr p do S od\<^bold>{post\<^bold>}"
   by (metis assms hoare_r_conseq while_hoare_r while_inv_def)
 
 lemma while_r_minimal_partial:
   assumes seq_step: "`p \<Rightarrow> invar`"
-  assumes induct_step: "\<lbrace>invar\<and> b\<rbrace> C \<lbrace>invar\<rbrace>"  
-  shows "\<lbrace>p\<rbrace>while b do C od\<lbrace>\<not>b \<and> invar\<rbrace>"
+  assumes induct_step: "\<^bold>{invar\<and> b\<^bold>} C \<^bold>{invar\<^bold>}"  
+  shows "\<^bold>{p\<^bold>}while b do C od\<^bold>{\<not>b \<and> invar\<^bold>}"
   using induct_step pre_str_hoare_r seq_step while_hoare_r by blast
 
 lemma approx_chain: 
@@ -213,8 +219,8 @@ text \<open> Total correctness law for Hoare logic, based on constructive chains
   variants that have naturals numbers as their range. \<close>
     
 lemma while_term_hoare_r:
-  assumes "\<And> z::nat. \<lbrace>p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<rbrace>S\<lbrace>p \<and> v < \<guillemotleft>z\<guillemotright>\<rbrace>"
-  shows "\<lbrace>p\<rbrace>while\<^sub>\<bottom> b do S od\<lbrace>\<not>b \<and> p\<rbrace>"
+  assumes "\<And> z::nat. \<^bold>{p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<^bold>}S\<^bold>{p \<and> v < \<guillemotleft>z\<guillemotright>\<^bold>}"
+  shows "\<^bold>{p\<^bold>}while\<^sub>\<bottom> b do S od\<^bold>{\<not>b \<and> p\<^bold>}"
 proof -
   have "(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>\<not> b \<and> p\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> X \<bullet> S ;; X \<triangleleft> b \<triangleright>\<^sub>r II)"
   proof (rule mu_refine_intro)
@@ -258,8 +264,8 @@ proof -
 qed
 
 lemma while_vrt_hoare_r [hoare_safe]:
-  assumes "\<And> z::nat. \<lbrace>p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<rbrace>S\<lbrace>p \<and> v < \<guillemotleft>z\<guillemotright>\<rbrace>" "`pre \<Rightarrow> p`" "`(\<not>b \<and> p) \<Rightarrow> post`"
-  shows "\<lbrace>pre\<rbrace>while b invr p vrt v do S od\<lbrace>post\<rbrace>"
+  assumes "\<And> z::nat. \<^bold>{p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<^bold>}S\<^bold>{p \<and> v < \<guillemotleft>z\<guillemotright>\<^bold>}" "`pre \<Rightarrow> p`" "`(\<not>b \<and> p) \<Rightarrow> post`"
+  shows "\<^bold>{pre\<^bold>}while b invr p vrt v do S od\<^bold>{post\<^bold>}"
   apply (rule hoare_r_conseq[OF _ assms(2) assms(3)])
   apply (simp add: while_vrt_def)
   apply (rule while_term_hoare_r[where v="v", OF assms(1)]) 
@@ -270,9 +276,9 @@ text \<open> General total correctness law based on well-founded induction \<clo
 lemma while_wf_hoare_r:
   assumes WF: "wf R"
   assumes I0: "`pre \<Rightarrow> p`"
-  assumes induct_step:"\<And> st. \<lbrace>b \<and> p \<and> e = \<guillemotleft>st\<guillemotright>\<rbrace>Q\<lbrace>p \<and> (e, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>\<rbrace>"
+  assumes induct_step:"\<And> st. \<^bold>{b \<and> p \<and> e = \<guillemotleft>st\<guillemotright>\<^bold>}Q\<^bold>{p \<and> (e, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>\<^bold>}"
   assumes PHI:"`(\<not>b \<and> p) \<Rightarrow> post`"  
-  shows "\<lbrace>pre\<rbrace>while\<^sub>\<bottom> b invr p do Q od\<lbrace>post\<rbrace>"
+  shows "\<^bold>{pre\<^bold>}while\<^sub>\<bottom> b invr p do Q od\<^bold>{post\<^bold>}"
 unfolding hoare_r_def while_inv_bot_def while_bot_def
 proof (rule pre_weak_rel[of _ "\<lceil>p\<rceil>\<^sub><" ])
   from I0 show "`\<lceil>pre\<rceil>\<^sub>< \<Rightarrow> \<lceil>p\<rceil>\<^sub><`"
@@ -296,44 +302,44 @@ text \<open> Frame rule: If starting $S$ in a state satisfying $p establishes q$
   refer to variables in the frame, and $q$ does not refer to variables outside the frame. \<close>
 
 lemma frame_hoare_r:
-  assumes "vwb_lens a" "a \<sharp> r" "a \<natural> q" "\<lbrace>p\<rbrace>P\<lbrace>q\<rbrace>"  
-  shows "\<lbrace>p \<and> r\<rbrace>a:[P]\<lbrace>q \<and> r\<rbrace>"
+  assumes "vwb_lens a" "a \<sharp> r" "a \<natural> q" "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>}"  
+  shows "\<^bold>{p \<and> r\<^bold>}a:[P]\<^bold>{q \<and> r\<^bold>}"
   using assms
   by (rel_auto, metis)
 
 lemma frame_strong_hoare_r [hoare_safe]: 
-  assumes "vwb_lens a" "a \<sharp> r" "a \<natural> q" "\<lbrace>p \<and> r\<rbrace>S\<lbrace>q\<rbrace>"
-  shows "\<lbrace>p \<and> r\<rbrace>a:[S]\<lbrace>q \<and> r\<rbrace>"
+  assumes "vwb_lens a" "a \<sharp> r" "a \<natural> q" "\<^bold>{p \<and> r\<^bold>}S\<^bold>{q\<^bold>}"
+  shows "\<^bold>{p \<and> r\<^bold>}a:[S]\<^bold>{q \<and> r\<^bold>}"
   using assms by (rel_auto, metis)
 
 lemma frame_hoare_r' [hoare_safe]: 
-  assumes "vwb_lens a" "a \<sharp> r" "a \<natural> q" "\<lbrace>r \<and> p\<rbrace>S\<lbrace>q\<rbrace>"
-  shows "\<lbrace>r \<and> p\<rbrace>a:[S]\<lbrace>r \<and> q\<rbrace>"
+  assumes "vwb_lens a" "a \<sharp> r" "a \<natural> q" "\<^bold>{r \<and> p\<^bold>}S\<^bold>{q\<^bold>}"
+  shows "\<^bold>{r \<and> p\<^bold>}a:[S]\<^bold>{r \<and> q\<^bold>}"
   using assms
   by (simp add: frame_strong_hoare_r utp_pred_laws.inf.commute)
 
 lemma antiframe_hoare_r:
-  assumes "vwb_lens a" "a \<natural> r" "a \<sharp> q" "\<lbrace>p\<rbrace>P\<lbrace>q\<rbrace>"  
-  shows "\<lbrace>p \<and> r\<rbrace> a:\<lbrakk>P\<rbrakk> \<lbrace>q \<and> r\<rbrace>"
+  assumes "vwb_lens a" "a \<natural> r" "a \<sharp> q" "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>}"  
+  shows "\<^bold>{p \<and> r\<^bold>} a:\<lbrakk>P\<rbrakk> \<^bold>{q \<and> r\<^bold>}"
   using assms by (rel_auto, metis)
     
 lemma antiframe_strong_hoare_r:
-  assumes "vwb_lens a" "a \<natural> r" "a \<sharp> q" "\<lbrace>p \<and> r\<rbrace>P\<lbrace>q\<rbrace>"  
-  shows "\<lbrace>p \<and> r\<rbrace> a:\<lbrakk>P\<rbrakk> \<lbrace>q \<and> r\<rbrace>"
+  assumes "vwb_lens a" "a \<natural> r" "a \<sharp> q" "\<^bold>{p \<and> r\<^bold>}P\<^bold>{q\<^bold>}"  
+  shows "\<^bold>{p \<and> r\<^bold>} a:\<lbrakk>P\<rbrakk> \<^bold>{q \<and> r\<^bold>}"
   using assms by (rel_auto, metis)
 
 lemma nmods_invariant:
   assumes "S nmods a" "a \<natural> p"
-  shows "\<lbrace>p\<rbrace>S\<lbrace>p\<rbrace>"
+  shows "\<^bold>{p\<^bold>}S\<^bold>{p\<^bold>}"
   using assms by (rel_auto, metis)
 
 lemma hoare_r_ghost:
-  assumes "vwb_lens x" "x \<sharp> p" "x \<sharp> q" "S nuses x" "\<lbrace>p\<rbrace>x := e;; S\<lbrace>q\<rbrace>"
-  shows "\<lbrace>p\<rbrace>S\<lbrace>q\<rbrace>" 
+  assumes "vwb_lens x" "x \<sharp> p" "x \<sharp> q" "S nuses x" "\<^bold>{p\<^bold>}x := e;; S\<^bold>{q\<^bold>}"
+  shows "\<^bold>{p\<^bold>}S\<^bold>{q\<^bold>}" 
 proof -
-  have "\<lbrace>p\<rbrace>x := e;; rrestr x S\<lbrace>q\<rbrace>"
+  have "\<^bold>{p\<^bold>}x := e;; rrestr x S\<^bold>{q\<^bold>}"
     by (simp add: Healthy_if assms(4) assms(5))
-  with assms(1-3) have "\<lbrace>p\<rbrace>rrestr x S\<lbrace>q\<rbrace>"
+  with assms(1-3) have "\<^bold>{p\<^bold>}rrestr x S\<^bold>{q\<^bold>}"
     by (rel_simp,metis mwb_lens.put_put vwb_lens_mwb)
   thus ?thesis
     by (simp add: Healthy_if assms(4))

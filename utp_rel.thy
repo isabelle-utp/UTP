@@ -29,7 +29,14 @@ lemma in_rel_transfer: "(s, s') \<in> (P)\<^sub>u \<longleftrightarrow> P (s, s'
   by (simp add: pred_set_def)
 
 method rel_simp uses add = (simp add: add rel_transfer rel pred_core unrest)
-method rel_auto uses add = (rel_simp add: add; (expr_simp add: add)?; (auto simp add: alpha_splits add)?)
+
+text \<open> @{method rel_simp} simply desugars UTP notation, leaving a relational goal \<close>
+
+method rel_auto uses add = (rel_simp add: add; (expr_simp add: add)?; (auto simp add: alpha_splits relcomp_unfold Id_on_iff add)?)
+
+text \<open> @{method rel_auto} also explodes expressions and turns the relational goal into a predicative one \<close>
+
+method rel_force uses add = (rel_simp add: add; (expr_simp add: add)?; (force simp add: alpha_splits relcomp_unfold Id_on_iff add)?)
 
 subsection \<open> Operators \<close>
 
@@ -53,7 +60,7 @@ translations
   "_rcond P b Q" == "_cond P (b\<^sup><) Q"
 
 definition assigns_rel :: "('s\<^sub>1, 's\<^sub>2) psubst \<Rightarrow> 's\<^sub>1 \<leftrightarrow> 's\<^sub>2" where
-  "assigns_rel \<sigma> = pfun_graph (fun_pfun \<sigma>)"
+[rel]: "assigns_rel \<sigma> = pfun_graph (fun_pfun \<sigma>)"
 
 adhoc_overloading uassigns assigns_rel
 
@@ -61,7 +68,7 @@ syntax "_assign" :: "svid \<Rightarrow> logic \<Rightarrow> logic" (infix ":=" 7
 translations "_assign x e" == "CONST uassigns [x \<leadsto> e]"
 
 definition test :: "'s pred \<Rightarrow> 's rel" where
-[expr_defs]: "test P = Id_on (Collect P)"
+[rel]: "test P = Id_on (Collect P)"
 
 syntax "_test" :: "logic \<Rightarrow> logic" ("\<questiondown>_?")
 translations "\<questiondown>P?" == "CONST test (P)\<^sub>e"
@@ -117,7 +124,7 @@ lemma rel_skip [rel]: "\<lbrakk>II\<rbrakk>\<^sub>P (s, s') = (s = s')"
   by expr_auto
 
 lemma rel_test [rel]: "\<lbrakk>\<questiondown>b?\<rbrakk>\<^sub>P (s, s') = (b s \<and> s = s')"
-  by expr_auto
+  by rel_auto
 
 lemma pred_seq_hom [pred]:
   "\<lbrakk>P \<^bold>; Q\<rbrakk>\<^sub>P = (\<exists> v\<^sub>0. [ \<^bold>v\<^sup>> \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> ] \<dagger> \<lbrakk>P\<rbrakk>\<^sub>P \<and> [ \<^bold>v\<^sup>< \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> ] \<dagger> \<lbrakk>Q\<rbrakk>\<^sub>P)\<^sub>e"
