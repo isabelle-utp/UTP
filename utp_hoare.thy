@@ -173,26 +173,27 @@ lemma mu_hoare_r:
   assumes induct_step:
     "\<And> st P. \<^bold>{p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p \<and> e = \<guillemotleft>st\<guillemotright>\<^bold>}F P\<^bold>{q\<^bold>}"   
   shows "\<^bold>{p\<^bold>}\<mu> F \<^bold>{q\<^bold>}"
-  proof (rule mu_rec_total_utp_rule[OF WF M , of _ e ])
+  unfolding hoare_r_def
+proof (rule mu_rec_total_utp_rule[OF WF M , of _ e ], goal_cases)
   case (1 st)
   then show ?case 
-    using induct_step[unfolded hoare_r_def, of "(\<lceil>p\<rceil>\<^sub>< \<and> (\<lceil>e\<rceil>\<^sub><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<Rightarrow> \<lceil>q\<rceil>\<^sub>>)" st]
-    by (simp add: alpha)    
+    using induct_step[unfolded hoare_r_def, of st "(p\<^sup>< \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q\<^sup>>)\<^sub>u"]
+      by (simp add: usubst)
 qed
     
 lemma mu_hoare_r':
   assumes WF: "wf R"
   assumes M:"mono F"  
   assumes induct_step:
-    "\<And> st P. \<^bold>{(p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>)\<^sub>e\<^bold>} P \<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{(p \<and> e = \<guillemotleft>st\<guillemotright>)\<^sub>e\<^bold>} F P \<^bold>{q\<^bold>}" 
+    "\<And> st P. \<^bold>{p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>\<^bold>} P \<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p \<and> e = \<guillemotleft>st\<guillemotright>\<^bold>} F P \<^bold>{q\<^bold>}" 
   assumes I0: "`p' \<longrightarrow> p`"  
   shows "\<^bold>{p'\<^bold>} \<mu> F \<^bold>{q\<^bold>}"
-  oops(*by (meson I0 M WF induct_step mu_hoare_r pre_str_hoare_r)*)
+  using I0 M WF assms(3) mu_hoare_r pre_str_hoare_r by blast
 
 subsection \<open> Iteration Rules \<close>
 
-lemma iter_hoare_r [hoare_safe]: "\<^bold>{P\<^bold>}S\<^bold>{P\<^bold>} \<Longrightarrow> \<^bold>{P\<^bold>}S\<^sup>\<star>\<^bold>{P\<^bold>}"
-  by (rel_simp', metis (mono_tags, hide_lams) mem_Collect_eq rtrancl_induct)
+lemma iter_hoare_r [hoare_safe]: "\<^bold>{P\<^bold>}S\<^bold>{P\<^bold>} \<Longrightarrow> \<^bold>{P\<^bold>}S\<^sup>*\<^bold>{P\<^bold>}"
+   using rtrancl_induct by (rel_auto, fastforce)
 
 lemma while_hoare_r [hoare_safe]:
   assumes "\<^bold>{p \<and> b\<^bold>}S\<^bold>{p\<^bold>}"
