@@ -1,7 +1,7 @@
 subsection \<open> UTP Relations \<close>
 
 theory utp_rel
-  imports utp_alpha
+  imports utp_alpha utp_healthy utp_pred_laws
 begin
 
 consts
@@ -49,7 +49,7 @@ adhoc_overloading useq relcomp
 abbreviation "true\<^sub>h \<equiv> (true :: 's rel)"
 
 definition cond :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<times> 's\<^sub>2 \<Rightarrow> bool) \<Rightarrow> ('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<leftrightarrow> 's\<^sub>2)" where
-"cond P B Q = (((B)\<^sub>u \<and> P) \<or> ((\<not>B)\<^sub>u \<and> Q))" 
+[rel]: "cond P B Q = (((B)\<^sub>u \<and> P) \<or> ((\<not>B)\<^sub>u \<and> Q))" 
 
 syntax 
   "_cond" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3_ \<lhd> _ \<rhd>/ _)" [52,0,53] 52)

@@ -172,7 +172,7 @@ lemma mu_hoare_r:
   assumes M:"mono F"  
   assumes induct_step:
     "\<And> st P. \<^bold>{p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p \<and> e = \<guillemotleft>st\<guillemotright>\<^bold>}F P\<^bold>{q\<^bold>}"   
-  shows "\<^bold>{p\<^bold>}\<mu> F \<^bold>{q\<^bold>}" 
+  shows "\<^bold>{p\<^bold>}\<mu> F \<^bold>{q\<^bold>}"
   proof (rule mu_rec_total_utp_rule[OF WF M , of _ e ])
   case (1 st)
   then show ?case 
