@@ -14,16 +14,19 @@ lemma comp_cond_left_distr:
 
 lemma cond_seq_left_distr:
   "out\<alpha> \<sharp> b \<Longrightarrow> ((P \<lhd> b \<rhd> Q) ;; R) = ((P ;; R) \<lhd> b \<rhd> (Q ;; R))"
-  by (rel_auto add: cond_def, blast)
+  by (rel_auto, blast)
 
 lemma cond_seq_right_distr:
   "in\<alpha> \<sharp> b \<Longrightarrow> (P ;; (Q \<lhd> b \<rhd> R)) = ((P ;; Q) \<lhd> b \<rhd> (P ;; R))"
-  by (rel_auto add: cond_def, blast)
+  by (rel_auto, blast)
 
 text \<open> Alternative expression of conditional using assumptions and choice \<close>
 
 lemma rcond_rassume_expand: "P \<^bold>\<lhd> b \<^bold>\<rhd> Q = (\<questiondown>b? ;; P) \<union> (\<questiondown>(\<not> b)? ;; Q)"
-  by (rel_auto)
+  by rel_auto
+
+lemma cond_mono:  "\<lbrakk> P\<^sub>1 \<sqsubseteq> P\<^sub>2; Q\<^sub>1 \<sqsubseteq> Q\<^sub>2 \<rbrakk> \<Longrightarrow> (P\<^sub>1 \<^bold>\<lhd> b \<^bold>\<rhd> Q\<^sub>1) \<sqsubseteq> (P\<^sub>2 \<^bold>\<lhd> b \<^bold>\<rhd> Q\<^sub>2)"
+  by rel_auto
 
 subsection \<open> Precondition and Postcondition Laws \<close>
   
@@ -153,7 +156,7 @@ lemma seqr_insert_ident_left:
 lemma seqr_insert_ident_right:
   assumes "vwb_lens x" "$x\<^sup>> \<sharp> P" "$x\<^sup>> \<sharp> Q"
   shows "(P ;; ($x\<^sup>> = $x\<^sup><)\<^sub>u \<and> Q) = (P ;; Q)"
-  using assms apply (rel_simp) nitpick
+  using assms apply (rel_simp) oops
 
 lemma seq_var_ident_lift:
   assumes "vwb_lens x" "$x\<acute> \<sharp> P" "$x \<sharp> Q"
@@ -337,7 +340,7 @@ lemma assigns_idem: "mwb_lens x \<Longrightarrow> (x,x) := (u,v) = (x := v)"
 lemma assigns_comp: "(\<langle>f\<rangle>\<^sub>a ;; \<langle>g\<rangle>\<^sub>a) = \<langle>g \<circ>\<^sub>s f\<rangle>\<^sub>a"
   by (rel_auto)
 
-lemma assigns_cond: "(\<langle>f\<rangle>\<^sub>a \<triangleleft> b \<triangleright>\<^sub>r \<langle>g\<rangle>\<^sub>a) = \<langle>f \<triangleleft> b \<triangleright> g\<rangle>\<^sub>a"
+lemma assigns_cond: "(\<langle>f\<rangle>\<^sub>a \<lhd> b \<rhd> \<langle>g\<rangle>\<^sub>a) = \<langle>f \<lhd> b \<rhd> g\<rangle>\<^sub>a"
   by (rel_auto)
 
 lemma assigns_r_conv:
@@ -381,11 +384,11 @@ lemma assign_r_alt_def:
   shows "x := v = II\<lbrakk>\<lceil>v\<rceil>\<^sub></$x\<rbrakk>"
   by (rel_auto)
 
-lemma assigns_r_ufunc: "ufunctional \<langle>f\<rangle>\<^sub>a"
+(*lemma assigns_r_ufunc: "ufunctional \<langle>f\<rangle>\<^sub>a"
   by (rel_auto)
 
 lemma assigns_r_uinj: "inj\<^sub>s f \<Longrightarrow> uinj \<langle>f\<rangle>\<^sub>a"
-  by (rel_simp, simp add: inj_eq)
+  apply (rel_simp, simp add: inj_eq) *)
     
 lemma assigns_r_swap_uinj:
   "\<lbrakk> vwb_lens x; vwb_lens y; x \<bowtie> y \<rbrakk> \<Longrightarrow> uinj ((x,y) := (&y,&x))"
@@ -399,12 +402,12 @@ lemma assign_unfold:
 subsection \<open> Non-deterministic Assignment Laws \<close>
 
 lemma nd_assign_comp:
-  "x \<bowtie> y \<Longrightarrow> x := * ;; y := * = x,y := *"
+  "x \<bowtie> y \<Longrightarrow> x := * ;; y := * = (x := *)"
   apply (rel_auto) using lens_indep_comm by fastforce+
 
 lemma nd_assign_assign:
-  "\<lbrakk> vwb_lens x; x \<sharp> e \<rbrakk> \<Longrightarrow> x := * ;; x := e = x := e"
-  by (rel_auto)
+  "\<lbrakk> vwb_lens x; $x \<sharp> e \<rbrakk> \<Longrightarrow> x := * ;; x := e = x := e"
+  by (pred_auto)
 
 subsection \<open> Converse Laws \<close>
 
@@ -467,68 +470,62 @@ lemma assume_seq: "[b]\<^sup>\<top> ;; [c]\<^sup>\<top> = [(b \<and> c)]\<^sup>\
 lemma assert_false: "{false}\<^sub>\<bottom> = true"
   by (rel_auto)
 
-lemma assert_true: "{true}\<^sub>\<bottom> = II"
+lemma assert_true: "\<questiondown>true? = II"
   by (rel_auto)
     
-lemma assert_seq: "{b}\<^sub>\<bottom> ;; {c}\<^sub>\<bottom> = {(b \<and> c)}\<^sub>\<bottom>"
+lemma assert_seq: "\<questiondown>b? ;; \<questiondown>c? = \<questiondown>(b \<and> c)?"
   by (rel_auto)
 
 subsection \<open> While Loop Laws \<close>
 
 theorem while_unfold:
-  "while b do P od = ((P ;; while b do P od) \<triangleleft> b \<triangleright>\<^sub>r II)"
+  "(while b do P od) = ((P ;; while b do P od) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
 proof -
-  have m:"mono (\<lambda>X. (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
-    by (auto intro: monoI seqr_mono cond_mono)
-  have "(while b do P od) = (\<nu> X \<bullet> (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
+  have m:"mono (\<lambda>X. (P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+    by (rule monoI; rel_auto)
+  have "(while b do P od) = (\<nu> X \<bullet> (P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
     by (simp add: while_top_def)
-  also have "... = ((P ;; (\<nu> X \<bullet> (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)) \<triangleleft> b \<triangleright>\<^sub>r II)"
+  also have "... = ((P ;; (\<nu> X \<bullet> (P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II)) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
     by (subst lfp_unfold, simp_all add: m)
-  also have "... = ((P ;; while b do P od) \<triangleleft> b \<triangleright>\<^sub>r II)"
+  also have "... = ((P ;; while b do P od) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
     by (simp add: while_top_def)
   finally show ?thesis .
 qed
 
-theorem while_false: "while false do P od = II"
+theorem while_false: "while (false)\<^sub>e do P od = II"
   by (subst while_unfold, rel_auto)
 
-theorem while_true: "while true do P od = false"
+theorem while_true: "while (true)\<^sub>e do P od = false"
   apply (simp add: while_top_def alpha)
   apply (rule antisym)
-   apply (simp_all)
   apply (rule lfp_lowerbound)
-  apply (rel_auto)
+  apply (rel_auto)+
   done
 
 theorem while_bot_unfold:
-  "while\<^sub>\<bottom> b do P od = ((P ;; while\<^sub>\<bottom> b do P od) \<triangleleft> b \<triangleright>\<^sub>r II)"
+  "while\<^sub>\<bottom> b do P od = ((P ;; while\<^sub>\<bottom> b do P od) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
 proof -
-  have m:"mono (\<lambda>X. (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
-    by (auto intro: monoI seqr_mono cond_mono)
-  have "(while\<^sub>\<bottom> b do P od) = (\<mu> X \<bullet> (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
+  have m:"mono (\<lambda>X. (P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+    by (rule monoI, rel_auto)    
+  have "(while\<^sub>\<bottom> b do P od) = (\<mu> X \<bullet> (P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
     by (simp add: while_bot_def)
-  also have "... = ((P ;; (\<mu> X \<bullet> (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)) \<triangleleft> b \<triangleright>\<^sub>r II)"
+  also have "... = ((P ;; (\<mu> X \<bullet> (P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd>  II)) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
     by (subst gfp_unfold, simp_all add: m)
-  also have "... = ((P ;; while\<^sub>\<bottom> b do P od) \<triangleleft> b \<triangleright>\<^sub>r II)"
+  also have "... = ((P ;; while\<^sub>\<bottom> b do P od) \<^bold>\<lhd> b \<^bold>\<rhd>  II)"
     by (simp add: while_bot_def)
   finally show ?thesis .
 qed
 
-theorem while_bot_false: "while\<^sub>\<bottom> false do P od = II"
-  by (simp add: while_bot_def mu_const alpha)
+theorem while_bot_false: "while\<^sub>\<bottom> (false)\<^sub>e do P od = II"
+  by (rel_auto add: while_bot_def gfp_const)
 
-theorem while_bot_true: "while\<^sub>\<bottom> true do P od = (\<mu> X \<bullet> P ;; X)"
-  by (simp add: while_bot_def alpha)
+theorem while_bot_true: "while\<^sub>\<bottom> (true)\<^sub>e do P od = (\<mu> X \<bullet> P ;; X)"
+  by (rel_auto add: while_bot_def)
 
 text \<open> An infinite loop with a feasible body corresponds to a program error (non-termination). \<close>
 
-theorem while_infinite: "P ;; true\<^sub>h = true \<Longrightarrow> while\<^sub>\<bottom> true do P od = true"
-  apply (simp add: while_bot_true)
-  apply (rule antisym)
-   apply (simp)
-  apply (rule gfp_upperbound)
-  apply (simp)
-  done
+theorem while_infinite: "P ;; true\<^sub>h = true \<Longrightarrow> while\<^sub>\<bottom> (true)\<^sub>e do P od = true"
+  by (simp add: while_bot_true gfp_upperbound subset_antisym true_pred_def)
 
 subsection \<open> Algebraic Properties \<close>
 

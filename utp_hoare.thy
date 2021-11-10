@@ -74,6 +74,9 @@ lemma hoare_r_cut_simple:
   shows "\<^bold>{b \<and> c\<^bold>}P\<^bold>{b \<and> c\<^bold>}"
   using assms by rel_auto
 
+lemma hoare_oracle: "\<^bold>{p\<^bold>}false\<^bold>{q\<^bold>}"
+  by (simp add: hoare_r_def)
+
 subsection \<open> Sequence Laws \<close>
 
 lemma seq_hoare_r: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{s\<^bold>} ; \<^bold>{s\<^bold>}Q\<^sub>2\<^bold>{r\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{r\<^bold>}"
@@ -198,8 +201,15 @@ lemma iter_hoare_r [hoare_safe]: "\<^bold>{P\<^bold>}S\<^bold>{P\<^bold>} \<Long
 lemma while_hoare_r [hoare_safe]:
   assumes "\<^bold>{p \<and> b\<^bold>}S\<^bold>{p\<^bold>}"
   shows "\<^bold>{p\<^bold>}while b do S od\<^bold>{\<not>b \<and> p\<^bold>}"
-  using assms
-  by (simp add: while_top_def hoare_r_def, rule_tac lfp_lowerbound) (rel_auto)
+proof -
+  have "\<^bold>{p\<^bold>}while b do S od\<^bold>{\<not>b\<^bold>}"
+    apply (pred_auto add: assms hoare_r_def while_top_def cond_def)
+    sorry
+  also have "\<^bold>{p\<^bold>}while b do S od\<^bold>{p\<^bold>}"
+    using assms apply (rel_simp add: while_top_def) sorry
+  ultimately show ?thesis
+    by (simp add: hoare_meaning)
+  
 
 lemma while_invr_hoare_r [hoare_safe]:
   assumes "\<^bold>{p \<and> b\<^bold>}S\<^bold>{p\<^bold>}" "`pre \<Rightarrow> p`" "`(\<not>b \<and> p) \<Rightarrow> post`"
@@ -207,8 +217,8 @@ lemma while_invr_hoare_r [hoare_safe]:
   by (metis assms hoare_r_conseq while_hoare_r while_inv_def)
 
 lemma while_r_minimal_partial:
-  assumes seq_step: "`p \<Rightarrow> invar`"
-  assumes induct_step: "\<^bold>{invar\<and> b\<^bold>} C \<^bold>{invar\<^bold>}"  
+  assumes seq_step: "`p \<longrightarrow> invar`"
+  assumes induct_step: "\<^bold>{invar \<and> b\<^bold>} C \<^bold>{invar\<^bold>}"  
   shows "\<^bold>{p\<^bold>}while b do C od\<^bold>{\<not>b \<and> invar\<^bold>}"
   using induct_step pre_str_hoare_r seq_step while_hoare_r by blast
 
