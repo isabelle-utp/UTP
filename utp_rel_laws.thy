@@ -23,7 +23,10 @@ lemma cond_seq_right_distr:
 text \<open> Alternative expression of conditional using assumptions and choice \<close>
 
 lemma rcond_rassume_expand: "P \<^bold>\<lhd> b \<^bold>\<rhd> Q = (\<questiondown>b? ;; P) \<union> (\<questiondown>(\<not> b)? ;; Q)"
-  by (rel_auto)
+  by rel_auto
+
+lemma cond_mono:  "\<lbrakk> P\<^sub>1 \<sqsubseteq> P\<^sub>2; Q\<^sub>1 \<sqsubseteq> Q\<^sub>2 \<rbrakk> \<Longrightarrow> (P\<^sub>1 \<^bold>\<lhd> b \<^bold>\<rhd> Q\<^sub>1) \<sqsubseteq> (P\<^sub>2 \<^bold>\<lhd> b \<^bold>\<rhd> Q\<^sub>2)"
+  by rel_auto
 
 subsection \<open> Precondition and Postcondition Laws \<close>
   
@@ -317,7 +320,7 @@ lemma assign_subst [usubst]:
 
 lemma assign_vacuous_skip:
   assumes "vwb_lens x"
-  shows "(x := $x) = II"
+  shows "(x := &x) = II"
   using assms by rel_auto
 
 text \<open> The following law shows the case for the above law when $x$ is only mainly-well behaved. We
@@ -330,8 +333,8 @@ lemma assign_vacuous_assume:
 
 lemma assign_simultaneous:
   assumes "vwb_lens y" "x \<bowtie> y"
-  shows "(x,y) := (e, $y) = (x := e)"
-  using assms usubst_upd_comm usubst_upd_var_id
+  shows "(x,y) := (e, &y) = (x := e)"
+  by (simp add: assms usubst_upd_comm usubst_upd_var_id)
 
 lemma assigns_idem: "mwb_lens x \<Longrightarrow> (x,x) := (u,v) = (x := v)"
   by (simp add: usubst)
@@ -383,11 +386,11 @@ lemma assign_r_alt_def:
   shows "x := v = II\<lbrakk>\<lceil>v\<rceil>\<^sub></$x\<rbrakk>"
   by (rel_auto)
 
-lemma assigns_r_ufunc: "ufunctional \<langle>f\<rangle>\<^sub>a"
+(*lemma assigns_r_ufunc: "ufunctional \<langle>f\<rangle>\<^sub>a"
   by (rel_auto)
 
 lemma assigns_r_uinj: "inj\<^sub>s f \<Longrightarrow> uinj \<langle>f\<rangle>\<^sub>a"
-  by (rel_simp, simp add: inj_eq)
+  apply (rel_simp, simp add: inj_eq) *)
     
 lemma assigns_r_swap_uinj:
   "\<lbrakk> vwb_lens x; vwb_lens y; x \<bowtie> y \<rbrakk> \<Longrightarrow> uinj ((x,y) := (&y,&x))"

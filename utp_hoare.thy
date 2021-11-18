@@ -74,6 +74,9 @@ lemma hoare_r_cut_simple:
   shows "\<^bold>{b \<and> c\<^bold>}P\<^bold>{b \<and> c\<^bold>}"
   using assms by rel_auto
 
+lemma hoare_oracle: "\<^bold>{p\<^bold>}false\<^bold>{q\<^bold>}"
+  by (simp add: hoare_r_def)
+
 subsection \<open> Sequence Laws \<close>
 
 lemma seq_hoare_r: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{s\<^bold>} ; \<^bold>{s\<^bold>}Q\<^sub>2\<^bold>{r\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{r\<^bold>}"
@@ -165,7 +168,7 @@ subsection \<open> Recursion Laws \<close>
 lemma nu_hoare_r_partial: 
   assumes induct_step: "\<And>P st. \<^bold>{p\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}F P\<^bold>{q\<^bold>}"   
   shows "\<^bold>{p\<^bold>}\<nu> F\<^bold>{q\<^bold>}"
-  using induct_step by (rel_simp add: lfp_lowerbound)
+  using induct_step by (rel_auto add: lfp_lowerbound)
 
 lemma mu_hoare_r:
   assumes WF: "wf R"
@@ -198,23 +201,28 @@ lemma iter_hoare_r [hoare_safe]: "\<^bold>{P\<^bold>}S\<^bold>{P\<^bold>} \<Long
 lemma while_hoare_r [hoare_safe]:
   assumes "\<^bold>{p \<and> b\<^bold>}S\<^bold>{p\<^bold>}"
   shows "\<^bold>{p\<^bold>}while b do S od\<^bold>{\<not>b \<and> p\<^bold>}"
-  using assms
-  by (simp add: while_top_def hoare_r_def, rule_tac lfp_lowerbound) (rel_auto)
+proof (simp add: while_top_def hoare_r_def assms)
+  have "(p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>u \<sqsubseteq> S ;; (p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>u \<^bold>\<lhd> b \<^bold>\<rhd> II"
+    using assms by rel_auto
+  then show "(p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>u \<sqsubseteq> (\<nu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+    by (simp add: lfp_lowerbound ref_by_def)
+qed
 
+(*
 lemma while_invr_hoare_r [hoare_safe]:
   assumes "\<^bold>{p \<and> b\<^bold>}S\<^bold>{p\<^bold>}" "`pre \<Rightarrow> p`" "`(\<not>b \<and> p) \<Rightarrow> post`"
   shows "\<^bold>{pre\<^bold>}while b invr p do S od\<^bold>{post\<^bold>}"
-  by (metis assms hoare_r_conseq while_hoare_r while_inv_def)
+  by (metis assms hoare_r_conseq while_hoare_r while_inv_def)*)
 
 lemma while_r_minimal_partial:
-  assumes seq_step: "`p \<Rightarrow> invar`"
-  assumes induct_step: "\<^bold>{invar\<and> b\<^bold>} C \<^bold>{invar\<^bold>}"  
+  assumes seq_step: "`p \<longrightarrow> invar`"
+  assumes induct_step: "\<^bold>{invar \<and> b\<^bold>} C \<^bold>{invar\<^bold>}"  
   shows "\<^bold>{p\<^bold>}while b do C od\<^bold>{\<not>b \<and> invar\<^bold>}"
   using induct_step pre_str_hoare_r seq_step while_hoare_r by blast
 
-lemma approx_chain: 
-  "(\<Sqinter>n::nat. \<lceil>p \<and> v < \<guillemotleft>n\<guillemotright>\<rceil>\<^sub><) = \<lceil>p\<rceil>\<^sub><"
-  by (rel_auto)
+(*lemma approx_chain: 
+  "(\<Sqinter>n::nat. \<lceil>p \<and> v <\<^sub>u \<guillemotleft>n\<guillemotright>\<rceil>\<^sub><) = \<lceil>p\<rceil>\<^sub><"
+  by (rel_auto)*)
 
 text \<open> Total correctness law for Hoare logic, based on constructive chains. This is limited to
   variants that have naturals numbers as their range. \<close>
@@ -223,20 +231,20 @@ lemma while_term_hoare_r:
   assumes "\<And> z::nat. \<^bold>{p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<^bold>}S\<^bold>{p \<and> v < \<guillemotleft>z\<guillemotright>\<^bold>}"
   shows "\<^bold>{p\<^bold>}while\<^sub>\<bottom> b do S od\<^bold>{\<not>b \<and> p\<^bold>}"
 proof -
-  have "(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>\<not> b \<and> p\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> X \<bullet> S ;; X \<triangleleft> b \<triangleright>\<^sub>r II)"
+  have "((p\<^sup><)\<^sub>u \<Rightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>u) \<sqsubseteq> (\<mu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
   proof (rule mu_refine_intro)
 
-    from assms show "(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>\<not> b \<and> p\<rceil>\<^sub>>) \<sqsubseteq> S ;; (\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>\<not> b \<and> p\<rceil>\<^sub>>) \<triangleleft> b \<triangleright>\<^sub>r II"
-      by (rel_auto)
+    from assms show "((p\<^sup><)\<^sub>u \<Rightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>u) \<sqsubseteq> S ;; ((p\<^sup><)\<^sub>u \<Rightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>u) \<^bold>\<lhd> b \<^bold>\<rhd> II"
+      by (rel_auto; smt (z3) hoare_meaning)+
 
-    let ?E = "\<lambda> n. \<lceil>p \<and> v < \<guillemotleft>n\<guillemotright>\<rceil>\<^sub><"
-    show "(\<lceil>p\<rceil>\<^sub>< \<and> (\<mu> X \<bullet> S ;; X \<triangleleft> b \<triangleright>\<^sub>r II)) = (\<lceil>p\<rceil>\<^sub>< \<and> (\<nu> X \<bullet> S ;; X \<triangleleft> b \<triangleright>\<^sub>r II))"
+    let ?E = "\<lambda> n. \<lbrakk>(p \<and> v < \<guillemotleft>n\<guillemotright>)\<^sup><\<rbrakk>\<^sub>u"
+    show "((p\<^sup><)\<^sub>u \<and> (\<mu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)) = ((p\<^sup><)\<^sub>u \<and> (\<nu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II))"
     proof (rule constr_fp_uniq[where E="?E"])
 
-      show "(\<Sqinter>n. ?E(n)) = \<lceil>p\<rceil>\<^sub><"
+      show " (\<Union>n. \<lbrakk>(p \<and> v < n)\<^sup><\<rbrakk>\<^sub>u) = (p\<^sup><)\<^sub>u"
         by (rel_auto)
           
-      show "mono (\<lambda>X. S ;; X \<triangleleft> b \<triangleright>\<^sub>r II)"
+      show "mono (\<lambda>X. S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
         by (simp add: cond_mono monoI seqr_mono)
           
       show "constr (\<lambda>X. S ;; X \<triangleleft> b \<triangleright>\<^sub>r II) ?E"
