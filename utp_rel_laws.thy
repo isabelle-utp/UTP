@@ -184,30 +184,28 @@ proof -
   finally show ?thesis .
 qed
 
-theorem seqr_pre_transfer: "in\<alpha> \<sharp> q \<Longrightarrow> ((P \<and> q) ;; R) = (P ;; (q\<^sup>- \<and> R))"
+theorem seqr_pre_transfer: "in\<alpha> \<sharp> q \<Longrightarrow> ((P \<and> q) ;; R) = (P ;; (q \<and> R))"
   by (rel_auto)
 
 theorem seqr_pre_transfer':
-  "((P \<and> \<lceil>q\<rceil>\<^sub>>) ;; R) = (P ;; (\<lceil>q\<rceil>\<^sub>< \<and> R))"
+  "((P \<and> (q\<^sup>>)\<^sub>u) ;; R) = (P ;; ((q\<^sup><)\<^sub>u \<and> R))"
   by (rel_auto)
 
 theorem seqr_post_out: "in\<alpha> \<sharp> r \<Longrightarrow> (P ;; (Q \<and> r)) = ((P ;; Q) \<and> r)"
-  by (rel_blast)
+  by (rel_auto)
 
 lemma seqr_post_var_out:
-  fixes x :: "(bool \<Longrightarrow> '\<alpha>)"
-  shows "(P ;; (Q \<and> $x\<acute>)) = ((P ;; Q) \<and> $x\<acute>)"
+  shows "(P ;; (Q \<and> (x\<^sup>>)\<^sub>u)) = ((P ;; Q) \<and> (x\<^sup>>)\<^sub>u)"
   by (rel_auto)
 
 theorem seqr_post_transfer: "out\<alpha> \<sharp> q \<Longrightarrow> (P ;; (q \<and> R)) = ((P \<and> q\<^sup>-) ;; R)"
   by (rel_auto)
 
 lemma seqr_pre_out: "out\<alpha> \<sharp> p \<Longrightarrow> ((p \<and> Q) ;; R) = (p \<and> (Q ;; R))"
-  by (rel_blast)
+  by (rel_auto)
 
 lemma seqr_pre_var_out:
-  fixes x :: "(bool \<Longrightarrow> '\<alpha>)"
-  shows "(($x \<and> P) ;; Q) = ($x \<and> (P ;; Q))"
+  shows "(((x\<^sup><)\<^sub>u \<and> P) ;; Q) = ((x\<^sup><)\<^sub>u \<and> (P ;; Q))"
   by (rel_auto)
 
 lemma seqr_true_lemma:
@@ -215,7 +213,7 @@ lemma seqr_true_lemma:
   by (rel_auto)
 
 lemma seqr_to_conj: "\<lbrakk> out\<alpha> \<sharp> P; in\<alpha> \<sharp> Q \<rbrakk> \<Longrightarrow> (P ;; Q) = (P \<and> Q)"
-  by (metis postcond_left_unit seqr_pre_out utp_pred_laws.inf_top.right_neutral)
+  by (rel_auto; blast)
 
 lemma shEx_lift_seq_1 [uquant_lift]:
   "((\<^bold>\<exists> x \<bullet> P x) ;; Q) = (\<^bold>\<exists> x \<bullet> (P x ;; Q))"
@@ -245,28 +243,31 @@ lemma iter_seqr_cons [simp]: "(;; i : (x # xs) \<bullet> P(i)) = P(x) ;; (;; i :
 
 subsection \<open> Quantale Laws \<close>
 
-lemma seq_Sup_distl: "P ;; (\<Sqinter> A) = (\<Sqinter> Q\<in>A. P ;; Q)"
+text \<open> Kept here for backwards compatibility, remove when this library catches up with the old UTP
+       as most of these are already proven in Relation.thy\<close>
+
+lemma seq_Sup_distl: "P ;; (\<Union> A) = (\<Union> Q\<in>A. P ;; Q)"
   by (transfer, auto)
 
-lemma seq_Sup_distr: "(\<Sqinter> A) ;; Q = (\<Sqinter> P\<in>A. P ;; Q)"
+lemma seq_Sup_distr: "(\<Union> A) ;; Q = (\<Union> P\<in>A. P ;; Q)"
   by (transfer, auto)
 
-lemma seq_UINF_distl: "P ;; (\<Sqinter> Q\<in>A \<bullet> F(Q)) = (\<Sqinter> Q\<in>A \<bullet> P ;; F(Q))"
-  by (simp add: UINF_as_Sup_collect seq_Sup_distl)
+lemma seq_UINF_distl: "P ;; (\<Union> Q\<in>A. F(Q)) = (\<Union> Q\<in>A. P ;; F(Q))"
+  by auto
 
-lemma seq_UINF_distl': "P ;; (\<Sqinter> Q \<bullet> F(Q)) = (\<Sqinter> Q \<bullet> P ;; F(Q))"
+lemma seq_UINF_distl': "P ;; (\<Union> Q. F(Q)) = (\<Union> Q. P ;; F(Q))"
   by (metis seq_UINF_distl)
 
-lemma seq_UINF_distr: "(\<Sqinter> P\<in>A \<bullet> F(P)) ;; Q = (\<Sqinter> P\<in>A \<bullet> F(P) ;; Q)"
-  by (simp add: UINF_as_Sup_collect seq_Sup_distr)
+lemma seq_UINF_distr: "(\<Union> P\<in>A . F(P)) ;; Q = (\<Union> P\<in>A. F(P) ;; Q)"
+  by auto
 
-lemma seq_UINF_distr': "(\<Sqinter> P \<bullet> F(P)) ;; Q = (\<Sqinter> P \<bullet> F(P) ;; Q)"
+lemma seq_UINF_distr': "(\<Union> P. F(P)) ;; Q = (\<Union> P. F(P) ;; Q)"
   by (metis seq_UINF_distr)
 
-lemma seq_SUP_distl: "P ;; (\<Sqinter>i\<in>A. Q(i)) = (\<Sqinter>i\<in>A. P ;; Q(i))"
+lemma seq_SUP_distl: "P ;; (\<Union>i\<in>A. Q(i)) = (\<Union>i\<in>A. P ;; Q(i))"
   by (metis image_image seq_Sup_distl)
 
-lemma seq_SUP_distr: "(\<Sqinter>i\<in>A. P(i)) ;; Q = (\<Sqinter>i\<in>A. P(i) ;; Q)"
+lemma seq_SUP_distr: "(\<Union>i\<in>A. P(i)) ;; Q = (\<Union>i\<in>A. P(i) ;; Q)"
   by (simp add: seq_Sup_distr)
 
 subsection \<open> Skip Laws \<close>
@@ -274,12 +275,12 @@ subsection \<open> Skip Laws \<close>
 lemma cond_skip: "out\<alpha> \<sharp> b \<Longrightarrow> (b \<and> II) = (II \<and> b\<^sup>-)"
   by (rel_auto)
 
-lemma pre_skip_post: "(\<lceil>b\<rceil>\<^sub>< \<and> II) = (II \<and> \<lceil>b\<rceil>\<^sub>>)"
+lemma pre_skip_post: "((b\<^sup><)\<^sub>u \<and> II) = (II \<and> (b\<^sup>>)\<^sub>u)"
   by (rel_auto)
 
 lemma skip_var:
   fixes x :: "(bool \<Longrightarrow> '\<alpha>)"
-  shows "($x \<and> II) = (II \<and> $x\<acute>)"
+  shows "(($x\<^sup><)\<^sub>u \<and> II) = (II \<and> ($x\<^sup>>)\<^sub>u)"
   by (rel_auto)
 
 lemma skip_r_unfold:
@@ -287,7 +288,7 @@ lemma skip_r_unfold:
   by (rel_simp, metis mwb_lens.put_put vwb_lens_mwb vwb_lens_wb wb_lens.get_put)
 
 lemma skip_r_alpha_eq:
-  "II = ($\<^bold>v\<acute> =\<^sub>u $\<^bold>v)"
+  "II = (\<^bold>v\<^sup>< = \<^bold>v\<^sup>>)\<^sub>u"
   by (rel_auto)
 
 lemma skip_ra_unfold:
@@ -320,7 +321,7 @@ lemma assign_subst [usubst]:
 
 lemma assign_vacuous_skip:
   assumes "vwb_lens x"
-  shows "(x := &x) = II"
+  shows "(x := $x) = II"
   using assms by rel_auto
 
 text \<open> The following law shows the case for the above law when $x$ is only mainly-well behaved. We
@@ -337,10 +338,7 @@ lemma assign_simultaneous:
   by (simp add: assms usubst_upd_comm usubst_upd_var_id)
 
 lemma assigns_idem: "mwb_lens x \<Longrightarrow> (x,x) := (u,v) = (x := v)"
-  by (simp add: usubst)
-
-lemma assigns_comp: "(\<langle>f\<rangle>\<^sub>a ;; \<langle>g\<rangle>\<^sub>a) = \<langle>g \<circ>\<^sub>s f\<rangle>\<^sub>a"
-  by (rel_auto)
+  apply rel_auto oops
 
 lemma assigns_cond: "(\<langle>f\<rangle>\<^sub>a \<triangleleft> b \<triangleright>\<^sub>r \<langle>g\<rangle>\<^sub>a) = \<langle>f \<triangleleft> b \<triangleright> g\<rangle>\<^sub>a"
   by (rel_auto)
@@ -355,20 +353,20 @@ lemma assign_pred_transfer:
   shows "(b \<and> x := v) = (x := v \<and> b\<^sup>-)"
   using assms by (rel_blast)
     
-lemma assign_r_comp: "x := u ;; P = P\<lbrakk>u\<^sup></$x\<rbrakk>"
-  by (simp add: assigns_r_comp usubst alpha)
-    
-lemma assign_test: "mwb_lens x \<Longrightarrow> (x := \<guillemotleft>u\<guillemotright> ;; x := \<guillemotleft>v\<guillemotright>) = (x := \<guillemotleft>v\<guillemotright>)"
-  by (simp add: assigns_comp usubst)
+lemma assign_r_comp: "x := u ;; P = P\<lbrakk>u\<^sup></x\<^sup><\<rbrakk>"
+  by rel_auto
 
-lemma assign_twice: "\<lbrakk> mwb_lens x; x \<sharp> f \<rbrakk> \<Longrightarrow> (x := e ;; x := f) = (x := f)"
-  by (simp add: assigns_comp usubst unrest)
+lemma assign_test: "mwb_lens x \<Longrightarrow> (x := \<guillemotleft>u\<guillemotright> ;; x := \<guillemotleft>v\<guillemotright>) = (x := \<guillemotleft>v\<guillemotright>)"
+  by rel_auto
+
+lemma assign_twice: "\<lbrakk> mwb_lens x; $x \<sharp> f \<rbrakk> \<Longrightarrow> (x := e ;; x := f) = (x := f)"
+  by rel_auto
  
 lemma assign_commute:
-  assumes "x \<bowtie> y" "x \<sharp> f" "y \<sharp> e"
+  assumes "$x \<bowtie> $y" "$x \<sharp> f" "$y \<sharp> e"
   shows "(x := e ;; y := f) = (y := f ;; x := e)"
   using assms
-  by (rel_simp, simp_all add: lens_indep_comm)
+  apply (rel_auto) oops
 
 lemma assign_cond:
   fixes x :: "('a \<Longrightarrow> '\<alpha>)"
@@ -481,7 +479,7 @@ lemma assert_seq: "{b}\<^sub>\<bottom> ;; {c}\<^sub>\<bottom> = {(b \<and> c)}\<
 subsection \<open> While Loop Laws \<close>
 
 theorem while_unfold:
-  "while b do P od = ((P ;; while b do P od) \<triangleleft> b \<triangleright>\<^sub>r II)"
+  "while b do P od = ((P ;; while b do P od) \<Zdres> b \<Zrres> II)"
 proof -
   have m:"mono (\<lambda>X. (P ;; X) \<triangleleft> b \<triangleright>\<^sub>r II)"
     by (auto intro: monoI seqr_mono cond_mono)
@@ -494,7 +492,7 @@ proof -
   finally show ?thesis .
 qed
 
-theorem while_false: "while false do P od = II"
+theorem while_false: "while (false)\<^sub>e do P od = II"
   by (subst while_unfold, rel_auto)
 
 theorem while_true: "while true do P od = false"
