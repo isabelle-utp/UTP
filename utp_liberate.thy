@@ -1,7 +1,7 @@
 subsection \<open> Liberation \<close>
 
 theory utp_liberate
-  imports utp_unrest
+  imports utp_unrest utp_rel
 begin
 
 definition liberate_pred :: "'s set \<Rightarrow> 's scene \<Rightarrow> 's set" where
@@ -9,4 +9,6 @@ definition liberate_pred :: "'s set \<Rightarrow> 's scene \<Rightarrow> 's set"
 
 adhoc_overloading liberate liberate_pred
 
+lemma liberate_expr_pred: "\<lbrakk>P\<rbrakk>\<^sub>P \\ $x = \<lbrakk>P \\ $x\<rbrakk>\<^sub>P"
+  by (rel_auto add: liberate_pred_def)
 end

@@ -14,11 +14,11 @@ lemma comp_cond_left_distr:
 
 lemma cond_seq_left_distr:
   "out\<alpha> \<sharp> b \<Longrightarrow> ((P \<lhd> b \<rhd> Q) ;; R) = ((P ;; R) \<lhd> b \<rhd> (Q ;; R))"
-  by (rel_auto add: cond_def, blast)
+  by (rel_auto, blast)
 
 lemma cond_seq_right_distr:
   "in\<alpha> \<sharp> b \<Longrightarrow> (P ;; (Q \<lhd> b \<rhd> R)) = ((P ;; Q) \<lhd> b \<rhd> (P ;; R))"
-  by (rel_auto add: cond_def, blast)
+  by (rel_auto, blast)
 
 text \<open> Alternative expression of conditional using assumptions and choice \<close>
 
@@ -71,15 +71,15 @@ lemma Monotonic_seqr_tail [closure]:
   shows "Monotonic (\<lambda> X. P ;; F(X))"
   by (simp add: assms monoD monoI seqr_mono) *)
 
-(*
-lemma seqr_exists_left:
+lemma seqr_liberate_left:
   "((P \\ $x\<^sup><) ;; Q) = ((P ;; Q) \\ $x\<^sup><)"
-  apply (pred_auto)
+  apply (rel_simp)
   oops
 
-lemma seqr_exists_right:
-  "(P ;; (\<exists> $x\<acute> \<bullet> Q)) = (\<exists> $x\<acute> \<bullet> (P ;; Q))" 
-  by (rel_auto)*)
+lemma seqr_liberate_right:
+  "P ;; Q \\ $x\<^sup>> = (P ;; Q) \\ $x\<^sup>>"
+  apply (rel_simp add: set_pred_def)
+  oops
 
 lemma seqr_or_distl:
   "((P \<or> Q) ;; R) = ((P ;; R) \<or> (Q ;; R))"
@@ -103,7 +103,7 @@ lemma seqr_unfold:
   by (rel_auto)
 
 lemma seqr_unfold_heterogeneous:
-  "(P ;; Q) = (\<^bold>\<exists> v \<bullet> (Pre(P\<lbrakk>\<guillemotleft>v\<guillemotright>/$\<^bold>v\<acute>\<rbrakk>))\<^sup>< \<and> (Post(Q\<lbrakk>\<guillemotleft>v\<guillemotright>/$\<^bold>v\<rbrakk>))\<^sup>>)"
+  "(P ;; Q) = (pre(P\<lbrakk>\<guillemotleft>v\<guillemotright>//$v\<^sup>>\<rbrakk>))\<^sup>< \\ v\<^sup>< \<and> (post(Q\<lbrakk>\<guillemotleft>v\<guillemotright>/$v\<rbrakk>))\<^sup>>)"
   by (rel_auto)
 
 lemma seqr_middle:
@@ -111,71 +111,73 @@ lemma seqr_middle:
   shows "(P ;; Q) = (\<^bold>\<exists> v \<bullet> P\<lbrakk>\<guillemotleft>v\<guillemotright>/$x\<acute>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/$x\<rbrakk>)"
   using assms
   by (rel_auto', metis vwb_lens_wb wb_lens.source_stability)
+*)
 
 lemma seqr_left_one_point:
   assumes "vwb_lens x"
-  shows "((P \<and> $x\<acute> =\<^sub>u \<guillemotleft>v\<guillemotright>) ;; Q) = (P\<lbrakk>\<guillemotleft>v\<guillemotright>/$x\<acute>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/$x\<rbrakk>)"
+  shows "((P \<and> ($x\<^sup>> = \<guillemotleft>v\<guillemotright>)\<^sub>u) ;; Q) = (P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>)"
   using assms
-  by (rel_auto, metis vwb_lens_wb wb_lens.get_put)*)
+  by (rel_auto, metis vwb_lens_wb wb_lens.get_put)
 
 lemma seqr_right_one_point:
   assumes "vwb_lens x"
-  shows "(P ;; ($x\<^sup>< = \<guillemotleft>v\<guillemotright> \<and> Q)) = (P\<lbrakk>\<guillemotleft>v\<guillemotright>/$x\<acute>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/$x\<rbrakk>)"
+  shows "(P ;; (($x\<^sup>< = \<guillemotleft>v\<guillemotright>)\<^sub>u \<and> Q)) = (P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>)"
   using assms
   by (rel_auto, metis vwb_lens_wb wb_lens.get_put)
 
 lemma seqr_left_one_point_true:
   assumes "vwb_lens x"
-  shows "((P \<and> $x\<acute>) ;; Q) = (P\<lbrakk>true/$x\<acute>\<rbrakk> ;; Q\<lbrakk>true/$x\<rbrakk>)"
-  by (metis assms seqr_left_one_point true_alt_def upred_eq_true)
+  shows "((P \<and> ($x\<^sup>>)\<^sub>u) ;; Q) = (P\<lbrakk>true/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>true/x\<^sup><\<rbrakk>)"
+  using assms
+  by (rel_auto, metis (full_types) vwb_lens_wb wb_lens.get_put)
 
 lemma seqr_left_one_point_false:
   assumes "vwb_lens x"
-  shows "((P \<and> \<not>$x\<acute>) ;; Q) = (P\<lbrakk>false/$x\<acute>\<rbrakk> ;; Q\<lbrakk>false/$x\<rbrakk>)"
-  by (metis assms false_alt_def seqr_left_one_point upred_eq_false)
+  shows "((P \<and> \<not>($x\<^sup>>)\<^sub>u) ;; Q) = (P\<lbrakk>false/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>false/x\<^sup><\<rbrakk>)"
+  using assms by (rel_auto, metis (full_types) vwb_lens_wb wb_lens.get_put)
 
 lemma seqr_right_one_point_true:
   assumes "vwb_lens x"
-  shows "(P ;; ($x \<and> Q)) = (P\<lbrakk>true/$x\<acute>\<rbrakk> ;; Q\<lbrakk>true/$x\<rbrakk>)"
-  by (metis assms seqr_right_one_point true_alt_def upred_eq_true)
+  shows "(P ;; (($x\<^sup><)\<^sub>u \<and> Q)) = (P\<lbrakk>true/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>true/x\<^sup><\<rbrakk>)"
+  using assms by (rel_auto, metis (full_types) vwb_lens_wb wb_lens.get_put)
 
 lemma seqr_right_one_point_false:
   assumes "vwb_lens x"
-  shows "(P ;; (\<not>$x \<and> Q)) = (P\<lbrakk>false/$x\<acute>\<rbrakk> ;; Q\<lbrakk>false/$x\<rbrakk>)"
-  by (metis assms false_alt_def seqr_right_one_point upred_eq_false)
+  shows "(P ;; (\<not>($x\<^sup><)\<^sub>u \<and> Q)) = (P\<lbrakk>false/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>false/x\<^sup><\<rbrakk>)"
+  using assms by (rel_auto, metis (full_types) vwb_lens_wb wb_lens.get_put)
 
 lemma seqr_insert_ident_left:
-  assumes "vwb_lens x" "$x\<acute> \<sharp> P" "$x \<sharp> Q"
-  shows "(($x\<acute> =\<^sub>u $x \<and> P) ;; Q) = (P ;; Q)"
-  using assms
-  by (rel_simp, meson vwb_lens_wb wb_lens_weak weak_lens.put_get)
+  assumes "vwb_lens x" "$x\<^sup>> \<sharp> P" "$x\<^sup>< \<sharp> Q"
+  shows "((($x\<^sup>> = $x\<^sup><)\<^sub>u \<and> P) ;; Q) = (P ;; Q)"
+  using assms by (rel_auto, meson vwb_lens_wb wb_lens_weak weak_lens.put_get)
 
 lemma seqr_insert_ident_right:
-  assumes "vwb_lens x" "$x\<^sup>> \<sharp> P" "$x\<^sup>> \<sharp> Q"
-  shows "(P ;; ($x\<^sup>> = $x\<^sup><)\<^sub>u \<and> Q) = (P ;; Q)"
-  using assms apply (rel_simp) nitpick
+  assumes "vwb_lens x" "$x\<^sup>> \<sharp> P" "$x\<^sup>< \<sharp> Q"
+  shows "(P ;; (($x\<^sup>> = $x\<^sup><)\<^sub>u \<and> Q)) = (P ;; Q)"
+  using assms by (rel_auto, metis (no_types, hide_lams) vwb_lens_def wb_lens_def weak_lens.put_get)
 
 lemma seq_var_ident_lift:
-  assumes "vwb_lens x" "$x\<acute> \<sharp> P" "$x \<sharp> Q"
-  shows "(($x\<acute> =\<^sub>u $x \<and> P) ;; ($x\<acute> =\<^sub>u $x \<and> Q)) = ($x\<acute> =\<^sub>u $x \<and> (P ;; Q))"
-  using assms by (rel_auto', metis (no_types, lifting) vwb_lens_wb wb_lens_weak weak_lens.put_get)
+  assumes "vwb_lens x" "$x\<^sup>> \<sharp> P" "$x\<^sup>< \<sharp> Q"
+  shows "((($x\<^sup>> = $x\<^sup><)\<^sub>u \<and> P) ;; (($x\<^sup>> = $x\<^sup><)\<^sub>u \<and> Q)) = (($x\<^sup>> = $x\<^sup><)\<^sub>u \<and> (P ;; Q))"
+  using assms by (rel_auto, metis (no_types, lifting) vwb_lens_wb wb_lens_weak weak_lens.put_get)
 
 lemma seqr_bool_split:
   assumes "vwb_lens x"
-  shows "P ;; Q = (P\<lbrakk>true/$x\<acute>\<rbrakk> ;; Q\<lbrakk>true/$x\<rbrakk> \<or> P\<lbrakk>false/$x\<acute>\<rbrakk> ;; Q\<lbrakk>false/$x\<rbrakk>)"
-  using assms
-  by (subst seqr_middle[of x], simp_all)
+  shows "P ;; Q = (P\<lbrakk>true/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>true/x\<^sup><\<rbrakk> \<or> P\<lbrakk>(false)\<^sub>u/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>false/x\<^sup><\<rbrakk>)"
+  using assms apply (subst seqr_middle[of x], simp_all)
+   oops
 
 lemma cond_inter_var_split:
   assumes "vwb_lens x"
-  shows "(P \<triangleleft> $x\<acute> \<triangleright> Q) ;; R = (P\<lbrakk>true/$x\<acute>\<rbrakk> ;; R\<lbrakk>true/$x\<rbrakk> \<or> Q\<lbrakk>false/$x\<acute>\<rbrakk> ;; R\<lbrakk>false/$x\<rbrakk>)"
+  shows "(P \<lhd> $x\<^sup>> \<rhd> Q) ;; R = (P\<lbrakk>true/x\<^sup>>\<rbrakk> ;; R\<lbrakk>true/x\<^sup><\<rbrakk> \<or> Q\<lbrakk>false/x\<^sup>>\<rbrakk> ;; R\<lbrakk>false/x\<^sup><\<rbrakk>)"
 proof -
-  have "(P \<triangleleft> $x\<acute> \<triangleright> Q) ;; R = (($x\<acute> \<and> P) ;; R \<or> (\<not> $x\<acute> \<and> Q) ;; R)"
-    by (simp add: cond_def seqr_or_distl)
-  also have "... = ((P \<and> $x\<acute>) ;; R \<or> (Q \<and> \<not>$x\<acute>) ;; R)"
+  have "(P \<lhd> $x\<^sup>> \<rhd> Q) ;; R = (((x\<^sup>>)\<^sub>u \<and> P) ;; R \<or> (\<not> (x\<^sup>>)\<^sub>u \<and> Q) ;; R)"
+    by rel_simp
+  also have "... = ((P \<and> (x\<^sup>>)\<^sub>u) ;; R \<or> (Q \<and> \<not>(x\<^sup>>)\<^sub>u) ;; R)"
     by (rel_auto)
-  also have "... = (P\<lbrakk>true/$x\<acute>\<rbrakk> ;; R\<lbrakk>true/$x\<rbrakk> \<or> Q\<lbrakk>false/$x\<acute>\<rbrakk> ;; R\<lbrakk>false/$x\<rbrakk>)"
-    by (simp add: seqr_left_one_point_true seqr_left_one_point_false assms)
+  also have "... = (P\<lbrakk>true/x\<^sup>>\<rbrakk> ;; R\<lbrakk>true/x\<^sup><\<rbrakk> \<or> Q\<lbrakk>false/x\<^sup>>\<rbrakk> ;; R\<lbrakk>false/x\<^sup><\<rbrakk>)"
+    apply (rel_auto add: seqr_left_one_point_true seqr_left_one_point_false assms)
+    by (metis (full_types) assms vwb_lens_wb wb_lens.get_put)+
   finally show ?thesis .
 qed
 
@@ -315,7 +317,7 @@ lemma assign_subst [usubst]:
 
 lemma assign_vacuous_skip:
   assumes "vwb_lens x"
-  shows "(x := &x) = II"
+  shows "(x := $x) = II"
   using assms by rel_auto
 
 text \<open> The following law shows the case for the above law when $x$ is only mainly-well behaved. We
@@ -328,8 +330,8 @@ lemma assign_vacuous_assume:
 
 lemma assign_simultaneous:
   assumes "vwb_lens y" "x \<bowtie> y"
-  shows "(x,y) := (e, &y) = (x := e)"
-  by (simp add: assms usubst_upd_comm usubst_upd_var_id)
+  shows "(x,y) := (e, $y) = (x := e)"
+  using assms usubst_upd_comm usubst_upd_var_id
 
 lemma assigns_idem: "mwb_lens x \<Longrightarrow> (x,x) := (u,v) = (x := v)"
   by (simp add: usubst)
