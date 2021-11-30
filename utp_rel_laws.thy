@@ -184,8 +184,8 @@ proof -
   finally show ?thesis .
 qed
 
-theorem seqr_pre_transfer: "in\<alpha> \<sharp> q \<Longrightarrow> ((P \<and> q) ;; R) = (P ;; (q \<and> R))"
-  by (rel_auto)
+theorem seqr_pre_transfer: "in\<alpha> \<sharp> q \<Longrightarrow> ((P \<and> q) ;; R) = (P ;; (q\<^sup>- \<and> R))"
+  by rel_auto
 
 theorem seqr_pre_transfer':
   "((P \<and> (q\<^sup>>)\<^sub>u) ;; R) = (P ;; ((q\<^sup><)\<^sub>u \<and> R))"

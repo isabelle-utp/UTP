@@ -59,6 +59,9 @@ translations
   "_cond P B Q" == "CONST cond P (B)\<^sub>e Q"
   "_rcond P b Q" == "_cond P (b\<^sup><) Q"
 
+abbreviation conv_r :: "'a rel \<Rightarrow> 'a rel" ("_\<^sup>-" [999] 999) where
+"conv_r p \<equiv> {(b,a). (a,b) \<in> p}"
+
 definition assigns_rel :: "('s\<^sub>1, 's\<^sub>2) psubst \<Rightarrow> 's\<^sub>1 \<leftrightarrow> 's\<^sub>2" where
 [rel]: "assigns_rel \<sigma> = pfun_graph (fun_pfun \<sigma>)"
 
