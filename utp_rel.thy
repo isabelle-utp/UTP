@@ -82,6 +82,12 @@ definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's rel" where
 syntax "_ndet_assign" :: "svid \<Rightarrow> logic" ("_ := *" [75] 76)
 translations "_ndet_assign x" == "CONST ndet_assign x"
 
+definition seqr_iter :: "'a list \<Rightarrow> ('a \<Rightarrow> 'b rel) \<Rightarrow> 'b rel" where
+[pred]: "seqr_iter xs P = foldr (\<lambda> i Q. P(i) ;; Q) xs II"
+
+syntax "_seqr_iter" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> '\<sigma> rel \<Rightarrow> '\<sigma> rel" ("(3;; _ : _ \<bullet>/ _)" [0, 0, 10] 10)
+translations ";; x : l \<bullet> P" \<rightleftharpoons> "(CONST seqr_iter) l (\<lambda>x. P)"
+
 definition while_top :: "'s pred \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sup>\<top> _ do _ od") where 
 "while_top b P = (\<nu> X \<bullet> ((P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
 
