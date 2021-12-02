@@ -215,10 +215,12 @@ lemma seqr_true_lemma:
 lemma seqr_to_conj: "\<lbrakk> out\<alpha> \<sharp> P; in\<alpha> \<sharp> Q \<rbrakk> \<Longrightarrow> (P ;; Q) = (P \<and> Q)"
   by (rel_auto; blast)
 
-lemma shEx_lift_seq_1 [uquant_lift]:
-  "((\<^bold>\<exists> x \<bullet> P x) ;; Q) = (\<^bold>\<exists> x \<bullet> (P x ;; Q))"
-  by rel_auto
+lemma liberate_seq_unfold:
+  "x \<sharp> Q \<Longrightarrow> (P \\ x) ;; Q = (P ;; Q) \\ x"
+  apply (rel_simp add: liberate_pred_def)
+  oops
 
+(*
 lemma shEx_mem_lift_seq_1 [uquant_lift]:
   assumes "out\<alpha> \<sharp> A"
   shows "((\<^bold>\<exists> x \<in> A \<bullet> P x) ;; Q) = (\<^bold>\<exists> x \<in> A \<bullet> (P x ;; Q))"
@@ -231,7 +233,7 @@ lemma shEx_lift_seq_2 [uquant_lift]:
 lemma shEx_mem_lift_seq_2 [uquant_lift]:
   assumes "in\<alpha> \<sharp> A"
   shows "(P ;; (\<^bold>\<exists> x \<in> A \<bullet> Q x)) = (\<^bold>\<exists> x \<in> A \<bullet> (P ;; Q x))"
-  using assms by rel_blast
+  using assms by rel_blast*)
 
 subsection \<open> Iterated Sequential Composition Laws \<close>
   
