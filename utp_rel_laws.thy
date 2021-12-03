@@ -7,7 +7,6 @@ theory utp_rel_laws
     utp_liberate
 begin
 
-
 lemma comp_cond_left_distr:
   "(P \<^bold>\<lhd> b \<^bold>\<rhd> Q) ;; R = (P ;; R) \<^bold>\<lhd> b \<^bold>\<rhd> (Q ;; R) "
   by (rel_auto)
@@ -25,7 +24,7 @@ text \<open> Alternative expression of conditional using assumptions and choice 
 lemma rcond_rassume_expand: "P \<^bold>\<lhd> b \<^bold>\<rhd> Q = (\<questiondown>b? ;; P) \<union> (\<questiondown>(\<not> b)? ;; Q)"
   by rel_auto
 
-lemma cond_mono:  "\<lbrakk> P\<^sub>1 \<sqsubseteq> P\<^sub>2; Q\<^sub>1 \<sqsubseteq> Q\<^sub>2 \<rbrakk> \<Longrightarrow> (P\<^sub>1 \<^bold>\<lhd> b \<^bold>\<rhd> Q\<^sub>1) \<sqsubseteq> (P\<^sub>2 \<^bold>\<lhd> b \<^bold>\<rhd> Q\<^sub>2)"
+lemma rcond_mono:  "\<lbrakk> P\<^sub>1 \<sqsubseteq> P\<^sub>2; Q\<^sub>1 \<sqsubseteq> Q\<^sub>2 \<rbrakk> \<Longrightarrow> (P\<^sub>1 \<^bold>\<lhd> b \<^bold>\<rhd> Q\<^sub>1) \<sqsubseteq> (P\<^sub>2 \<^bold>\<lhd> b \<^bold>\<rhd> Q\<^sub>2)"
   by rel_auto
 
 subsection \<open> Precondition and Postcondition Laws \<close>
@@ -75,13 +74,17 @@ lemma Monotonic_seqr_tail [closure]:
   by (simp add: assms monoD monoI seqr_mono) *)
 
 lemma seqr_liberate_left:
-  "((P \\ $x\<^sup><) ;; Q) = ((P ;; Q) \\ $x\<^sup><)"
-  apply (rel_simp)
+  "(((P :: 'a \<leftrightarrow> 'b) \\ $x\<^sup><) ;; Q) = ((P ;; Q) \\ $x\<^sup><)"
+  apply (expr_simp add: liberate_pred_def)
   oops
 
 lemma seqr_liberate_right:
   "P ;; Q \\ $x\<^sup>> = (P ;; Q) \\ $x\<^sup>>"
-  apply (rel_simp add: set_pred_def)
+proof (rel_simp add: set_pred_def)
+  have "$x\<^sup>> \<sharp> Q \\ $x\<^sup>>"
+    using unrest_liberate_pred by auto
+  then have "$x\<^sup>> \<sharp> P ;; Q \\ $x\<^sup>>"
+    apply rel_simp
   oops
 
 lemma seqr_or_distl:
@@ -285,14 +288,18 @@ lemma skip_var:
   shows "(($x\<^sup><)\<^sub>u \<and> II) = (II \<and> ($x\<^sup>>)\<^sub>u)"
   by (rel_auto)
 
+(*
+text \<open>Liberate currently doesn't work on relations - it expects a lens of type 'a instead of 'a \<times> 'a\<close>
 lemma skip_r_unfold:
-  "vwb_lens x \<Longrightarrow> II = ($x\<acute> =\<^sub>u $x \<and> II\<restriction>\<^sub>\<alpha>x)"
+  "vwb_lens x \<Longrightarrow> II = (($x\<^sup>> = $x\<^sup><)\<^sub>u \<and> II \\ $x)"
   by (rel_simp, metis mwb_lens.put_put vwb_lens_mwb vwb_lens_wb wb_lens.get_put)
+*)
 
 lemma skip_r_alpha_eq:
   "II = (\<^bold>v\<^sup>< = \<^bold>v\<^sup>>)\<^sub>u"
   by (rel_auto)
 
+(*
 lemma skip_ra_unfold:
   "II\<^bsub>x;y\<^esub> = ($x\<acute> =\<^sub>u $x \<and> II\<^bsub>y\<^esub>)"
   by (rel_auto)
@@ -303,7 +310,7 @@ lemma skip_res_as_ra:
    apply (metis (no_types, lifting) lens_indep_def)
   apply (metis vwb_lens.put_eq)
   done
-
+*)
 subsection \<open> Assignment Laws \<close>
   
 lemma assigns_subst [usubst]:
