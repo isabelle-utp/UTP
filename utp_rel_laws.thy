@@ -73,19 +73,11 @@ lemma Monotonic_seqr_tail [closure]:
   shows "Monotonic (\<lambda> X. P ;; F(X))"
   by (simp add: assms monoD monoI seqr_mono) *)
 
-lemma seqr_liberate_left:
-  "(((P :: 'a \<leftrightarrow> 'b) \\ $x\<^sup><) ;; Q) = ((P ;; Q) \\ $x\<^sup><)"
-  apply (expr_simp add: liberate_pred_def)
-  oops
+lemma seqr_liberate_left: "vwb_lens x \<Longrightarrow> (((P :: 'a \<leftrightarrow> 'b) \\ $x\<^sup><) ;; Q) = ((P ;; Q) \\ $x\<^sup><)"
+  by (rel_auto add: liberate_pred_def)
 
-lemma seqr_liberate_right:
-  "P ;; Q \\ $x\<^sup>> = (P ;; Q) \\ $x\<^sup>>"
-proof (rel_simp add: set_pred_def)
-  have "$x\<^sup>> \<sharp> Q \\ $x\<^sup>>"
-    using unrest_liberate_pred by auto
-  then have "$x\<^sup>> \<sharp> P ;; Q \\ $x\<^sup>>"
-    apply rel_simp
-  oops
+lemma seqr_liberate_right: "vwb_lens x \<Longrightarrow> P ;; Q \\ $x\<^sup>> = (P ;; Q) \\ $x\<^sup>>"
+  by (rel_auto add: liberate_pred_def)
 
 lemma seqr_or_distl:
   "((P \<or> Q) ;; R) = ((P ;; R) \<or> (Q ;; R))"
@@ -171,7 +163,8 @@ lemma seqr_bool_split:
   assumes "vwb_lens x"
   shows "P ;; Q = (P\<lbrakk>true/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>true/x\<^sup><\<rbrakk> \<or> P\<lbrakk>(false)\<^sub>u/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>false/x\<^sup><\<rbrakk>)"
   using assms apply (subst seqr_middle[of x], simp_all)
-   oops
+  apply rel_auto
+  oops
 
 lemma cond_inter_var_split:
   assumes "vwb_lens x"
@@ -219,8 +212,8 @@ lemma seqr_to_conj: "\<lbrakk> out\<alpha> \<sharp> P; in\<alpha> \<sharp> Q \<r
   by (rel_auto; blast)
 
 lemma liberate_seq_unfold:
-  "x \<sharp> Q \<Longrightarrow> (P \\ x) ;; Q = (P ;; Q) \\ x"
-  apply (rel_simp add: liberate_pred_def)
+  "vwb_lens x \<Longrightarrow> $x \<sharp> Q \<Longrightarrow> (P \\ $x) ;; Q = (P ;; Q) \\ $x"
+  apply (rel_auto add: liberate_pred_def)
   oops
 
 (*
@@ -349,18 +342,17 @@ lemma assign_simultaneous:
 lemma assigns_idem: "mwb_lens x \<Longrightarrow> (x,x) := (u,v) = (x := v)"
   apply rel_auto oops
 
-lemma assigns_cond: "(\<langle>f\<rangle>\<^sub>a \<triangleleft> b \<triangleright>\<^sub>r \<langle>g\<rangle>\<^sub>a) = \<langle>f \<triangleleft> b \<triangleright> g\<rangle>\<^sub>a"
+lemma assigns_cond: "\<langle>f\<rangle>\<^sub>a \<lhd> b \<rhd> \<langle>g\<rangle>\<^sub>a = \<langle>f \<lhd> b \<rhd> g\<rangle>\<^sub>a"
   by (rel_auto)
 
 lemma assigns_r_conv:
-  "bij\<^sub>s f \<Longrightarrow> \<langle>f\<rangle>\<^sub>a\<^sup>- = \<langle>inv\<^sub>s f\<rangle>\<^sub>a"
+  "bij f \<Longrightarrow> \<langle>f\<rangle>\<^sub>a\<^sup>- = \<langle>inv f\<rangle>\<^sub>a"
   by (rel_auto, simp_all add: bij_is_inj bij_is_surj surj_f_inv_f)
 
 lemma assign_pred_transfer:
-  fixes x :: "('a \<Longrightarrow> '\<alpha>)"
-  assumes "$x \<sharp> b" "out\<alpha> \<sharp> b"
+  assumes "$x\<^sup>< \<sharp> b" "out\<alpha> \<sharp> b"
   shows "(b \<and> x := v) = (x := v \<and> b\<^sup>-)"
-  using assms by (rel_blast)
+  using assms apply rel_auto oops
     
 lemma assign_r_comp: "x := u ;; P = P\<lbrakk>u\<^sup></x\<^sup><\<rbrakk>"
   by rel_auto
@@ -372,15 +364,14 @@ lemma assign_twice: "\<lbrakk> mwb_lens x; $x \<sharp> f \<rbrakk> \<Longrightar
   by rel_auto
  
 lemma assign_commute:
-  assumes "$x \<bowtie> $y" "$x \<sharp> f" "$y \<sharp> e"
+  assumes "x \<bowtie> y" "$x \<sharp> f" "$y \<sharp> e" "vwb_lens x" "vwb_lens y"
   shows "(x := e ;; y := f) = (y := f ;; x := e)"
-  using assms
-  apply (rel_auto) oops
+  using assms by (rel_auto add: lens_indep_comm)
 
 lemma assign_cond:
   fixes x :: "('a \<Longrightarrow> '\<alpha>)"
   assumes "out\<alpha> \<sharp> b"
-  shows "(x := e ;; (P \<triangleleft> b \<triangleright> Q)) = ((x := e ;; P) \<triangleleft> (b\<lbrakk>\<lceil>e\<rceil>\<^sub></$x\<rbrakk>) \<triangleright> (x := e ;; Q))"
+  shows "(x := e ;; (P \<triangleleft> b \<triangleright> Q)) = ((x := e ;; P) \<triangleleft> b \<triangleright> (x := e ;; Q))"
   by (rel_auto)
 
 lemma assign_rcond:
@@ -404,15 +395,15 @@ lemma assigns_r_swap_uinj:
   by (metis assigns_r_uinj pr_var_def swap_usubst_inj)
 
 lemma assign_unfold:
-  "vwb_lens x \<Longrightarrow> (x := v) = ($x\<acute> =\<^sub>u \<lceil>v\<rceil>\<^sub>< \<and> II\<restriction>\<^sub>\<alpha>x)"
+  "vwb_lens x \<Longrightarrow> (x := v) = (x\<^sup>> = v\<^sup><)"
   apply (rel_auto, auto simp add: comp_def)
   using vwb_lens.put_eq by fastforce
 
 subsection \<open> Non-deterministic Assignment Laws \<close>
 
 lemma nd_assign_comp:
-  "x \<bowtie> y \<Longrightarrow> x := * ;; y := * = x,y := *"
-  apply (rel_auto) using lens_indep_comm by fastforce+
+  "x \<bowtie> y \<Longrightarrow> x := * ;; y := * = (x,y) := *"
+  apply (rel_auto) using lens_indep_comm sorry
 
 lemma nd_assign_assign:
   "\<lbrakk> vwb_lens x; x \<sharp> e \<rbrakk> \<Longrightarrow> x := * ;; x := e = x := e"

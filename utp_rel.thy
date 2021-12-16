@@ -197,7 +197,7 @@ lemma unrest_seq_ovar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>> \<sharp> Q \<r
 
 subsection \<open> Algebraic Laws \<close>
 
-lemma seqr_middle: "vwb_lens x \<Longrightarrow> P \<^bold>; Q = (\<Union> v. P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> \<^bold>; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>)"
+lemma seqr_middle: "vwb_lens x \<Longrightarrow> P ;; Q = (\<Union> v. P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> \<^bold>; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>)"
   by (rel_auto, metis vwb_lens.put_eq)
 
 lemma precond_equiv: "true ;; P = P \<longleftrightarrow> (in\<alpha> \<sharp> P)"
