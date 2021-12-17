@@ -93,7 +93,7 @@ proof -
         also from hyp have "... = (E (n + 1) \<and> F (E n \<and> \<nu> F))"
           by simp
         also from hyp have "... = (E (n + 1) \<and> \<nu> F)"
-          by (metis (no_types, hide_lams) pred_ba.inf.commute constr_def lfp_unfold)
+          by (metis (no_types, opaque_lifting) pred_ba.inf.commute constr_def lfp_unfold)
         ultimately show ?thesis
           by simp
       qed

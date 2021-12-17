@@ -20,22 +20,22 @@ lemma relcomp_iff: "(a, b) \<in> P O Q \<longleftrightarrow> (\<exists> c. (a, c
 lemma hoare_meaning: "\<^bold>{p\<^bold>}Q\<^bold>{r\<^bold>} = (\<forall> s s'. p s \<and> (s, s') \<in> Q \<longrightarrow> r s')"
   by (rel_auto)
 
-lemma hoare_alt_def: "\<^bold>{b\<^bold>}P\<^bold>{c\<^bold>} = (P ;; \<questiondown>c? \<sqsubseteq> \<questiondown>b? ;; P)"
+lemma hoare_alt_def: "\<^bold>{b\<^bold>}P\<^bold>{c\<^bold>} = (P \<Zcomp> \<questiondown>c? \<sqsubseteq> \<questiondown>b? \<Zcomp> P)"
   by (rel_auto)
 
-lemma hoare_assume: "\<^bold>{P\<^bold>}S\<^bold>{Q\<^bold>} \<Longrightarrow> \<questiondown>P? ;; S = \<questiondown>P? ;; S ;; \<questiondown>Q?"
+lemma hoare_assume: "\<^bold>{P\<^bold>}S\<^bold>{Q\<^bold>} \<Longrightarrow> \<questiondown>P? \<Zcomp> S = \<questiondown>P? \<Zcomp> S \<Zcomp> \<questiondown>Q?"
   by (rel_auto)
 
-lemma hoare_pre_assume_1: "\<^bold>{b \<and> c\<^bold>}P\<^bold>{d\<^bold>} = \<^bold>{c\<^bold>}\<questiondown>b? ;; P\<^bold>{d\<^bold>}"
+lemma hoare_pre_assume_1: "\<^bold>{b \<and> c\<^bold>}P\<^bold>{d\<^bold>} = \<^bold>{c\<^bold>}\<questiondown>b? \<Zcomp> P\<^bold>{d\<^bold>}"
   by (rel_auto)
 
-lemma hoare_pre_assume_2: "\<^bold>{b \<and> c\<^bold>}P\<^bold>{d\<^bold>} = \<^bold>{b\<^bold>}\<questiondown>c? ;; P\<^bold>{d\<^bold>}"
+lemma hoare_pre_assume_2: "\<^bold>{b \<and> c\<^bold>}P\<^bold>{d\<^bold>} = \<^bold>{b\<^bold>}\<questiondown>c? \<Zcomp> P\<^bold>{d\<^bold>}"
   by rel_auto
                                
 lemma hoare_test [hoare_safe]: "`p \<and> b \<longrightarrow> q` \<Longrightarrow> \<^bold>{p\<^bold>}\<questiondown>b?\<^bold>{q\<^bold>}"
   by rel_auto
 
-lemma hoare_gcmd' [hoare_safe]: "\<^bold>{p \<and> b\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}\<questiondown>b? ;; P\<^bold>{q\<^bold>}"
+lemma hoare_gcmd' [hoare_safe]: "\<^bold>{p \<and> b\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}\<questiondown>b? \<Zcomp> P\<^bold>{q\<^bold>}"
   by rel_auto
 
 (*
@@ -79,24 +79,24 @@ lemma hoare_oracle: "\<^bold>{p\<^bold>}false\<^bold>{q\<^bold>}"
 
 subsection \<open> Sequence Laws \<close>
 
-lemma seq_hoare_r: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{s\<^bold>} ; \<^bold>{s\<^bold>}Q\<^sub>2\<^bold>{r\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{r\<^bold>}"
+lemma seq_hoare_r: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{s\<^bold>} ; \<^bold>{s\<^bold>}Q\<^sub>2\<^bold>{r\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 \<Zcomp> Q\<^sub>2\<^bold>{r\<^bold>}"
   by (rel_force)
  
-lemma seq_hoare_invariant [hoare_safe]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{p\<^bold>} ; \<^bold>{p\<^bold>}Q\<^sub>2\<^bold>{p\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{p\<^bold>}"
+lemma seq_hoare_invariant [hoare_safe]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{p\<^bold>} ; \<^bold>{p\<^bold>}Q\<^sub>2\<^bold>{p\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 \<Zcomp> Q\<^sub>2\<^bold>{p\<^bold>}"
   by (rel_force)
 
 lemma seq_hoare_stronger_pre_1 [hoare_safe]: 
-  "\<lbrakk> \<^bold>{p \<and> q\<^bold>}Q\<^sub>1\<^bold>{p \<and> q\<^bold>} ; \<^bold>{p \<and> q\<^bold>}Q\<^sub>2\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p \<and> q\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{q\<^bold>}"
+  "\<lbrakk> \<^bold>{p \<and> q\<^bold>}Q\<^sub>1\<^bold>{p \<and> q\<^bold>} ; \<^bold>{p \<and> q\<^bold>}Q\<^sub>2\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p \<and> q\<^bold>}Q\<^sub>1 \<Zcomp> Q\<^sub>2\<^bold>{q\<^bold>}"
   using seq_hoare_r by blast
 
 lemma seq_hoare_stronger_pre_2 [hoare_safe]: 
-  "\<lbrakk> \<^bold>{p \<and> q\<^bold>}Q\<^sub>1\<^bold>{p \<and> q\<^bold>} ; \<^bold>{p \<and> q\<^bold>}Q\<^sub>2\<^bold>{p\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p \<and> q\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{p\<^bold>}"
+  "\<lbrakk> \<^bold>{p \<and> q\<^bold>}Q\<^sub>1\<^bold>{p \<and> q\<^bold>} ; \<^bold>{p \<and> q\<^bold>}Q\<^sub>2\<^bold>{p\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p \<and> q\<^bold>}Q\<^sub>1 \<Zcomp> Q\<^sub>2\<^bold>{p\<^bold>}"
   using seq_hoare_r by blast
     
-lemma seq_hoare_inv_r_2 [hoare]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{q\<^bold>} ; \<^bold>{q\<^bold>}Q\<^sub>2\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{q\<^bold>}"
+lemma seq_hoare_inv_r_2 [hoare]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{q\<^bold>} ; \<^bold>{q\<^bold>}Q\<^sub>2\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 \<Zcomp> Q\<^sub>2\<^bold>{q\<^bold>}"
   using seq_hoare_r by blast
 
-lemma seq_hoare_inv_r_3 [hoare]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{p\<^bold>} ; \<^bold>{p\<^bold>}Q\<^sub>2\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{q\<^bold>}"
+lemma seq_hoare_inv_r_3 [hoare]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{p\<^bold>} ; \<^bold>{p\<^bold>}Q\<^sub>2\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 \<Zcomp> Q\<^sub>2\<^bold>{q\<^bold>}"
   using seq_hoare_r by blast
 
 subsection \<open> Assignment Laws \<close>
@@ -115,15 +115,15 @@ lemma assign_floyd_hoare_r:
   by (rel_auto, metis lens_override_def lens_override_idem)
 
 lemma assigns_init_hoare [hoare_safe]:
-  "\<lbrakk> vwb_lens x; $x \<sharp> p; $x \<sharp> v; \<^bold>{$x = v \<and> p\<^bold>}S\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}(x := v) ;; S\<^bold>{q\<^bold>}"
+  "\<lbrakk> vwb_lens x; $x \<sharp> p; $x \<sharp> v; \<^bold>{$x = v \<and> p\<^bold>}S\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}(x := v) \<Zcomp> S\<^bold>{q\<^bold>}"
   by rel_auto
 
 lemma assigns_init_hoare_general:
-  "\<lbrakk> vwb_lens x; \<And> x\<^sub>0. \<^bold>{$x = v\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk> \<and> p\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk>\<^bold>}S\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}(x := v) ;; S\<^bold>{q\<^bold>}"
+  "\<lbrakk> vwb_lens x; \<And> x\<^sub>0. \<^bold>{$x = v\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk> \<and> p\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk>\<^bold>}S\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}(x := v) \<Zcomp> S\<^bold>{q\<^bold>}"
   by (rule seq_hoare_r, rule assign_floyd_hoare_r, simp, rel_auto)
 
 lemma assigns_final_hoare [hoare_safe]:
-  "\<^bold>{p\<^bold>}S\<^bold>{\<sigma> \<dagger> q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}S ;; \<langle>\<sigma>\<rangle>\<^sub>a\<^bold>{q\<^bold>}"
+  "\<^bold>{p\<^bold>}S\<^bold>{\<sigma> \<dagger> q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}S \<Zcomp> \<langle>\<sigma>\<rangle>\<^sub>a\<^bold>{q\<^bold>}"
   by (rel_auto)
 
 lemma skip_hoare_r [hoare_safe]: "\<^bold>{p\<^bold>}II\<^bold>{p\<^bold>}"
@@ -202,9 +202,9 @@ lemma while_hoare_r [hoare_safe]:
   assumes "\<^bold>{p \<and> b\<^bold>}S\<^bold>{p\<^bold>}"
   shows "\<^bold>{p\<^bold>}while b do S od\<^bold>{\<not>b \<and> p\<^bold>}"
 proof (simp add: while_top_def hoare_r_def assms)
-  have "(p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>u \<sqsubseteq> S ;; (p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>u \<^bold>\<lhd> b \<^bold>\<rhd> II"
+  have "(p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>u \<sqsubseteq> S \<Zcomp> (p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>u \<^bold>\<lhd> b \<^bold>\<rhd> II"
     using assms by rel_auto
-  then show "(p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>u \<sqsubseteq> (\<nu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  then show "(p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>u \<sqsubseteq> (\<nu> X \<bullet> S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
     by (simp add: lfp_lowerbound ref_by_def)
 qed
 
@@ -231,23 +231,23 @@ lemma while_term_hoare_r:
   assumes "\<And> z::nat. \<^bold>{p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<^bold>}S\<^bold>{p \<and> v < \<guillemotleft>z\<guillemotright>\<^bold>}"
   shows "\<^bold>{p\<^bold>}while\<^sub>\<bottom> b do S od\<^bold>{\<not>b \<and> p\<^bold>}"
 proof -
-  have "((p\<^sup><)\<^sub>u \<Rightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>u) \<sqsubseteq> (\<mu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  have "((p\<^sup><)\<^sub>u \<Rightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>u) \<sqsubseteq> (\<mu> X \<bullet> S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
   proof (rule mu_refine_intro)
 
-    from assms show "((p\<^sup><)\<^sub>u \<Rightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>u) \<sqsubseteq> S ;; ((p\<^sup><)\<^sub>u \<Rightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>u) \<^bold>\<lhd> b \<^bold>\<rhd> II"
+    from assms show "((p\<^sup><)\<^sub>u \<Rightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>u) \<sqsubseteq> S \<Zcomp> ((p\<^sup><)\<^sub>u \<Rightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>u) \<^bold>\<lhd> b \<^bold>\<rhd> II"
       by (rel_auto; smt (z3) hoare_meaning)+
 
     let ?E = "\<lambda> n. \<lbrakk>(p \<and> v < \<guillemotleft>n\<guillemotright>)\<^sup><\<rbrakk>\<^sub>u"
-    show "((p\<^sup><)\<^sub>u \<and> (\<mu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)) = ((p\<^sup><)\<^sub>u \<and> (\<nu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II))"
+    show "((p\<^sup><)\<^sub>u \<and> (\<mu> X \<bullet> S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II)) = ((p\<^sup><)\<^sub>u \<and> (\<nu> X \<bullet> S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II))"
     proof (rule constr_fp_uniq[where E="?E"])
 
       show " (\<Union>n. \<lbrakk>(p \<and> v < n)\<^sup><\<rbrakk>\<^sub>u) = (p\<^sup><)\<^sub>u"
         by (rel_auto)
           
-      show "mono (\<lambda>X. S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+      show "mono (\<lambda>X. S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
         by (simp add: cond_mono monoI seqr_mono)
           
-      show "constr (\<lambda>X. S ;; X \<triangleleft> b \<triangleright>\<^sub>r II) ?E"
+      show "constr (\<lambda>X. S \<Zcomp> X \<triangleleft> b \<triangleright>\<^sub>r II) ?E"
       proof (rule constrI)
         
         show "chain ?E"
@@ -259,8 +259,8 @@ proof -
         qed
           
         from assms
-        show "\<And>X n. (S ;; X \<triangleleft> b \<triangleright>\<^sub>r II \<and> \<lceil>p \<and> v < \<guillemotleft>n + 1\<guillemotright>\<rceil>\<^sub><) =
-                     (S ;; (X \<and> \<lceil>p \<and> v < \<guillemotleft>n\<guillemotright>\<rceil>\<^sub><) \<triangleleft> b \<triangleright>\<^sub>r II \<and> \<lceil>p \<and> v < \<guillemotleft>n + 1\<guillemotright>\<rceil>\<^sub><)"
+        show "\<And>X n. (S \<Zcomp> X \<triangleleft> b \<triangleright>\<^sub>r II \<and> \<lceil>p \<and> v < \<guillemotleft>n + 1\<guillemotright>\<rceil>\<^sub><) =
+                     (S \<Zcomp> (X \<and> \<lceil>p \<and> v < \<guillemotleft>n\<guillemotright>\<rceil>\<^sub><) \<triangleleft> b \<triangleright>\<^sub>r II \<and> \<lceil>p \<and> v < \<guillemotleft>n + 1\<guillemotright>\<rceil>\<^sub><)"
           apply (rel_auto)
           using less_antisym less_trans apply blast
           done
@@ -292,14 +292,14 @@ unfolding hoare_r_def while_inv_bot_def while_bot_def
 proof (rule pre_weak_rel[of _ "\<lceil>p\<rceil>\<^sub><" ])
   from I0 show "`\<lceil>pre\<rceil>\<^sub>< \<Rightarrow> \<lceil>p\<rceil>\<^sub><`"
     by rel_auto
-  show "(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>post\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> X \<bullet> Q ;; X \<triangleleft> b \<triangleright>\<^sub>r II)"
+  show "(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>post\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> X \<bullet> Q \<Zcomp> X \<triangleleft> b \<triangleright>\<^sub>r II)"
   proof (rule mu_rec_total_utp_rule[where e=e, OF WF])
-    show "Monotonic (\<lambda>X. Q ;; X \<triangleleft> b \<triangleright>\<^sub>r II)"
+    show "Monotonic (\<lambda>X. Q \<Zcomp> X \<triangleleft> b \<triangleright>\<^sub>r II)"
       by (simp add: closure)
     have induct_step': "\<And> st. (\<lceil>b \<and> p \<and>  e = \<guillemotleft>st\<guillemotright> \<rceil>\<^sub>< \<Rightarrow> (\<lceil>p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<rceil>\<^sub>> )) \<sqsubseteq> Q"
       using induct_step by rel_auto  
     with PHI
-    show "\<And>st. (\<lceil>p\<rceil>\<^sub>< \<and> \<lceil>e\<rceil>\<^sub>< = \<guillemotleft>st\<guillemotright> \<Rightarrow> \<lceil>post\<rceil>\<^sub>>) \<sqsubseteq> Q ;; (\<lceil>p\<rceil>\<^sub>< \<and> (\<lceil>e\<rceil>\<^sub><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<Rightarrow> \<lceil>post\<rceil>\<^sub>>) \<triangleleft> b \<triangleright>\<^sub>r II" 
+    show "\<And>st. (\<lceil>p\<rceil>\<^sub>< \<and> \<lceil>e\<rceil>\<^sub>< = \<guillemotleft>st\<guillemotright> \<Rightarrow> \<lceil>post\<rceil>\<^sub>>) \<sqsubseteq> Q \<Zcomp> (\<lceil>p\<rceil>\<^sub>< \<and> (\<lceil>e\<rceil>\<^sub><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<Rightarrow> \<lceil>post\<rceil>\<^sub>>) \<triangleleft> b \<triangleright>\<^sub>r II" 
       by (rel_auto)
   qed       
 qed
@@ -343,10 +343,10 @@ lemma nmods_invariant:
   using assms by (rel_auto, metis)
 
 lemma hoare_r_ghost:
-  assumes "vwb_lens x" "x \<sharp> p" "x \<sharp> q" "S nuses x" "\<^bold>{p\<^bold>}x := e;; S\<^bold>{q\<^bold>}"
+  assumes "vwb_lens x" "x \<sharp> p" "x \<sharp> q" "S nuses x" "\<^bold>{p\<^bold>}x := e\<Zcomp> S\<^bold>{q\<^bold>}"
   shows "\<^bold>{p\<^bold>}S\<^bold>{q\<^bold>}" 
 proof -
-  have "\<^bold>{p\<^bold>}x := e;; rrestr x S\<^bold>{q\<^bold>}"
+  have "\<^bold>{p\<^bold>}x := e\<Zcomp> rrestr x S\<^bold>{q\<^bold>}"
     by (simp add: Healthy_if assms(4) assms(5))
   with assms(1-3) have "\<^bold>{p\<^bold>}rrestr x S\<^bold>{q\<^bold>}"
     by (rel_simp,metis mwb_lens.put_put vwb_lens_mwb)

@@ -33,20 +33,20 @@ theorem design_composition_subst:
   assumes
     "$ok\<^sup>> \<sharp> P1" "$ok\<^sup>< \<sharp> P2"
   shows "((P1 \<turnstile> Q1) \<^bold>; (P2 \<turnstile> Q2)) =
-         (((\<not> ((\<not> P1) ;; true)) \<and> \<not> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> \<^bold>; (\<not> P2))) \<turnstile> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> ;; Q2\<lbrakk>true/ok\<^sup><\<rbrakk>))"
+         (((\<not> ((\<not> P1) \<Zcomp> true)) \<and> \<not> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> \<^bold>; (\<not> P2))) \<turnstile> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> \<Zcomp> Q2\<lbrakk>true/ok\<^sup><\<rbrakk>))"
 proof -
-  have "((P1 \<turnstile> Q1) ;; (P2 \<turnstile> Q2)) = (\<Union> ok\<^sub>0. ((P1 \<turnstile> Q1)\<lbrakk>\<guillemotleft>ok\<^sub>0\<guillemotright>/ok\<^sup>>\<rbrakk> ;; (P2 \<turnstile> Q2)\<lbrakk>\<guillemotleft>ok\<^sub>0\<guillemotright>/ok\<^sup><\<rbrakk>))"
+  have "((P1 \<turnstile> Q1) \<Zcomp> (P2 \<turnstile> Q2)) = (\<Union> ok\<^sub>0. ((P1 \<turnstile> Q1)\<lbrakk>\<guillemotleft>ok\<^sub>0\<guillemotright>/ok\<^sup>>\<rbrakk> \<Zcomp> (P2 \<turnstile> Q2)\<lbrakk>\<guillemotleft>ok\<^sub>0\<guillemotright>/ok\<^sup><\<rbrakk>))"
     by (rule seqr_middle, simp)
   also have " ...
-        = (((P1 \<turnstile> Q1)\<lbrakk>false/ok\<^sup>>\<rbrakk> ;; (P2 \<turnstile> Q2)\<lbrakk>false/ok\<^sup><\<rbrakk>)
-            \<or> ((P1 \<turnstile> Q1)\<lbrakk>true/ok\<^sup>>\<rbrakk> ;; (P2 \<turnstile> Q2)\<lbrakk>true/ok\<^sup><\<rbrakk>))"
+        = (((P1 \<turnstile> Q1)\<lbrakk>false/ok\<^sup>>\<rbrakk> \<Zcomp> (P2 \<turnstile> Q2)\<lbrakk>false/ok\<^sup><\<rbrakk>)
+            \<or> ((P1 \<turnstile> Q1)\<lbrakk>true/ok\<^sup>>\<rbrakk> \<Zcomp> (P2 \<turnstile> Q2)\<lbrakk>true/ok\<^sup><\<rbrakk>))"
     by (rel_auto; metis (full_types))
   also from assms
-  have "... = ((((ok\<^sup><)\<^sub>u \<and> P1 \<Rightarrow> Q1\<lbrakk>true/ok\<^sup>>\<rbrakk>) ;; (P2 \<Rightarrow> (ok\<^sup>>)\<^sub>u \<and> Q2\<lbrakk>true/ok\<^sup><\<rbrakk>)) \<or> ((\<not> ((ok\<^sup><)\<^sub>u \<and> P1)) ;; true))"
+  have "... = ((((ok\<^sup><)\<^sub>u \<and> P1 \<Rightarrow> Q1\<lbrakk>true/ok\<^sup>>\<rbrakk>) \<Zcomp> (P2 \<Rightarrow> (ok\<^sup>>)\<^sub>u \<and> Q2\<lbrakk>true/ok\<^sup><\<rbrakk>)) \<or> ((\<not> ((ok\<^sup><)\<^sub>u \<and> P1)) \<Zcomp> true))"
     by (simp add: design_def usubst usubst_eval, rel_auto)
-  also have "... = (((\<not>ok\<^sup><)\<^sub>u ;; true\<^sub>h) \<or> ((\<not>P1) ;; true) \<or> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> ;; (\<not>P2)) \<or> ((ok\<^sup>>)\<^sub>u \<and> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> ;; Q2\<lbrakk>true/ok\<^sup><\<rbrakk>)))"
+  also have "... = (((\<not>ok\<^sup><)\<^sub>u \<Zcomp> true\<^sub>h) \<or> ((\<not>P1) \<Zcomp> true) \<or> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> \<Zcomp> (\<not>P2)) \<or> ((ok\<^sup>>)\<^sub>u \<and> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> \<Zcomp> Q2\<lbrakk>true/ok\<^sup><\<rbrakk>)))"
     by (rel_auto)
-  also have "... = (((\<not> ((\<not> P1) ;; true)) \<and> \<not> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> ;; (\<not> P2))) \<turnstile> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> ;; Q2\<lbrakk>true/ok\<^sup><\<rbrakk>))"
+  also have "... = (((\<not> ((\<not> P1) \<Zcomp> true)) \<and> \<not> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> \<Zcomp> (\<not> P2))) \<turnstile> (Q1\<lbrakk>true/ok\<^sup>>\<rbrakk> \<Zcomp> Q2\<lbrakk>true/ok\<^sup><\<rbrakk>))"
     unfolding design_def by (rel_auto)
   finally show ?thesis .
 qed
@@ -62,7 +62,7 @@ theorem rdesign_composition:
   by (simp add: rdesign_def design_composition unrest usubst, rel_auto)
 
 theorem ndesign_composition_wlp:
-  "(p\<^sub>1 \<turnstile>\<^sub>n Q\<^sub>1) ;; (p\<^sub>2 \<turnstile>\<^sub>n Q\<^sub>2) = (p\<^sub>1 \<and> Q\<^sub>1 wlp p\<^sub>2) \<turnstile>\<^sub>n (Q\<^sub>1 ;; Q\<^sub>2)"
+  "(p\<^sub>1 \<turnstile>\<^sub>n Q\<^sub>1) \<Zcomp> (p\<^sub>2 \<turnstile>\<^sub>n Q\<^sub>2) = (p\<^sub>1 \<and> Q\<^sub>1 wlp p\<^sub>2) \<turnstile>\<^sub>n (Q\<^sub>1 \<Zcomp> Q\<^sub>2)"
   by (simp add: rdesign_composition unrest, rel_auto)
 
 end

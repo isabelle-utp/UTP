@@ -5,12 +5,8 @@ theory utp_rel
 begin
 
 consts
-  useq     :: "'a \<Rightarrow> 'b \<Rightarrow> 'c" (infixr ";;" 61)
   uassigns :: "('a, 'b) psubst \<Rightarrow> 'c" ("\<langle>_\<rangle>\<^sub>a")
   uskip    :: "'a" ("II")
-
-abbreviation (input) hseq (infixr ";;\<^sub>h" 61) where
-"hseq \<equiv> (useq :: 'a \<Rightarrow> 'a \<Rightarrow> 'a)"
 
 named_theorems rel and rel_transfer
 
@@ -44,7 +40,6 @@ abbreviation "in\<alpha> \<equiv> var_alpha fst\<^sub>L"
 abbreviation "out\<alpha> \<equiv> var_alpha snd\<^sub>L"
 
 adhoc_overloading uskip Id
-adhoc_overloading useq relcomp
 
 abbreviation "true\<^sub>h \<equiv> (true :: 's rel)"
 
@@ -83,18 +78,18 @@ syntax "_ndet_assign" :: "svid \<Rightarrow> logic" ("_ := *" [75] 76)
 translations "_ndet_assign x" == "CONST ndet_assign x"
 
 definition seqr_iter :: "'a list \<Rightarrow> ('a \<Rightarrow> 'b rel) \<Rightarrow> 'b rel" where
-[pred]: "seqr_iter xs P = foldr (\<lambda> i Q. P(i) ;; Q) xs II"
+[pred]: "seqr_iter xs P = foldr (\<lambda> i Q. P(i) \<Zcomp> Q) xs II"
 
-syntax "_seqr_iter" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> '\<sigma> rel \<Rightarrow> '\<sigma> rel" ("(3;; _ : _ \<bullet>/ _)" [0, 0, 10] 10)
-translations ";; x : l \<bullet> P" \<rightleftharpoons> "(CONST seqr_iter) l (\<lambda>x. P)"
+syntax "_seqr_iter" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> '\<sigma> rel \<Rightarrow> '\<sigma> rel" ("(3\<Zcomp> _ : _ \<bullet>/ _)" [0, 0, 10] 10)
+translations "\<Zcomp> x : l \<bullet> P" \<rightleftharpoons> "(CONST seqr_iter) l (\<lambda>x. P)"
 
 definition while_top :: "'s pred \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sup>\<top> _ do _ od") where 
-"while_top b P = (\<nu> X \<bullet> ((P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
+"while_top b P = (\<nu> X \<bullet> ((P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
 
 notation while_top ("while _ do _ od")
 
 definition while_bot :: "'s pred \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sub>\<bottom> _ do _ od") where 
-"while_bot b P = (\<mu> X \<bullet> ((P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
+"while_bot b P = (\<mu> X \<bullet> ((P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
 
 definition pre :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" 
   where "pre P = \<lbrakk>Domain P\<rbrakk>\<^sub>P"
@@ -127,7 +122,7 @@ text \<open> Promotion takes a partial lens @{term a} and a relation @{term P}. 
   the state space. \<close>
 
 definition promote :: "'c rel \<Rightarrow> ('c \<Longrightarrow> 's) \<Rightarrow> 's rel" where
-[rel]: "promote P a = \<questiondown>\<^bold>D(a)? ;; a:[P]\<^sub>\<up>"
+[rel]: "promote P a = \<questiondown>\<^bold>D(a)? \<Zcomp> a:[P]\<^sub>\<up>"
 
 syntax "_promote" :: "logic \<Rightarrow> svid \<Rightarrow> logic" (infix "\<Up>" 60)
 translations "_promote P a" == "CONST promote P a"
@@ -189,36 +184,36 @@ lemma unrest_iuvar [unrest]: "out\<alpha> \<sharp> ($x\<^sup><)\<^sub>u"
 lemma unrest_ouvar [unrest]: "in\<alpha> \<sharp> ($x\<^sup>>)\<^sub>u"
   by rel_auto
 
-lemma unrest_seq_ivar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>< \<sharp> P \<rbrakk> \<Longrightarrow> $x\<^sup>< \<sharp> P ;; Q"
+lemma unrest_seq_ivar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>< \<sharp> P \<rbrakk> \<Longrightarrow> $x\<^sup>< \<sharp> P \<Zcomp> Q"
   by rel_auto
 
-lemma unrest_seq_ovar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>> \<sharp> Q \<rbrakk> \<Longrightarrow> $x\<^sup>> \<sharp> P ;; Q"
+lemma unrest_seq_ovar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>> \<sharp> Q \<rbrakk> \<Longrightarrow> $x\<^sup>> \<sharp> P \<Zcomp> Q"
   by rel_auto
 
 subsection \<open> Algebraic Laws \<close>
 
-lemma seqr_middle: "vwb_lens x \<Longrightarrow> P ;; Q = (\<Union> v. P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> \<^bold>; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>)"
+lemma seqr_middle: "vwb_lens x \<Longrightarrow> P \<Zcomp> Q = (\<Union> v. P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> \<^bold>; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>)"
   by (rel_auto, metis vwb_lens.put_eq)
 
-lemma precond_equiv: "true ;; P = P \<longleftrightarrow> (in\<alpha> \<sharp> P)"
+lemma precond_equiv: "true \<Zcomp> P = P \<longleftrightarrow> (in\<alpha> \<sharp> P)"
   by (rel_auto)
 
-lemma precond_simp [simp]: "in\<alpha> \<sharp> P \<Longrightarrow> true ;; P = P"
+lemma precond_simp [simp]: "in\<alpha> \<sharp> P \<Longrightarrow> true \<Zcomp> P = P"
   by (simp add: precond_equiv)
 
-lemma postcond_equiv: "P ;; true = P \<longleftrightarrow> (out\<alpha> \<sharp> P)"
+lemma postcond_equiv: "P \<Zcomp> true = P \<longleftrightarrow> (out\<alpha> \<sharp> P)"
   by (rel_auto)
 
-lemma postcond_simp: "out\<alpha> \<sharp> P \<Longrightarrow> P ;; true = P"
+lemma postcond_simp: "out\<alpha> \<sharp> P \<Longrightarrow> P \<Zcomp> true = P"
   by (simp add: postcond_equiv)
 
-lemma "($x\<^sup>< = $x\<^sup>>)\<^sub>u ;; ($x\<^sup>< = $x\<^sup>>)\<^sub>u = ($x\<^sup>< = $x\<^sup>>)\<^sub>u"
+lemma "($x\<^sup>< = $x\<^sup>>)\<^sub>u \<Zcomp> ($x\<^sup>< = $x\<^sup>>)\<^sub>u = ($x\<^sup>< = $x\<^sup>>)\<^sub>u"
   by rel_auto
 
 lemma assigns_skip: "\<langle>id\<rangle>\<^sub>a = II"
   by rel_auto
 
-lemma assigns_comp: "\<langle>\<sigma>\<rangle>\<^sub>a ;; \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<rho> \<circ>\<^sub>s \<sigma>\<rangle>\<^sub>a"
+lemma assigns_comp: "\<langle>\<sigma>\<rangle>\<^sub>a \<Zcomp> \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<rho> \<circ>\<^sub>s \<sigma>\<rangle>\<^sub>a"
   by rel_auto
 
 lemma assigns_cond: "\<langle>\<sigma>\<rangle>\<^sub>a \<^bold>\<lhd> b \<^bold>\<rhd> \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<sigma> \<triangleleft> b \<triangleright> \<rho>\<rangle>\<^sub>a"

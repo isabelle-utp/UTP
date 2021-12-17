@@ -84,6 +84,7 @@ subsection \<open> Properties of Healthiness Conditions \<close>
 definition Idempotent :: "'\<alpha> health \<Rightarrow> bool" where
   "Idempotent(H) \<longleftrightarrow> (\<forall> P. H(H(P)) = H(P))"
 
+(*
 abbreviation Monotonic :: "'\<alpha> health \<Rightarrow> bool" where
   "Monotonic(H) \<equiv> mono H"
 
@@ -306,5 +307,5 @@ lemma USUP_healthy: "A \<subseteq> \<lbrakk>H\<rbrakk>\<^sub>H \<Longrightarrow>
 
 lemma UINF_healthy: "A \<subseteq> \<lbrakk>H\<rbrakk>\<^sub>H \<Longrightarrow> (\<Union> P\<in>A. F(P)) = (\<Union> P\<in>A. F(H(P)))"
   by (rule UINF_cong, simp add: Healthy_subset_member)
-  
+  *)
 end

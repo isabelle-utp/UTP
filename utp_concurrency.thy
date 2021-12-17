@@ -62,7 +62,7 @@ text \<open> A symmetric merge is one for which swapping the order of the merged
   @{term "swap\<^sub>m"} is a left-unit. \<close>
 
 abbreviation SymMerge :: "'\<alpha> merge \<Rightarrow> '\<alpha> merge" where
-"SymMerge(M) \<equiv> (swap\<^sub>m ;; M)"
+"SymMerge(M) \<equiv> (swap\<^sub>m \<Zcomp> M)"
 
 subsection \<open> Separating Simulations \<close>
 
@@ -75,10 +75,10 @@ definition U0 :: "'\<beta>\<^sub>0 \<leftrightarrow> ('\<alpha>, '\<beta>\<^sub>
 definition U1 :: "'\<beta>\<^sub>1 \<leftrightarrow> ('\<alpha>, '\<beta>\<^sub>0, '\<beta>\<^sub>1) mrg" where
 [rel]: "U1 = ($1:\<^bold>v\<^sup>> = $\<^bold>v\<^sup><)\<^sub>u"
 
-lemma U0_swap: "(U0 ;; swap\<^sub>m) = U1"
+lemma U0_swap: "(U0 \<Zcomp> swap\<^sub>m) = U1"
   by (rel_auto)
 
-lemma U1_swap: "(U1 ;; swap\<^sub>m) = U0"
+lemma U1_swap: "(U1 \<Zcomp> swap\<^sub>m) = U0"
   by (rel_auto)
 
 text \<open> As shown below, separating simulations can also be expressed using the following two 
@@ -100,10 +100,10 @@ text \<open> @{term "\<lceil>P\<rceil>\<^sub>0"} is predicate $P$ where all vari
   @{term "\<lceil>P\<rceil>\<^sub>1"} is where all variables are indexed by $1$. We can thus equivalently express separating 
   simulations using alphabet extrusion. \<close>
   
-lemma U0_as_alpha: "(P ;; U0) = \<lceil>P\<rceil>\<^sub>0"
+lemma U0_as_alpha: "(P \<Zcomp> U0) = \<lceil>P\<rceil>\<^sub>0"
   by (rel_auto)
 
-lemma U1_as_alpha: "(P ;; U1) = \<lceil>P\<rceil>\<^sub>1"
+lemma U1_as_alpha: "(P \<Zcomp> U1) = \<lceil>P\<rceil>\<^sub>1"
   by (rel_auto)
 
 lemma U0\<alpha>_vwb_lens [simp]: "vwb_lens U0\<alpha>"
@@ -138,10 +138,10 @@ lemma U0_skip [alpha]: "\<lceil>II\<rceil>\<^sub>0 = ($0:\<^bold>v\<^sup>> = $\<
 lemma U1_skip [alpha]: "\<lceil>II\<rceil>\<^sub>1 = ($1:\<^bold>v\<^sup>> = $\<^bold>v\<^sup><)\<^sub>u"
   by (rel_auto)
 
-lemma U0_seqr [alpha]: "\<lceil>P ;; Q\<rceil>\<^sub>0 = P ;; \<lceil>Q\<rceil>\<^sub>0"
+lemma U0_seqr [alpha]: "\<lceil>P \<Zcomp> Q\<rceil>\<^sub>0 = P \<Zcomp> \<lceil>Q\<rceil>\<^sub>0"
   by (rel_auto)
 
-lemma U1_seqr [alpha]: "\<lceil>P ;; Q\<rceil>\<^sub>1 = P ;; \<lceil>Q\<rceil>\<^sub>1"
+lemma U1_seqr [alpha]: "\<lceil>P \<Zcomp> Q\<rceil>\<^sub>1 = P \<Zcomp> \<lceil>Q\<rceil>\<^sub>1"
   by (rel_auto)
 
 lemma U0\<alpha>_comp_in_var [alpha]: "(x\<^sup><)\<^sub>v ;\<^sub>L U0\<alpha> = (x\<^sup><)\<^sub>v"
@@ -167,7 +167,7 @@ text \<open> Associativity of a merge means that if we construct a three way mer
 \<close>
   
 definition ThreeWayMerge :: "'\<alpha> merge \<Rightarrow> (('\<alpha>, '\<alpha>, ('\<alpha>, '\<alpha>, '\<alpha>) mrg) mrg \<leftrightarrow> '\<alpha>)" ("\<^bold>M3'(_')") where
-[rel]: "ThreeWayMerge M = (($0:\<^bold>v\<^sup>> = $0:\<^bold>v\<^sup>< \<and> $1:\<^bold>v\<^sup>> = $1:0:\<^bold>v\<^sup>< \<and> $<:\<^bold>v\<^sup>> = $<:\<^bold>v\<^sup><)\<^sub>u ;; M ;; U0 \<and> ($1:\<^bold>v\<^sup>> = $1:1:\<^bold>v\<^sup>< \<and> $<:\<^bold>v\<^sup>> = $<:\<^bold>v\<^sup><)\<^sub>u) ;; M"
+[rel]: "ThreeWayMerge M = (($0:\<^bold>v\<^sup>> = $0:\<^bold>v\<^sup>< \<and> $1:\<^bold>v\<^sup>> = $1:0:\<^bold>v\<^sup>< \<and> $<:\<^bold>v\<^sup>> = $<:\<^bold>v\<^sup><)\<^sub>u \<Zcomp> M \<Zcomp> U0 \<and> ($1:\<^bold>v\<^sup>> = $1:1:\<^bold>v\<^sup>< \<and> $<:\<^bold>v\<^sup>> = $<:\<^bold>v\<^sup><)\<^sub>u) \<Zcomp> M"
   
 text \<open> The next definition rotates the inputs to a three way merge to the left one place. \<close>
 
@@ -176,7 +176,7 @@ abbreviation rotate\<^sub>m where "rotate\<^sub>m \<equiv> (0:\<^bold>v,1:0:\<^b
 text \<open> Finally, a merge is associative if rotating the inputs does not effect the output. \<close>
   
 definition AssocMerge :: "'\<alpha> merge \<Rightarrow> bool" where
-[rel]: "AssocMerge M = (rotate\<^sub>m ;; \<^bold>M3(M) = \<^bold>M3(M))"
+[rel]: "AssocMerge M = (rotate\<^sub>m \<Zcomp> \<^bold>M3(M) = \<^bold>M3(M))"
     
 subsection \<open> Parallel Operators \<close>
 
@@ -184,7 +184,7 @@ text \<open> We implement the following useful abbreviation for separating of tw
   copying of the before variables, all to act as input to the merge predicate. \<close>
 
 abbreviation par_sep (infixr "\<parallel>\<^sub>s" 85) where
-"P \<parallel>\<^sub>s Q \<equiv> (P ;; U0) \<and> (Q ;; U1) \<and> ($<\<^sup>> = $\<^bold>v\<^sup><)\<^sub>u"
+"P \<parallel>\<^sub>s Q \<equiv> (P \<Zcomp> U0) \<and> (Q \<Zcomp> U1) \<and> ($<\<^sup>> = $\<^bold>v\<^sup><)\<^sub>u"
 
 text \<open> The following implementation of parallel by merge is less general than the book version, in
   that it does not properly partition the alphabet into two disjoint segments. We could actually
@@ -194,9 +194,9 @@ text \<open> The following implementation of parallel by merge is less general t
 definition 
   par_by_merge :: "('\<alpha> \<leftrightarrow> '\<beta>) \<Rightarrow> (('\<alpha>, '\<beta>, '\<gamma>) mrg \<leftrightarrow> '\<delta>) \<Rightarrow> ('\<alpha> \<leftrightarrow> '\<gamma>) \<Rightarrow> ('\<alpha> \<leftrightarrow> '\<delta>)" 
   ("_ \<parallel>\<^bsub>_\<^esub> _" [85,0,86] 85)
-where [rel]: "P \<parallel>\<^bsub>M\<^esub> Q = (P \<parallel>\<^sub>s Q ;; M)"
+where [rel]: "P \<parallel>\<^bsub>M\<^esub> Q = (P \<parallel>\<^sub>s Q \<Zcomp> M)"
 
-lemma par_by_merge_alt_def: "P \<parallel>\<^bsub>M\<^esub> Q = (\<lceil>P\<rceil>\<^sub>0 \<and> \<lceil>Q\<rceil>\<^sub>1 \<and> ($<\<^sup>> = $\<^bold>v\<^sup><)\<^sub>u) ;; M"
+lemma par_by_merge_alt_def: "P \<parallel>\<^bsub>M\<^esub> Q = (\<lceil>P\<rceil>\<^sub>0 \<and> \<lceil>Q\<rceil>\<^sub>1 \<and> ($<\<^sup>> = $\<^bold>v\<^sup><)\<^sub>u) \<Zcomp> M"
   by (simp add: par_by_merge_def U0_as_alpha U1_as_alpha)
 
 (*
@@ -231,10 +231,10 @@ text \<open> Substitution is a little tricky because when we push the expression
   literal substitution, though this could be generalised with suitable alphabet coercsions. We
   need quite a number of variants to support this which are below. \<close>
 
-lemma U0_seq_subst: "(P ;; U0)\<lbrakk>\<guillemotleft>v\<guillemotright>/0:x\<^sup>>\<rbrakk> = (P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> ;; U0)"
+lemma U0_seq_subst: "(P \<Zcomp> U0)\<lbrakk>\<guillemotleft>v\<guillemotright>/0:x\<^sup>>\<rbrakk> = (P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> \<Zcomp> U0)"
   by (rel_auto)
 
-lemma U1_seq_subst: "(P ;; U1)\<lbrakk>\<guillemotleft>v\<guillemotright>/1:x\<^sup>>\<rbrakk> = (P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> ;; U1)"
+lemma U1_seq_subst: "(P \<Zcomp> U1)\<lbrakk>\<guillemotleft>v\<guillemotright>/1:x\<^sup>>\<rbrakk> = (P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> \<Zcomp> U1)"
   by (rel_auto)
 
 lemma lit_pbm_subst [usubst]:
@@ -283,20 +283,20 @@ lemma par_by_merge_right_false [simp]:
   "P \<parallel>\<^bsub>M\<^esub> false = false"
   by (rel_auto)
 
-lemma par_by_merge_seq_add: "(P \<parallel>\<^bsub>M\<^esub> Q) ;; R = (P \<parallel>\<^bsub>M ;; R\<^esub> Q)"
+lemma par_by_merge_seq_add: "(P \<parallel>\<^bsub>M\<^esub> Q) \<Zcomp> R = (P \<parallel>\<^bsub>M \<Zcomp> R\<^esub> Q)"
   by (simp add: par_by_merge_def seqr_assoc)
 
 text \<open> A skip parallel-by-merge yields a skip whenever the parallel predicates are both feasible. \<close>
 
 lemma par_by_merge_skip:
-  assumes "P ;; true = true" "Q ;; true = true"
+  assumes "P \<Zcomp> true = true" "Q \<Zcomp> true = true"
   shows "P \<parallel>\<^bsub>skip\<^sub>m\<^esub> Q = II"
   using assms by (rel_auto)
 
-lemma skip_merge_swap: "swap\<^sub>m ;; skip\<^sub>m = skip\<^sub>m"
+lemma skip_merge_swap: "swap\<^sub>m \<Zcomp> skip\<^sub>m = skip\<^sub>m"
   by (rel_auto)
 
-lemma par_sep_swap: "P \<parallel>\<^sub>s Q ;; swap\<^sub>m = Q \<parallel>\<^sub>s P"
+lemma par_sep_swap: "P \<parallel>\<^sub>s Q \<Zcomp> swap\<^sub>m = Q \<parallel>\<^sub>s P"
   by (rel_auto)
 *)
 
