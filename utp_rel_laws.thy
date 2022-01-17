@@ -73,6 +73,9 @@ lemma seqr_monotonic:
   "\<lbrakk> mono P; mono Q \<rbrakk> \<Longrightarrow> mono (\<lambda> X. P X \<Zcomp> Q X)"
   by (simp add: mono_def relcomp_mono)
 
+lemma cond_seqr_mono: "mono (\<lambda>X. (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  unfolding mono_def by (meson equalityE rcond_mono ref_by_def relcomp_mono)
+
 (*
 lemma Monotonic_seqr_tail [closure]:
   assumes "Monotonic F"
@@ -310,6 +313,135 @@ lemma skip_res_as_ra:
   apply (metis vwb_lens.put_eq)
   done
 *)
+
+section \<open> Frame laws \<close>
+
+named_theorems frame
+
+lemma frame_all [frame]: "\<Sigma>:[P] = P"
+  by (rel_auto)
+
+lemma frame_none [frame]: "\<emptyset>:[P] = (P \<and> II)"
+  by (rel_auto add: scene_override_commute)
+
+
+lemma frame_commute:
+  assumes "($y\<^sup><) \<sharp> P" "($y\<^sup>>) \<sharp> P""($x\<^sup><) \<sharp> Q" "($x\<^sup>>) \<sharp> Q" "x \<bowtie> y" 
+  shows "$x:[P] \<Zcomp> $y:[Q] = $y:[Q] \<Zcomp> $x:[P]"
+  oops
+  (*apply (insert assms)
+  apply (rel_auto)
+   apply (rename_tac s s' s\<^sub>0)
+   apply (subgoal_tac "(s \<oplus>\<^sub>L s' on y) \<oplus>\<^sub>L s\<^sub>0 on x = s\<^sub>0 \<oplus>\<^sub>L s' on y")
+    apply (metis lens_indep_get lens_indep_sym lens_override_def)
+   apply (simp add: lens_indep.lens_put_comm lens_override_def)
+  apply (rename_tac s s' s\<^sub>0)
+  apply (subgoal_tac "put\<^bsub>y\<^esub> (put\<^bsub>x\<^esub> s (get\<^bsub>x\<^esub> (put\<^bsub>x\<^esub> s\<^sub>0 (get\<^bsub>x\<^esub> s')))) (get\<^bsub>y\<^esub> (put\<^bsub>y\<^esub> s (get\<^bsub>y\<^esub> s\<^sub>0))) 
+                      = put\<^bsub>x\<^esub> s\<^sub>0 (get\<^bsub>x\<^esub> s')")
+   apply (metis lens_indep_get lens_indep_sym)
+  apply (metis lens_indep.lens_put_comm)
+  done*)
+ 
+lemma frame_miracle [simp]:
+  "x:[false] = false"
+  by (rel_auto)
+
+lemma frame_skip [simp]:
+  "idem_scene x \<Longrightarrow> x:[II] = II"
+  by (rel_auto)
+
+lemma frame_assign_in [frame]:
+  "\<lbrakk> vwb_lens a; x \<subseteq>\<^sub>L a \<rbrakk> \<Longrightarrow> $a:[x := v] = x := v"
+  apply rel_auto
+  by (simp add: lens_override_def scene_override_commute)
+
+lemma frame_conj_true [frame]:
+  "\<lbrakk>-{x\<^sup><, x\<^sup>>} \<sharp> P; vwb_lens x \<rbrakk> \<Longrightarrow> (P \<and> $x:[true]) = $x:[P]"
+  by (rel_auto)
+
+(*lemma frame_is_assign [frame]:
+  "vwb_lens x \<Longrightarrow> x:[$x\<acute> =\<^sub>u \<lceil>v\<rceil>\<^sub><] = x := v"
+  by (rel_auto)
+  *)  
+lemma frame_seq [frame]:
+  assumes "vwb_lens x" "-{x\<^sup>>,x\<^sup><} \<sharp> P" "-{x\<^sup><,x\<^sup>>} \<sharp> Q"
+  shows "$x:[P \<Zcomp> Q] = $x:[P] \<Zcomp> $x:[Q]"
+  unfolding frame_def apply (rel_auto)
+  oops
+
+lemma frame_assign_commute_unrest:
+  assumes "vwb_lens x" "x \<bowtie> a" "$a \<sharp> v" "$x\<^sup>< \<sharp> P" "$x\<^sup>> \<sharp> P"
+  shows "x := v \<Zcomp> $a:[P] = $a:[P] \<Zcomp> x := v"
+  using assms apply (rel_auto)
+  oops
+
+lemma frame_to_antiframe [frame]:
+  "\<lbrakk> x \<bowtie>\<^sub>S y; x \<squnion>\<^sub>S y = \<top>\<^sub>S \<rbrakk> \<Longrightarrow> x:[P] = (-y):[P]"
+  apply rel_auto
+  by (metis scene_indep_compat scene_indep_override scene_override_commute scene_override_id scene_override_union)+
+
+lemma rel_frext_miracle [frame]: 
+  "a:[false]\<^sup>+ = false"
+  by (metis false_pred_def frame_miracle trancl_empty)
+    
+lemma rel_frext_skip [frame]: 
+  "idem_scene a \<Longrightarrow> a:[II]\<^sup>+ = II"
+  by (metis frame_skip rtrancl_empty rtrancl_trancl_absorb)
+
+lemma rel_frext_seq [frame]:
+  "idem_scene a \<Longrightarrow> a:[P \<Zcomp> Q]\<^sup>+ = (a:[P]\<^sup>+ \<Zcomp> a:[Q]\<^sup>+)"
+  apply (rel_auto)
+  oops (* gets nitpicked *)
+
+(*
+lemma rel_frext_assigns [frame]:
+  "vwb_lens a \<Longrightarrow> a:[\<langle>\<sigma>\<rangle>\<^sub>a]\<^sup>+ = \<langle>\<sigma> \<oplus>\<^sub>s a\<rangle>\<^sub>a"
+  by (rel_auto)
+
+lemma rel_frext_rcond [frame]:
+  "a:[P \<triangleleft> b \<triangleright>\<^sub>r Q]\<^sup>+ = (a:[P]\<^sup>+ \<triangleleft> b \<oplus>\<^sub>p a \<triangleright>\<^sub>r a:[Q]\<^sup>+)"
+  by (rel_auto)
+
+lemma rel_frext_commute: 
+  "x \<bowtie> y \<Longrightarrow> x:[P]\<^sup>+ \<Zcomp> y:[Q]\<^sup>+ = y:[Q]\<^sup>+ \<Zcomp> x:[P]\<^sup>+"
+  apply (rel_auto)
+   apply (rename_tac a c b)
+   apply (subgoal_tac "\<And>b a. get\<^bsub>y\<^esub> (put\<^bsub>x\<^esub> b a) = get\<^bsub>y\<^esub> b")
+    apply (metis (no_types, hide_lams) lens_indep_comm lens_indep_get)
+   apply (simp add: lens_indep.lens_put_irr2)
+  apply (subgoal_tac "\<And>b c. get\<^bsub>x\<^esub> (put\<^bsub>y\<^esub> b c) = get\<^bsub>x\<^esub> b")
+   apply (subgoal_tac "\<And>b a. get\<^bsub>y\<^esub> (put\<^bsub>x\<^esub> b a) = get\<^bsub>y\<^esub> b")
+    apply (metis (mono_tags, lifting) lens_indep_comm)
+   apply (simp_all add: lens_indep.lens_put_irr2)    
+  done
+    
+lemma antiframe_disj [frame]: "(x:\<lbrakk>P\<rbrakk> \<or> x:\<lbrakk>Q\<rbrakk>) = x:\<lbrakk>P \<or> Q\<rbrakk>"
+  by (rel_auto)
+
+lemma antiframe_seq [frame]:
+  "\<lbrakk> vwb_lens x; $x\<acute> \<sharp> P; $x \<sharp> Q \<rbrakk>  \<Longrightarrow> (x:\<lbrakk>P\<rbrakk> \<Zcomp> x:\<lbrakk>Q\<rbrakk>) = x:\<lbrakk>P \<Zcomp> Q\<rbrakk>"
+  apply (rel_auto)
+   apply (metis vwb_lens_wb wb_lens_def weak_lens.put_get)
+  apply (metis vwb_lens_wb wb_lens.put_twice wb_lens_def weak_lens.put_get)
+  done
+
+lemma antiframe_copy_assign:
+  "vwb_lens x \<Longrightarrow> (x := \<guillemotleft>v\<guillemotright> \<Zcomp> x:\<lbrakk>P\<rbrakk> \<Zcomp> x := \<guillemotleft>v\<guillemotright>) = (x := \<guillemotleft>v\<guillemotright> \<Zcomp> x:\<lbrakk>P\<rbrakk>)"
+  by rel_auto
+
+  
+lemma nameset_skip: "vwb_lens x \<Longrightarrow> (\<^bold>n\<^bold>s x \<bullet> II) = II\<^bsub>x\<^esub>"
+  by (rel_auto, meson vwb_lens_wb wb_lens.get_put)
+    
+lemma nameset_skip_ra: "vwb_lens x \<Longrightarrow> (\<^bold>n\<^bold>s x \<bullet> II\<^bsub>x\<^esub>) = II\<^bsub>x\<^esub>"
+  by (rel_auto)
+    
+declare sublens_def [lens_defs]
+*)
+subsection \<open> Modification laws \<close>
+lemma "(rrestr x P) nmods x"
+  oops
+
 subsection \<open> Assignment Laws \<close>
 
 text \<open>Extend the alphabet of a substitution\<close>
@@ -327,8 +459,9 @@ lemma assigns_r_feasible:
   by (rel_auto)
 
 lemma assign_subst [usubst]:
-  "\<lbrakk> mwb_lens x; mwb_lens y \<rbrakk> \<Longrightarrow> [x \<leadsto> u\<^sup><] \<dagger> (y := v) = (x, y) := (u, [x \<leadsto> u] \<dagger> v)"
-  by (rel_auto)
+  "\<lbrakk> vwb_lens x; vwb_lens y \<rbrakk> \<Longrightarrow>  [x\<^sup>> \<leadsto> u\<^sup><] \<dagger> (y := v) = (y, x) := ([x \<leadsto> u] \<dagger> v, u)"
+  apply rel_auto
+  oops
 
 lemma assign_vacuous_skip:
   assumes "vwb_lens x"
@@ -338,21 +471,23 @@ lemma assign_vacuous_skip:
 text \<open> The following law shows the case for the above law when $x$ is only mainly-well behaved. We
   require that the state is one of those in which $x$ is well defined using and assumption. \<close>
 
+(*
 lemma assign_vacuous_assume:
   assumes "mwb_lens x"
   shows "[&\<^bold>v \<in> \<guillemotleft>\<S>\<^bsub>x\<^esub>\<guillemotright>]\<^sup>\<top> \<Zcomp> (x := &x) = [&\<^bold>v \<in> \<guillemotleft>\<S>\<^bsub>x\<^esub>\<guillemotright>]\<^sup>\<top>"
-  using assms by rel_auto
+  using assms by rel_auto *)
 
 lemma assign_simultaneous:
   assumes "vwb_lens y" "x \<bowtie> y"
-  shows "(x,y) := (e, &y) = (x := e)"
-  by (simp add: assms usubst_upd_comm usubst_upd_var_id)
+  shows "(x,y) := (e, $y) = (x := e)"
+  using assms by rel_auto
 
-lemma assigns_idem: "mwb_lens x \<Longrightarrow> (x,x) := (u,v) = (x := v)"
-  apply rel_auto oops
+lemma assigns_idem: "mwb_lens x \<Longrightarrow> (x,x) := (v,u) = (x := v)"
+  by rel_auto
 
-lemma assigns_cond: "\<langle>f\<rangle>\<^sub>a \<lhd> b \<rhd> \<langle>g\<rangle>\<^sub>a = \<langle>f \<lhd> b \<rhd> g\<rangle>\<^sub>a"
-  by (rel_auto)
+(*
+lemma assigns_cond: "\<langle>f\<rangle>\<^sub>a \<^bold>\<lhd> b \<^bold>\<rhd> \<langle>g\<rangle>\<^sub>a = \<langle>f \<^bold>\<lhd> b \<^bold>\<rhd> g\<rangle>\<^sub>a"
+  by (rel_auto)*)
 
 lemma assigns_r_conv:
   "bij f \<Longrightarrow> \<langle>f\<rangle>\<^sub>a\<^sup>- = \<langle>inv f\<rangle>\<^sub>a"
@@ -376,7 +511,7 @@ lemma assign_commute:
   assumes "x \<bowtie> y" "$x \<sharp> f" "$y \<sharp> e" "vwb_lens x" "vwb_lens y"
   shows "(x := e \<Zcomp> y := f) = (y := f \<Zcomp> x := e)"
   using assms by (rel_auto add: lens_indep_comm)
-
+(*
 lemma assign_cond:
   fixes x :: "('a \<Longrightarrow> '\<alpha>)"
   assumes "out\<alpha> \<sharp> b"
@@ -393,11 +528,11 @@ lemma assign_r_alt_def:
   shows "x := v = II\<lbrakk>\<lceil>v\<rceil>\<^sub></$x\<rbrakk>"
   by (rel_auto)
 
-(*lemma assigns_r_ufunc: "ufunctional \<langle>f\<rangle>\<^sub>a"
+lemma assigns_r_ufunc: "ufunctional \<langle>f\<rangle>\<^sub>a"
   by (rel_auto)
 
 lemma assigns_r_uinj: "inj\<^sub>s f \<Longrightarrow> uinj \<langle>f\<rangle>\<^sub>a"
-  apply (rel_simp, simp add: inj_eq) *)
+  apply (rel_simp, simp add: inj_eq) 
     
 lemma assigns_r_swap_uinj:
   "\<lbrakk> vwb_lens x; vwb_lens y; x \<bowtie> y \<rbrakk> \<Longrightarrow> uinj ((x,y) := (&y,&x))"
@@ -406,29 +541,33 @@ lemma assigns_r_swap_uinj:
 lemma assign_unfold:
   "vwb_lens x \<Longrightarrow> (x := v) = (x\<^sup>> = v\<^sup><)"
   apply (rel_auto, auto simp add: comp_def)
-  using vwb_lens.put_eq by fastforce
+  using vwb_lens.put_eq by fastforce*)
 
 subsection \<open> Non-deterministic Assignment Laws \<close>
 
-lemma nd_assign_comp:
+lemma ndet_assign_comp:
   "x \<bowtie> y \<Longrightarrow> x := * \<Zcomp> y := * = (x,y) := *"
-  apply (rel_auto) using lens_indep_comm sorry
+  by (rel_auto add: lens_indep.lens_put_comm)
+  
+lemma ndet_assign_assign:
+  "\<lbrakk> vwb_lens x; $x \<sharp> e \<rbrakk> \<Longrightarrow> x := * \<Zcomp> x := e = x := e"
+  by rel_auto
 
-lemma nd_assign_assign:
-  "\<lbrakk> vwb_lens x; x \<sharp> e \<rbrakk> \<Longrightarrow> x := * \<Zcomp> x := e = x := e"
-  by (rel_auto)
+lemma ndet_assign_refine:
+  "x := * \<sqsubseteq> x := e"
+  by rel_auto
 
 subsection \<open> Converse Laws \<close>
 
 lemma convr_invol [simp]: "p\<^sup>-\<^sup>- = p"
   by pred_auto
-
-lemma lit_convr [simp]: "\<guillemotleft>v\<guillemotright>\<^sup>- = \<guillemotleft>v\<guillemotright>"
+(*
+lemma lit_convr [simp]: "(\<guillemotleft>v\<guillemotright>)\<^sup>- = \<guillemotleft>v\<guillemotright>"
   by pred_auto
 
 lemma uivar_convr [simp]:
   fixes x :: "('a \<Longrightarrow> '\<alpha>)"
-  shows "($x)\<^sup>- = $x\<acute>"
+  shows "($x\<^sup><)\<^sup>- = $x\<^sup>>"
   by pred_auto
 
 lemma uovar_convr [simp]:
@@ -442,7 +581,7 @@ lemma uop_convr [simp]: "(uop f u)\<^sup>- = uop f (u\<^sup>-)"
 lemma bop_convr [simp]: "(bop f u v)\<^sup>- = bop f (u\<^sup>-) (v\<^sup>-)"
   by (pred_auto)
 
-lemma eq_convr [simp]: "(p =\<^sub>u q)\<^sup>- = (p\<^sup>- =\<^sub>u q\<^sup>-)"
+lemma eq_convr [simp]: "(p = q)\<^sup>- = (p\<^sup>- = q\<^sup>-)"
   by (pred_auto)
 
 lemma not_convr [simp]: "(\<not> p)\<^sup>- = (\<not> p\<^sup>-)"
@@ -461,13 +600,14 @@ lemma pre_convr [simp]: "\<lceil>p\<rceil>\<^sub><\<^sup>- = \<lceil>p\<rceil>\<
   by (rel_auto)
 
 lemma post_convr [simp]: "\<lceil>p\<rceil>\<^sub>>\<^sup>- = \<lceil>p\<rceil>\<^sub><"
-  by (rel_auto)
+  by (rel_auto)*)
 
 subsection \<open> Assertion and Assumption Laws \<close>
 
+(*
 declare sublens_def [lens_defs del]
   
-lemma assume_false: "[false]\<^sup>\<top> = false"
+lemma assume_false: "(false)\<^sub>e\<^sup>\<top> = false"
   by (rel_auto)
   
 lemma assume_true: "[true]\<^sup>\<top> = II"
@@ -483,7 +623,7 @@ lemma assert_true: "{true}\<^sub>\<bottom> = II"
   by (rel_auto)
     
 lemma assert_seq: "{b}\<^sub>\<bottom> \<Zcomp> {c}\<^sub>\<bottom> = {(b \<and> c)}\<^sub>\<bottom>"
-  by (rel_auto)
+  by (rel_auto)*)
 
 subsection \<open> While Loop Laws \<close>
 
@@ -543,13 +683,15 @@ theorem while_infinite: "P \<Zcomp> true = true \<Longrightarrow> while\<^sub>\<
 
 subsection \<open> Algebraic Properties \<close>
 
-interpretation upred_semiring: semiring_1 uskip useq "(\<union>)" "{}"
+interpretation upred_semiring: semiring_1 
+  where times = "(\<Zcomp>)" and one = Id and zero = false_pred and plus = "Lattices.sup"
+  by (unfold_locales; rel_auto+)
 
 declare upred_semiring.power_Suc [simp del]
 
 text \<open> We introduce the power syntax derived from semirings \<close>
 
-abbreviation upower :: "'\<alpha> rel \<Rightarrow> nat \<Rightarrow> '\<alpha> rel" (infixr "\<^bold>^" 80) where
+abbreviation upower :: "'a rel \<Rightarrow> nat \<Rightarrow> 'a rel" (infixr "\<^bold>^" 80) where
 "upower P n \<equiv> upred_semiring.power P n"
 
 translations
@@ -558,8 +700,9 @@ translations
 
 text \<open> Set up transfer tactic for powers \<close>
 
+(*
 lemma upower_rep_eq:
-  "\<lbrakk>P \<^bold>^ i\<rbrakk>\<^sub>e = (\<lambda> b. b \<in> ({p. \<lbrakk>P\<rbrakk>\<^sub>e p} ^^ i))"
+  "\<lbrakk>P \<^bold>^ i\<rbrakk>\<^sub>P = (\<lambda> b. b \<in> ({p. P p} ^^ i))"
 proof (induct i arbitrary: P)
   case 0
   then show ?case
@@ -651,7 +794,7 @@ definition ustar :: "'\<alpha> rel \<Rightarrow> '\<alpha> rel" ("_\<^sup>\<star
 "P\<^sup>\<star> = (\<Sqinter>i\<in>{0..} \<bullet> P\<^bold>^i)"
 
 lemma ustar_rep_eq:
-  "\<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>e = (\<lambda>b. b \<in> ({p. \<lbrakk>P\<rbrakk>\<^sub>e p}\<^sup>*))"
+  "\<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>e = (\<lambda>b. b \<in> ({p. \<lbrakk>P\<rbrakk>\<^sub>e p}\<^sup>* ))"
   by (simp add: ustar_def, rel_auto, simp_all add: relpow_imp_rtrancl rtrancl_imp_relpow)
 
 update_uexpr_rep_eq_thms
@@ -865,5 +1008,5 @@ lemma Pre_conj_indep [prepost]: "\<lbrakk> {$a,$a\<acute>} \<natural> P; $a\<acu
 lemma assume_Pre [prepost]:
   "[Pre(P)]\<^sup>\<top> \<Zcomp> P = P"
   by (rel_auto)
-
+*)
 end

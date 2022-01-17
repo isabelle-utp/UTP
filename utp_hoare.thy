@@ -1,5 +1,5 @@
 theory utp_hoare
-imports utp_rel utp_recursion
+imports utp_rel_laws
 begin
 
 text \<open>Hoare triples\<close>
@@ -240,31 +240,19 @@ proof -
     let ?E = "\<lambda> n. \<lbrakk>(p \<and> v < \<guillemotleft>n\<guillemotright>)\<^sup><\<rbrakk>\<^sub>u"
     show "((p\<^sup><)\<^sub>u \<and> (\<mu> X \<bullet> S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II)) = ((p\<^sup><)\<^sub>u \<and> (\<nu> X \<bullet> S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II))"
     proof (rule constr_fp_uniq[where E="?E"])
-
-      show " (\<Union>n. \<lbrakk>(p \<and> v < n)\<^sup><\<rbrakk>\<^sub>u) = (p\<^sup><)\<^sub>u"
-        by (rel_auto)
-          
       show "mono (\<lambda>X. S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
-        by (simp add: cond_mono monoI seqr_mono)
-          
-      show "constr (\<lambda>X. S \<Zcomp> X \<triangleleft> b \<triangleright>\<^sub>r II) ?E"
+        by (rule cond_seqr_mono)          
+      show "constr (\<lambda>X. S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II) ?E"
       proof (rule constrI)
-        
         show "chain ?E"
-        proof (rule chainI)
-          show "\<lceil>p \<and> v < \<guillemotleft>0\<guillemotright>\<rceil>\<^sub>< = false"
-            by (rel_auto)
-          show "\<And>i. \<lceil>p \<and> v < \<guillemotleft>Suc i\<guillemotright>\<rceil>\<^sub>< \<sqsubseteq> \<lceil>p \<and> v < \<guillemotleft>i\<guillemotright>\<rceil>\<^sub><"
-            by (rel_auto)
-        qed
-          
-        from assms
-        show "\<And>X n. (S \<Zcomp> X \<triangleleft> b \<triangleright>\<^sub>r II \<and> \<lceil>p \<and> v < \<guillemotleft>n + 1\<guillemotright>\<rceil>\<^sub><) =
-                     (S \<Zcomp> (X \<and> \<lceil>p \<and> v < \<guillemotleft>n\<guillemotright>\<rceil>\<^sub><) \<triangleleft> b \<triangleright>\<^sub>r II \<and> \<lceil>p \<and> v < \<guillemotleft>n + 1\<guillemotright>\<rceil>\<^sub><)"
-          apply (rel_auto)
-          using less_antisym less_trans apply blast
-          done
-      qed  
+          by (rule chainI, rel_auto+)
+        have "S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II = S \<Zcomp> (X \<and> \<lbrakk>(p \<and> v < n)\<^sup><\<rbrakk>\<^sub>u) \<^bold>\<lhd> b \<^bold>\<rhd> II" for X n
+          using assms sorry
+        then show "(S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II \<and> \<lbrakk>(p \<and> v < n + 1)\<^sup><\<rbrakk>\<^sub>u) = 
+              (S \<Zcomp> (X \<and> \<lbrakk>(p \<and> v < n)\<^sup><\<rbrakk>\<^sub>u) \<^bold>\<lhd> b \<^bold>\<rhd> II \<and> \<lbrakk>(p \<and> v < n + 1)\<^sup><\<rbrakk>\<^sub>u)" for X n
+          by presburger
+      qed
+      show "(\<Union> (range ?E) = (p\<^sup><)\<^sub>u"
     qed
   qed
 

@@ -72,7 +72,7 @@ syntax "_test" :: "logic \<Rightarrow> logic" ("\<questiondown>_?")
 translations "\<questiondown>P?" == "CONST test (P)\<^sub>e"
 
 definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's rel" where
-[pred]: "ndet_assign x = (\<Union> v. x := \<guillemotleft>v\<guillemotright>)"
+[rel]: "ndet_assign x = (\<Union> v. x := \<guillemotleft>v\<guillemotright>)"
 
 syntax "_ndet_assign" :: "svid \<Rightarrow> logic" ("_ := *" [75] 76)
 translations "_ndet_assign x" == "CONST ndet_assign x"
@@ -90,6 +90,23 @@ notation while_top ("while _ do _ od")
 
 definition while_bot :: "'s pred \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sub>\<bottom> _ do _ od") where 
 "while_bot b P = (\<mu> X \<bullet> ((P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
+
+text \<open> While loops with invariant decoration -- partial correctness\<close>
+
+definition while_inv :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sup>\<top> _ invr _ do _ od") where
+"while_inv b p P = while_top b P"
+
+notation while_inv ("while _ invr _ do _ od")
+
+text \<open> While loops with invariant decoration -- total correctness\<close>
+
+definition while_inv_bot :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sub>\<bottom> _ invr _ do _ od") where
+"while_inv_bot b p P = while_bot b P"
+
+text \<open> While loops with invariant and variant decoration -- total correctness \<close>
+
+definition while_vrt :: "'s pred \<Rightarrow> 's pred \<Rightarrow> (nat, 's) expr \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while _ invr _ vrt _ do _ od") where
+"while_vrt b p v P = while_bot b P"
 
 definition pre :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" 
   where "pre P = \<lbrakk>Domain P\<rbrakk>\<^sub>P"
@@ -115,6 +132,12 @@ syntax
 translations
   "_frame a P" == "CONST frame a P"
   "_frame_ext a P" == "CONST frame_ext a P"
+
+abbreviation modifies ("_ mods _") where
+"modifies P a \<equiv> P is frame a"
+
+abbreviation not_modifies ("_ nmods _") where
+"not_modifies P a \<equiv> P is frame (-a)"
 
 text \<open> Promotion takes a partial lens @{term a} and a relation @{term P}. It constructs a relation
   that firstly restricts the state to valuations where @{term a} is valid (i.e. defined), and 
