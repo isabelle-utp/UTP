@@ -35,13 +35,8 @@ lemma hoare_pre_assume_2: "\<^bold>{b \<and> c\<^bold>}P\<^bold>{d\<^bold>} = \<
 lemma hoare_test [hoare_safe]: "`p \<and> b \<longrightarrow> q` \<Longrightarrow> \<^bold>{p\<^bold>}\<questiondown>b?\<^bold>{q\<^bold>}"
   by rel_auto
 
-lemma hoare_gcmd' [hoare_safe]: "\<^bold>{p \<and> b\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}\<questiondown>b? \<Zcomp> P\<^bold>{q\<^bold>}"
+lemma hoare_gcmd [hoare_safe]: "\<^bold>{p \<and> b\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}\<questiondown>b? \<Zcomp> P\<^bold>{q\<^bold>}"
   by rel_auto
-
-(*
-lemma hoare_gcmd [hoare_safe]: "\<^bold>{p \<and> b\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}b \<longrightarrow> P\<^bold>{q\<^bold>}"
-  by (rel_auto)
-*)
 
 lemma hoare_r_conj [hoare_safe]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^bold>{r\<^bold>}; \<^bold>{p\<^bold>}Q\<^bold>{s\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^bold>{r \<and> s\<^bold>}"
   by rel_auto
@@ -250,8 +245,8 @@ proof -
 qed
 
 lemma while_vrt_hoare_r [hoare_safe]:
-  assumes "\<And> z::nat. \<^bold>{p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<^bold>}S\<^bold>{p \<and> v < \<guillemotleft>z\<guillemotright>\<^bold>}" "`pre S \<longrightarrow> p`" "`(\<not>b \<and> p) \<longrightarrow> post S`"
-  shows "\<^bold>{pre\<^bold>}while b invr p vrt v do S od\<^bold>{post\<^bold>}"
+  assumes "\<And> z::nat. \<^bold>{p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<^bold>}S\<^bold>{p \<and> v < \<guillemotleft>z\<guillemotright>\<^bold>}" "`p' \<longrightarrow> p`" "`(\<not>b \<and> p) \<longrightarrow> q'`"
+  shows "\<^bold>{p'\<^bold>}while b invr p vrt v do S od\<^bold>{q'\<^bold>}"
   apply (rule hoare_r_conseq[OF _ assms(2) assms(3)])
   apply (simp add: while_vrt_def)
   apply (rule while_term_hoare_r[where v="v", OF assms(1)]) 
@@ -259,7 +254,6 @@ lemma while_vrt_hoare_r [hoare_safe]:
   
 text \<open> General total correctness law based on well-founded induction \<close>
 
-(*
 lemma while_wf_hoare_r:
   assumes WF: "wf R"
   assumes I0: "`p' \<longrightarrow> p`"
@@ -267,20 +261,25 @@ lemma while_wf_hoare_r:
   assumes PHI:"`(\<not>b \<and> p) \<longrightarrow> q'`"  
   shows "\<^bold>{p'\<^bold>}while\<^sub>\<bottom> b invr p do Q od\<^bold>{q'\<^bold>}"
   unfolding hoare_r_def while_inv_bot_def while_bot_def
-proof (rule pre_weak_rel[of _ "\<lceil>p\<rceil>\<^sub><" ])
-  from I0 show "`\<lceil>pre\<rceil>\<^sub>< \<Rightarrow> \<lceil>p\<rceil>\<^sub><`"
-    by rel_auto
-  show "(\<lceil>p\<rceil>\<^sub>< \<Rightarrow> \<lceil>post\<rceil>\<^sub>>) \<sqsubseteq> (\<mu> X \<bullet> Q \<Zcomp> X \<triangleleft> b \<triangleright>\<^sub>r II)"
+proof (rule pre_weak_rel[of _ "p\<^sup><" ], goal_cases)
+  case 1
+  from I0 show ?case by expr_auto
+next
+  case 2
+  have "(p\<^sup>< \<longrightarrow> q'\<^sup>>)\<^sub>u \<sqsubseteq> (\<mu> X \<bullet> Q \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
   proof (rule mu_rec_total_utp_rule[where e=e, OF WF])
-    show "Monotonic (\<lambda>X. Q \<Zcomp> X \<triangleleft> b \<triangleright>\<^sub>r II)"
-      by (simp add: closure)
-    have induct_step': "\<And> st. (\<lceil>b \<and> p \<and>  e = \<guillemotleft>st\<guillemotright> \<rceil>\<^sub>< \<Rightarrow> (\<lceil>p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<rceil>\<^sub>> )) \<sqsubseteq> Q"
+    show "mono (\<lambda>X. Q \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+      by (simp add: cond_seqr_mono)
+    have induct_step': "\<And> st. ((b \<and> p \<and> e = \<guillemotleft>st\<guillemotright>)\<^sup>< \<longrightarrow> (p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>)\<^sup>>)\<^sub>u \<sqsubseteq> Q"
       using induct_step by rel_auto  
     with PHI
-    show "\<And>st. (\<lceil>p\<rceil>\<^sub>< \<and> \<lceil>e\<rceil>\<^sub>< = \<guillemotleft>st\<guillemotright> \<Rightarrow> \<lceil>post\<rceil>\<^sub>>) \<sqsubseteq> Q \<Zcomp> (\<lceil>p\<rceil>\<^sub>< \<and> (\<lceil>e\<rceil>\<^sub><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<Rightarrow> \<lceil>post\<rceil>\<^sub>>) \<triangleleft> b \<triangleright>\<^sub>r II" 
-      by (rel_auto)
-  qed       
-qed*)
+    show "\<And>st. (p\<^sup>< \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q'\<^sup>>)\<^sub>u \<sqsubseteq> Q \<Zcomp> (p\<^sup>< \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q'\<^sup>>)\<^sub>u \<^bold>\<lhd> b \<^bold>\<rhd> II"
+      apply rel_auto
+      by (smt (z3) hoare_meaning induct_step)+
+  qed
+  then show ?case by simp
+qed
+
 
 subsection \<open> Frame Rules \<close>
 
@@ -333,6 +332,7 @@ lemma nmods_invariant:
   using assms apply rel_auto
   by (metis Healthy_def SEXP_def rel_frame scene_equiv_def scene_override_commute set_pred_def)
 
+(*
 lemma hoare_r_ghost:
   assumes "vwb_lens x" "x \<sharp> p" "x \<sharp> q" "S nuses x" "\<^bold>{p\<^bold>}x := e\<Zcomp> S\<^bold>{q\<^bold>}"
   shows "\<^bold>{p\<^bold>}S\<^bold>{q\<^bold>}" 
@@ -343,6 +343,6 @@ proof -
     by (rel_simp,metis mwb_lens.put_put vwb_lens_mwb)
   thus ?thesis
     by (simp add: Healthy_if assms(4))
-qed
+qed *)
 
 end

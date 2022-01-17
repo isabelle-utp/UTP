@@ -936,13 +936,15 @@ lemma skip_r_refine:
 lemma conj_refine_left:
   "(Q \<Rightarrow> P) \<sqsubseteq> R \<Longrightarrow> P \<sqsubseteq> (Q \<and> R)"
   by (rel_auto)
-  
+*)
+
 lemma pre_weak_rel:
-  assumes "`pre \<Rightarrow> I`"
-  and     "(I \<Rightarrow> post) \<sqsubseteq> P"
-  shows "(pre \<Rightarrow> post) \<sqsubseteq> P"
+  assumes "`p \<longrightarrow> I`"
+  and     "(I \<longrightarrow> q)\<^sub>u \<sqsubseteq> P"
+  shows "(p \<longrightarrow> q)\<^sub>u \<sqsubseteq> P"
   using assms by(rel_auto)
-    
+
+(*
 lemma cond_refine_rel: 
   assumes "S \<sqsubseteq> (\<lceil>b\<rceil>\<^sub>< \<and> P)" "S \<sqsubseteq> (\<lceil>\<not>b\<rceil>\<^sub>< \<and> Q)"
   shows "S \<sqsubseteq> P \<^bold>\<lhd> b \<^bold>\<rhd> Q"

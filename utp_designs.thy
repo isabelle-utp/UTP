@@ -29,6 +29,12 @@ lemma "false \<turnstile> true = true"
 lemma "true \<turnstile> false = (\<not> $ok\<^sup><)\<^sub>u"
   by rel_auto
 
+lemma design_union: "(P\<^sub>1 \<turnstile> Q\<^sub>1) \<union> (P\<^sub>2 \<turnstile> Q\<^sub>2) = ((P\<^sub>1 \<and> P\<^sub>2) \<turnstile> (Q\<^sub>1 \<or> Q\<^sub>2))"
+  by rel_auto
+
+lemma design_cond: "(P\<^sub>1 \<turnstile> Q\<^sub>1) \<lhd> b \<rhd> (P\<^sub>2 \<turnstile> Q\<^sub>2) = (P\<^sub>1 \<lhd> b \<rhd> P\<^sub>2) \<turnstile> (Q\<^sub>1 \<lhd> b \<rhd> Q\<^sub>2)"
+  by rel_auto
+
 theorem design_composition_subst:
   assumes
     "$ok\<^sup>> \<sharp> P1" "$ok\<^sup>< \<sharp> P2"
