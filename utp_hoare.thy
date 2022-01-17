@@ -208,11 +208,10 @@ proof (simp add: while_top_def hoare_r_def assms)
     by (simp add: lfp_lowerbound ref_by_def)
 qed
 
-(*
 lemma while_invr_hoare_r [hoare_safe]:
-  assumes "\<^bold>{p \<and> b\<^bold>}S\<^bold>{p\<^bold>}" "`pre \<Rightarrow> p`" "`(\<not>b \<and> p) \<Rightarrow> post`"
-  shows "\<^bold>{pre\<^bold>}while b invr p do S od\<^bold>{post\<^bold>}"
-  by (metis assms hoare_r_conseq while_hoare_r while_inv_def)*)
+  assumes "\<^bold>{p \<and> b\<^bold>}S\<^bold>{p\<^bold>}" "`pre' \<longrightarrow> p`" "`(\<not>b \<and> p) \<longrightarrow> post'`"
+  shows "\<^bold>{pre'\<^bold>}while b invr p do S od\<^bold>{post'\<^bold>}"
+  unfolding while_inv_def using assms while_hoare_r hoare_r_conseq by blast
 
 lemma while_r_minimal_partial:
   assumes seq_step: "`p \<longrightarrow> invar`"
@@ -233,35 +232,25 @@ lemma while_term_hoare_r:
 proof -
   have "((p\<^sup><)\<^sub>u \<Rightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>u) \<sqsubseteq> (\<mu> X \<bullet> S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
   proof (rule mu_refine_intro)
-
     from assms show "((p\<^sup><)\<^sub>u \<Rightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>u) \<sqsubseteq> S \<Zcomp> ((p\<^sup><)\<^sub>u \<Rightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>u) \<^bold>\<lhd> b \<^bold>\<rhd> II"
       by (rel_auto; smt (z3) hoare_meaning)+
-
     let ?E = "\<lambda> n. \<lbrakk>(p \<and> v < \<guillemotleft>n\<guillemotright>)\<^sup><\<rbrakk>\<^sub>u"
     show "((p\<^sup><)\<^sub>u \<and> (\<mu> X \<bullet> S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II)) = ((p\<^sup><)\<^sub>u \<and> (\<nu> X \<bullet> S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II))"
     proof (rule constr_fp_uniq[where E="?E"])
       show "mono (\<lambda>X. S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
-        by (rule cond_seqr_mono)          
+        by (rule cond_seqr_mono)
       show "constr (\<lambda>X. S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II) ?E"
-      proof (rule constrI)
-        show "chain ?E"
-          by (rule chainI, rel_auto+)
-        have "S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II = S \<Zcomp> (X \<and> \<lbrakk>(p \<and> v < n)\<^sup><\<rbrakk>\<^sub>u) \<^bold>\<lhd> b \<^bold>\<rhd> II" for X n
-          using assms sorry
-        then show "(S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II \<and> \<lbrakk>(p \<and> v < n + 1)\<^sup><\<rbrakk>\<^sub>u) = 
-              (S \<Zcomp> (X \<and> \<lbrakk>(p \<and> v < n)\<^sup><\<rbrakk>\<^sub>u) \<^bold>\<lhd> b \<^bold>\<rhd> II \<and> \<lbrakk>(p \<and> v < n + 1)\<^sup><\<rbrakk>\<^sub>u)" for X n
-          by presburger
-      qed
-      show "(\<Union> (range ?E) = (p\<^sup><)\<^sub>u"
-    qed
+        apply (rule constrI, rule chainI)
+          apply (rel_auto)+
+        by (smt (verit, del_insts) assms hoare_meaning less_Suc_eq order_less_trans)+
+    qed rel_auto (* Couldn't pattern match last goal *)
   qed
-
   thus ?thesis
-    by (simp add: hoare_r_def while_bot_def)
+    by (rel_auto add: while_bot_def)
 qed
 
 lemma while_vrt_hoare_r [hoare_safe]:
-  assumes "\<And> z::nat. \<^bold>{p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<^bold>}S\<^bold>{p \<and> v < \<guillemotleft>z\<guillemotright>\<^bold>}" "`pre \<Rightarrow> p`" "`(\<not>b \<and> p) \<Rightarrow> post`"
+  assumes "\<And> z::nat. \<^bold>{p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<^bold>}S\<^bold>{p \<and> v < \<guillemotleft>z\<guillemotright>\<^bold>}" "`pre S \<longrightarrow> p`" "`(\<not>b \<and> p) \<longrightarrow> post S`"
   shows "\<^bold>{pre\<^bold>}while b invr p vrt v do S od\<^bold>{post\<^bold>}"
   apply (rule hoare_r_conseq[OF _ assms(2) assms(3)])
   apply (simp add: while_vrt_def)
@@ -269,14 +258,15 @@ lemma while_vrt_hoare_r [hoare_safe]:
   done
   
 text \<open> General total correctness law based on well-founded induction \<close>
-        
+
+(*
 lemma while_wf_hoare_r:
   assumes WF: "wf R"
-  assumes I0: "`pre \<Rightarrow> p`"
+  assumes I0: "`p' \<longrightarrow> p`"
   assumes induct_step:"\<And> st. \<^bold>{b \<and> p \<and> e = \<guillemotleft>st\<guillemotright>\<^bold>}Q\<^bold>{p \<and> (e, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>\<^bold>}"
-  assumes PHI:"`(\<not>b \<and> p) \<Rightarrow> post`"  
-  shows "\<^bold>{pre\<^bold>}while\<^sub>\<bottom> b invr p do Q od\<^bold>{post\<^bold>}"
-unfolding hoare_r_def while_inv_bot_def while_bot_def
+  assumes PHI:"`(\<not>b \<and> p) \<longrightarrow> q'`"  
+  shows "\<^bold>{p'\<^bold>}while\<^sub>\<bottom> b invr p do Q od\<^bold>{q'\<^bold>}"
+  unfolding hoare_r_def while_inv_bot_def while_bot_def
 proof (rule pre_weak_rel[of _ "\<lceil>p\<rceil>\<^sub><" ])
   from I0 show "`\<lceil>pre\<rceil>\<^sub>< \<Rightarrow> \<lceil>p\<rceil>\<^sub><`"
     by rel_auto
@@ -290,7 +280,7 @@ proof (rule pre_weak_rel[of _ "\<lceil>p\<rceil>\<^sub><" ])
     show "\<And>st. (\<lceil>p\<rceil>\<^sub>< \<and> \<lceil>e\<rceil>\<^sub>< = \<guillemotleft>st\<guillemotright> \<Rightarrow> \<lceil>post\<rceil>\<^sub>>) \<sqsubseteq> Q \<Zcomp> (\<lceil>p\<rceil>\<^sub>< \<and> (\<lceil>e\<rceil>\<^sub><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<Rightarrow> \<lceil>post\<rceil>\<^sub>>) \<triangleleft> b \<triangleright>\<^sub>r II" 
       by (rel_auto)
   qed       
-qed
+qed*)
 
 subsection \<open> Frame Rules \<close>
 
@@ -298,37 +288,50 @@ text \<open> Frame rule: If starting $S$ in a state satisfying $p establishes q$
   we can insert an invariant predicate $r$ when $S$ is framed by $a$, provided that $r$ does not
   refer to variables in the frame, and $q$ does not refer to variables outside the frame. \<close>
 
+(* TODO - Fix all these metis proofs *)
+
 lemma frame_hoare_r:
-  assumes "vwb_lens a" "a \<sharp> r" "a \<natural> q" "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>}"  
+  assumes "idem_scene a" "a \<sharp> r" "-a \<sharp> q" "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>}"
   shows "\<^bold>{p \<and> r\<^bold>}a:[P]\<^bold>{q \<and> r\<^bold>}"
   using assms
-  by (rel_auto, metis)
+  apply (rel_auto)
+   apply (metis (mono_tags, lifting) Product_Type.Collect_case_prodD frame_def fst_conv hoare_meaning snd_conv)
+  by (metis (mono_tags, lifting) Product_Type.Collect_case_prodD frame_def fst_eqD scene_equiv_def scene_override_commute snd_eqD)
 
 lemma frame_strong_hoare_r [hoare_safe]: 
-  assumes "vwb_lens a" "a \<sharp> r" "a \<natural> q" "\<^bold>{p \<and> r\<^bold>}S\<^bold>{q\<^bold>}"
+  assumes "idem_scene a" "a \<sharp> r" "-a \<sharp> q" "\<^bold>{p \<and> r\<^bold>}S\<^bold>{q\<^bold>}"
   shows "\<^bold>{p \<and> r\<^bold>}a:[S]\<^bold>{q \<and> r\<^bold>}"
-  using assms by (rel_auto, metis)
+  using assms apply (rel_auto)
+   apply (metis (mono_tags, lifting) SEXP_def hoare_meaning rel_frame set_pred_def)
+  by (metis SEXP_def rel_frame scene_equiv_def scene_override_commute set_pred_def)
 
 lemma frame_hoare_r' [hoare_safe]: 
-  assumes "vwb_lens a" "a \<sharp> r" "a \<natural> q" "\<^bold>{r \<and> p\<^bold>}S\<^bold>{q\<^bold>}"
+  assumes "idem_scene a" "a \<sharp> r" "-a \<sharp> q" "\<^bold>{r \<and> p\<^bold>}S\<^bold>{q\<^bold>}"
   shows "\<^bold>{r \<and> p\<^bold>}a:[S]\<^bold>{r \<and> q\<^bold>}"
-  using assms
-  by (simp add: frame_strong_hoare_r utp_pred_laws.inf.commute)
+  using assms apply (rel_auto)
+   apply (metis SEXP_def rel_frame scene_equiv_def scene_override_commute set_pred_def)
+  by (metis (mono_tags, lifting) Product_Type.Collect_case_prodD frame_def fst_conv hoare_meaning snd_conv)
 
 lemma antiframe_hoare_r:
-  assumes "vwb_lens a" "a \<natural> r" "a \<sharp> q" "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>}"  
-  shows "\<^bold>{p \<and> r\<^bold>} a:\<lbrakk>P\<rbrakk> \<^bold>{q \<and> r\<^bold>}"
-  using assms by (rel_auto, metis)
+  assumes "idem_scene a" "-a \<sharp> r" "a \<sharp> q" "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>}"  
+  shows "\<^bold>{p \<and> r\<^bold>} (-a):[P] \<^bold>{q \<and> r\<^bold>}"
+  using assms apply (rel_auto)
+   apply (metis (mono_tags, lifting) Product_Type.Collect_case_prodD frame_def fst_conv hoare_meaning snd_conv)
+  by (metis (full_types) SEXP_def rel_frame scene_equiv_def scene_override_commute set_pred_def)
     
 lemma antiframe_strong_hoare_r:
-  assumes "vwb_lens a" "a \<natural> r" "a \<sharp> q" "\<^bold>{p \<and> r\<^bold>}P\<^bold>{q\<^bold>}"  
-  shows "\<^bold>{p \<and> r\<^bold>} a:\<lbrakk>P\<rbrakk> \<^bold>{q \<and> r\<^bold>}"
-  using assms by (rel_auto, metis)
+  assumes "idem_scene a" "-a \<sharp> r" "a \<sharp> q" "\<^bold>{p \<and> r\<^bold>}P\<^bold>{q\<^bold>}"  
+  shows "\<^bold>{p \<and> r\<^bold>} (-a):[P] \<^bold>{q \<and> r\<^bold>}"
+  using assms  apply (rel_auto)
+   apply (metis (mono_tags, lifting) Product_Type.Collect_case_prodD frame_def fst_conv hoare_meaning snd_conv)
+  by (metis (full_types) SEXP_def rel_frame scene_equiv_def scene_override_commute set_pred_def)
+
 
 lemma nmods_invariant:
-  assumes "S nmods a" "a \<natural> p"
+  assumes "S nmods a" "-a \<sharp> p"
   shows "\<^bold>{p\<^bold>}S\<^bold>{p\<^bold>}"
-  using assms by (rel_auto, metis)
+  using assms apply rel_auto
+  by (metis Healthy_def SEXP_def rel_frame scene_equiv_def scene_override_commute set_pred_def)
 
 lemma hoare_r_ghost:
   assumes "vwb_lens x" "x \<sharp> p" "x \<sharp> q" "S nuses x" "\<^bold>{p\<^bold>}x := e\<Zcomp> S\<^bold>{q\<^bold>}"
