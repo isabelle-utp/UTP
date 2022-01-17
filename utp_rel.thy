@@ -139,6 +139,23 @@ abbreviation modifies ("_ mods _") where
 abbreviation not_modifies ("_ nmods _") where
 "not_modifies P a \<equiv> P is frame (-a)"
 
+text \<open> Variable restriction - assign arbitrary values to the variable\<close>
+
+(* Not sure if this is the right definition *)
+definition rrestr :: "'s scene \<Rightarrow> 's rel \<Rightarrow> 's rel" where
+"rrestr x P = (\<Union>t t'. frame (-x) ((\<lambda>(s,s'). (t \<oplus>\<^sub>S s on x, t' \<oplus>\<^sub>S s' on x))`P))"
+
+abbreviation not_uses ("_ nuses _") where
+"not_uses P a \<equiv> P is rrestr a"
+
+lemma "P nuses x \<Longrightarrow> P nmods x"
+  using rrestr_def oops
+
+lemma nuses_assign_commute:
+  assumes "mwb_lens x" "P nuses $x"
+  shows "x := \<guillemotleft>v\<guillemotright> \<Zcomp> P = P \<Zcomp> x := \<guillemotleft>v\<guillemotright>"
+  oops
+
 text \<open> Promotion takes a partial lens @{term a} and a relation @{term P}. It constructs a relation
   that firstly restricts the state to valuations where @{term a} is valid (i.e. defined), and 
   secondly uses the lens to promote @{term P} so that it acts only on the @{term a} region of
