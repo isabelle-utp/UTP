@@ -7,13 +7,37 @@ theory utp_rel_laws
     utp_liberate
 begin
 
-lemma rcond_true [simp]: "P \<^bold>\<lhd> true \<^bold>\<rhd> Q = P"
-  by (simp add: rel_eq_iff rel_rcond)
+section \<open> Cond laws \<close>
 
-lemma rcond_false [simp]: "(P \<^bold>\<lhd> false \<^bold>\<rhd> Q) = Q"
-  by (simp add: rel_eq_iff rel_rcond)
+lemma cond_idem [simp]: "P \<lhd> b \<rhd> P = P"
+  by rel_auto
 
-lemma comp_cond_left_distr:
+lemma cond_sym: "P \<lhd> b \<rhd> Q = Q \<lhd> \<not>b \<rhd> P"
+  by rel_auto
+
+lemma cond_assoc: "(P \<lhd> b \<rhd> Q) \<lhd> c \<rhd> R = P \<lhd> b \<and> c \<rhd> (Q \<lhd> c \<rhd> R)"
+  by rel_auto
+
+lemma cond_distr: "P \<lhd> b \<rhd> (Q \<lhd> c \<rhd> R) = (P \<lhd> b \<rhd> Q) \<lhd> c \<rhd> (P \<lhd> b \<rhd> R)"
+  by rel_auto
+
+lemma cond_true [simp]: "P \<lhd> true \<rhd> Q = P"
+  by rel_auto
+
+lemma cond_false [simp]: "P \<lhd> false \<rhd> Q = Q"
+  by rel_auto
+
+lemma cond_reach [simp]: "P \<lhd> b \<rhd> (Q \<lhd> b \<rhd> R) = P \<lhd> b \<rhd> R"
+  by rel_auto
+
+lemma cond_disj [simp]: "P \<lhd> b \<rhd> (P \<lhd> c \<rhd> Q) = P \<lhd> b \<or> c \<rhd> Q"
+  by rel_auto
+
+(* \<odot> stands for any truth-functional operator. Any way of writing this?
+lemma cond_interchange: "(P \<odot> Q) \<lhd> b \<rhd> (R \<odot> S) = (P \<lhd> b \<rhd> R) \<odot> (Q \<lhd> b \<rhd> S)"
+*)
+
+lemma comp_rcond_left_distr:
   "(P \<^bold>\<lhd> b \<^bold>\<rhd> Q) \<Zcomp> R = (P \<Zcomp> R) \<^bold>\<lhd> b \<^bold>\<rhd> (Q \<Zcomp> R) "
   by (rel_auto)
 
@@ -33,7 +57,10 @@ lemma rcond_rassume_expand: "P \<^bold>\<lhd> b \<^bold>\<rhd> Q = (\<questiondo
 lemma rcond_mono:  "\<lbrakk> P\<^sub>1 \<sqsubseteq> P\<^sub>2; Q\<^sub>1 \<sqsubseteq> Q\<^sub>2 \<rbrakk> \<Longrightarrow> (P\<^sub>1 \<^bold>\<lhd> b \<^bold>\<rhd> Q\<^sub>1) \<sqsubseteq> (P\<^sub>2 \<^bold>\<lhd> b \<^bold>\<rhd> Q\<^sub>2)"
   by rel_auto
 
-subsection \<open> Precondition and Postcondition Laws \<close>
+lemma rcond_refine: "(P \<sqsubseteq> (Q \<lhd> b \<rhd> R)) = (P \<sqsubseteq> ((b)\<^sub>u \<and> Q) \<and> (P \<sqsubseteq> ((\<not>b)\<^sub>u \<and> R)))"
+  by rel_simp
+
+section \<open> Precondition and Postcondition Laws \<close>
   
 theorem precond_equiv:
   "P = (P \<Zcomp> true) \<longleftrightarrow> (out\<alpha> \<sharp> P)"
@@ -67,7 +94,7 @@ lemma seqr_right_zero [simp]:
 
 lemma seqr_mono:
   "\<lbrakk> P\<^sub>1 \<sqsubseteq> P\<^sub>2; Q\<^sub>1 \<sqsubseteq> Q\<^sub>2 \<rbrakk> \<Longrightarrow> (P\<^sub>1 \<Zcomp> Q\<^sub>1) \<sqsubseteq> (P\<^sub>2 \<Zcomp> Q\<^sub>2)"
-  by (rel_auto)
+  unfolding ref_by_def by auto
     
 lemma seqr_monotonic:
   "\<lbrakk> mono P; mono Q \<rbrakk> \<Longrightarrow> mono (\<lambda> X. P X \<Zcomp> Q X)"
@@ -76,11 +103,11 @@ lemma seqr_monotonic:
 lemma cond_seqr_mono: "mono (\<lambda>X. (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
   unfolding mono_def by (meson equalityE rcond_mono ref_by_def relcomp_mono)
 
-(*
-lemma Monotonic_seqr_tail [closure]:
-  assumes "Monotonic F"
-  shows "Monotonic (\<lambda> X. P \<Zcomp> F(X))"
-  by (simp add: assms monoD monoI seqr_mono) *)
+lemma mono_seqr_tail:
+  assumes "mono F"
+  shows "mono (\<lambda> X. P \<Zcomp> F(X))"
+  apply (rule monoI)
+  by (meson assms monoE relcomp_mono subset_eq)
 
 lemma seqr_liberate_left: "vwb_lens x \<Longrightarrow> (((P :: 'a \<leftrightarrow> 'b) \\ $x\<^sup><) \<Zcomp> Q) = ((P \<Zcomp> Q) \\ $x\<^sup><)"
   by (rel_auto add: liberate_pred_def)
@@ -96,17 +123,17 @@ lemma seqr_or_distr:
   "(P \<Zcomp> (Q \<or> R)) = ((P \<Zcomp> Q) \<or> (P \<Zcomp> R))"
   by (rel_auto)
 
-(*
 lemma seqr_and_distr_ufunc:
-  "ufunctional P \<Longrightarrow> (P \<Zcomp> (Q \<and> R)) = ((P \<Zcomp> Q) \<and> (P \<Zcomp> R))"
-  by (rel_auto)
+  "functional P \<Longrightarrow> (P \<Zcomp> (Q \<and> R)) = ((P \<Zcomp> Q) \<and> (P \<Zcomp> R))"
+  by (rel_auto; metis single_valuedD)
 
 lemma seqr_and_distl_uinj:
-  "uinj R \<Longrightarrow> ((P \<and> Q) \<Zcomp> R) = ((P \<Zcomp> R) \<and> (Q \<Zcomp> R))"
-  by (rel_auto)
+  "injective R \<Longrightarrow> ((P \<and> Q) \<Zcomp> R) = ((P \<Zcomp> R) \<and> (Q \<Zcomp> R))"
+  by (rel_auto add: injective_def)
 
+(*
 lemma seqr_unfold:
-  "(P \<Zcomp> Q) = (\<^bold>\<exists> v \<bullet> P\<lbrakk>\<guillemotleft>v\<guillemotright>/$\<^bold>v\<acute>\<rbrakk> \<and> Q\<lbrakk>\<guillemotleft>v\<guillemotright>/$\<^bold>v\<rbrakk>)"
+  "(P \<Zcomp> Q) = (P\<lbrakk>\<guillemotleft>v\<guillemotright>/\<^bold>v\<^sup>>\<rbrakk> \<and> Q\<lbrakk>\<guillemotleft>v\<guillemotright>/\<^bold>v\<^sup><\<rbrakk>) \\ v"
   by (rel_auto)
 
 lemma seqr_unfold_heterogeneous:
@@ -252,30 +279,6 @@ subsection \<open> Quantale Laws \<close>
 
 text \<open> Kept here for backwards compatibility, remove when this library catches up with the old UTP
        as most of these are already proven in Relation.thy\<close>
-
-lemma seq_Sup_distl: "P \<Zcomp> (\<Union> A) = (\<Union> Q\<in>A. P \<Zcomp> Q)"
-  by (transfer, auto)
-
-lemma seq_Sup_distr: "(\<Union> A) \<Zcomp> Q = (\<Union> P\<in>A. P \<Zcomp> Q)"
-  by (transfer, auto)
-
-lemma seq_UINF_distl: "P \<Zcomp> (\<Union> Q\<in>A. F(Q)) = (\<Union> Q\<in>A. P \<Zcomp> F(Q))"
-  by auto
-
-lemma seq_UINF_distl': "P \<Zcomp> (\<Union> Q. F(Q)) = (\<Union> Q. P \<Zcomp> F(Q))"
-  by (metis seq_UINF_distl)
-
-lemma seq_UINF_distr: "(\<Union> P\<in>A . F(P)) \<Zcomp> Q = (\<Union> P\<in>A. F(P) \<Zcomp> Q)"
-  by auto
-
-lemma seq_UINF_distr': "(\<Union> P. F(P)) \<Zcomp> Q = (\<Union> P. F(P) \<Zcomp> Q)"
-  by (metis seq_UINF_distr)
-
-lemma seq_SUP_distl: "P \<Zcomp> (\<Union>i\<in>A. Q(i)) = (\<Union>i\<in>A. P \<Zcomp> Q(i))"
-  by (metis image_image seq_Sup_distl)
-
-lemma seq_SUP_distr: "(\<Union>i\<in>A. P(i)) \<Zcomp> Q = (\<Union>i\<in>A. P(i) \<Zcomp> Q)"
-  by (simp add: seq_Sup_distr)
 
 subsection \<open> Skip Laws \<close>
     
@@ -511,26 +514,27 @@ lemma assign_commute:
   assumes "x \<bowtie> y" "$x \<sharp> f" "$y \<sharp> e" "vwb_lens x" "vwb_lens y"
   shows "(x := e \<Zcomp> y := f) = (y := f \<Zcomp> x := e)"
   using assms by (rel_auto add: lens_indep_comm)
-(*
+
 lemma assign_cond:
-  fixes x :: "('a \<Longrightarrow> '\<alpha>)"
   assumes "out\<alpha> \<sharp> b"
-  shows "(x := e \<Zcomp> (P \<triangleleft> b \<triangleright> Q)) = ((x := e \<Zcomp> P) \<triangleleft> b \<triangleright> (x := e \<Zcomp> Q))"
-  by (rel_auto)
+  shows "(x := e \<Zcomp> (P \<lhd> b \<rhd> Q)) = ((x := e \<Zcomp> P) \<lhd> b \<rhd> (x := e \<Zcomp> Q))"
+  apply rel_auto
+     defer
+  oops
 
 lemma assign_rcond:
-  fixes x :: "('a \<Longrightarrow> '\<alpha>)"
-  shows "(x := e \<Zcomp> (P \<^bold>\<lhd> b \<^bold>\<rhd> Q)) = ((x := e \<Zcomp> P) \<triangleleft> (b\<lbrakk>e/x\<rbrakk>) \<triangleright>\<^sub>r (x := e \<Zcomp> Q))"
+  "(x := e \<Zcomp> (P \<^bold>\<lhd> b \<^bold>\<rhd> Q)) = ((x := e \<Zcomp> P) \<^bold>\<lhd> (b\<lbrakk>e/x\<rbrakk>) \<^bold>\<rhd> (x := e \<Zcomp> Q))"
   by (rel_auto)
 
 lemma assign_r_alt_def:
   fixes x :: "('a \<Longrightarrow> '\<alpha>)"
-  shows "x := v = II\<lbrakk>\<lceil>v\<rceil>\<^sub></$x\<rbrakk>"
+  shows "x := v = II\<lbrakk>v\<^sup></x\<^sup><\<rbrakk>"
   by (rel_auto)
 
-lemma assigns_r_ufunc: "ufunctional \<langle>f\<rangle>\<^sub>a"
+lemma assigns_r_func: "functional \<langle>f\<rangle>\<^sub>a"
   by (rel_auto)
 
+(*
 lemma assigns_r_uinj: "inj\<^sub>s f \<Longrightarrow> uinj \<langle>f\<rangle>\<^sub>a"
   apply (rel_simp, simp add: inj_eq) 
     
@@ -604,18 +608,19 @@ lemma post_convr [simp]: "\<lceil>p\<rceil>\<^sub>>\<^sup>- = \<lceil>p\<rceil>\
 
 subsection \<open> Assertion and Assumption Laws \<close>
 
-(*
+
 declare sublens_def [lens_defs del]
   
-lemma assume_false: "(false)\<^sub>e\<^sup>\<top> = false"
+lemma assume_false: "\<questiondown>false? = false"
   by (rel_auto)
   
-lemma assume_true: "[true]\<^sup>\<top> = II"
+lemma assume_true: "\<questiondown>true? = II"
   by (rel_auto)
     
-lemma assume_seq: "[b]\<^sup>\<top> \<Zcomp> [c]\<^sup>\<top> = [(b \<and> c)]\<^sup>\<top>"
+lemma assume_seq: "\<questiondown>b? \<Zcomp> \<questiondown>c? = \<questiondown>b \<and> c?"
   by (rel_auto)
 
+(*
 lemma assert_false: "{false}\<^sub>\<bottom> = true"
   by (rel_auto)
 
@@ -666,19 +671,17 @@ proof -
 qed
 
 theorem while_bot_false: "while\<^sub>\<bottom> (false)\<^sub>e do P od = II"
-  by (simp add: while_bot_def mu_const alpha)
+  by (rel_auto add: while_bot_def gfp_const)
 
 theorem while_bot_true: "while\<^sub>\<bottom> (true)\<^sub>e do P od = (\<mu> X \<bullet> P \<Zcomp> X)"
-  by (simp add: while_bot_def alpha)
+  by (rel_auto add: while_bot_def)
 
 text \<open> An infinite loop with a feasible body corresponds to a program error (non-termination). \<close>
 
 theorem while_infinite: "P \<Zcomp> true = true \<Longrightarrow> while\<^sub>\<bottom> (true)\<^sub>e do P od = true"
-  apply (simp add: while_bot_true)
   apply (rule antisym)
-  apply (simp add: true_pred_def)
-  apply (rule gfp_upperbound)
-  apply (rel_auto)
+   apply (simp add: true_pred_def)
+    apply (rel_auto add: gfp_upperbound while_bot_true)
   done
 
 subsection \<open> Algebraic Properties \<close>
@@ -691,34 +694,9 @@ declare upred_semiring.power_Suc [simp del]
 
 text \<open> We introduce the power syntax derived from semirings \<close>
 
-abbreviation upower :: "'a rel \<Rightarrow> nat \<Rightarrow> 'a rel" (infixr "\<^bold>^" 80) where
-"upower P n \<equiv> upred_semiring.power P n"
-
-translations
-  "P \<^bold>^ i" <= "CONST power.power II op \<Zcomp> P i"
-  "P \<^bold>^ i" <= "(CONST power.power II op \<Zcomp> P) i"
-
 text \<open> Set up transfer tactic for powers \<close>
+unbundle utp_lattice_syntax
 
-(*
-lemma upower_rep_eq:
-  "\<lbrakk>P \<^bold>^ i\<rbrakk>\<^sub>P = (\<lambda> b. b \<in> ({p. P p} ^^ i))"
-proof (induct i arbitrary: P)
-  case 0
-  then show ?case
-    by (auto, rel_auto)
-next
-  case (Suc i)
-  show ?case
-    by (simp add: Suc seqr.rep_eq relpow_commute upred_semiring.power_Suc)
-qed
-
-lemma upower_rep_eq_alt:
-  "\<lbrakk>power.power \<langle>id\<^sub>s\<rangle>\<^sub>a (\<Zcomp>) P i\<rbrakk>\<^sub>e = (\<lambda>b. b \<in> ({p. \<lbrakk>P\<rbrakk>\<^sub>e p} ^^ i))"
-  by (metis skip_r_def upower_rep_eq)
-
-update_uexpr_rep_eq_thms
-  
 lemma Sup_power_expand:
   fixes P :: "nat \<Rightarrow> 'a::complete_lattice"
   shows "P(0) \<sqinter> (\<Sqinter>i. P(i+1)) = (\<Sqinter>i. P(i))"
@@ -730,11 +708,11 @@ proof -
   moreover have "\<Sqinter> (P ` insert 0 {1..}) = P(0) \<sqinter> \<Sqinter> (P ` {1..})"
     by (simp)
   moreover have "\<Sqinter> (P ` {1..}) = (\<Sqinter>i. P(i+1))"
-    by (simp add: atLeast_Suc_greaterThan greaterThan_0)
+    sorry
   ultimately show ?thesis
-    by (simp only:)
+    by simp
 qed
-
+(*
 lemma Sup_upto_Suc: "(\<Sqinter>i\<in>{0..Suc n}. P \<^bold>^ i) = (\<Sqinter>i\<in>{0..n}. P \<^bold>^ i) \<sqinter> P \<^bold>^ Suc n"
 proof -
   have "(\<Sqinter>i\<in>{0..Suc n}. P \<^bold>^ i) = (\<Sqinter>i\<in>insert (Suc n) {0..n}. P \<^bold>^ i)"
@@ -744,36 +722,31 @@ proof -
   finally show ?thesis
     by (simp add: Lattices.sup_commute)
 qed
-
+*)
 text \<open> The following two proofs are adapted from the AFP entry 
   \href{https://www.isa-afp.org/entries/Kleene_Algebra.shtml}{Kleene Algebra}. 
   See also~\cite{Armstrong2012,Armstrong2015}. \<close>
 
-lemma upower_inductl: "Q \<sqsubseteq> ((P \<Zcomp> Q) \<sqinter> R) \<Longrightarrow> Q \<sqsubseteq> P \<^bold>^ n \<Zcomp> R"
+lemma upower_inductl: "Q \<sqsubseteq> ((P \<Zcomp> Q) \<sqinter> R) \<Longrightarrow> Q \<sqsubseteq> P ^^ n \<Zcomp> R"
 proof (induct n)
   case 0
   then show ?case by (auto)
 next
   case (Suc n)
   then show ?case
-    by (auto simp add: upred_semiring.power_Suc, metis (no_types, hide_lams) dual_order.trans order_refl seqr_assoc seqr_mono)
+    by (smt (verit, del_insts) ref_lattice.inf.absorb_iff1 ref_lattice.le_infE relcomp_distrib relpow.simps(2) relpow_commute seqr_assoc)
 qed
 
 lemma upower_inductr:
   assumes "Q \<sqsubseteq> R \<sqinter> (Q \<Zcomp> P)"
-  shows "Q \<sqsubseteq> R \<Zcomp> (P \<^bold>^ n)"
+  shows "Q \<sqsubseteq> R \<Zcomp> (P ^^ n)"
 using assms proof (induct n)
   case 0
   then show ?case by auto
 next
   case (Suc n)
-  have "R \<Zcomp> P \<^bold>^ Suc n = (R \<Zcomp> P \<^bold>^ n) \<Zcomp> P"
-    by (metis seqr_assoc upred_semiring.power_Suc2)
-  also have "Q \<Zcomp> P \<sqsubseteq> ..."
-    by (meson Suc.hyps assms eq_iff seqr_mono)
-  also have "Q \<sqsubseteq> ..."
-    using assms by auto
-  finally show ?case .
+  then show ?case
+    by (rel_auto, blast)
 qed
 
 lemma SUP_atLeastAtMost_first:
@@ -782,32 +755,9 @@ lemma SUP_atLeastAtMost_first:
   shows "(\<Sqinter>i\<in>{m..n}. P(i)) = P(m) \<sqinter> (\<Sqinter>i\<in>{Suc m..n}. P(i))"
   by (metis SUP_insert assms atLeastAtMost_insertL)
     
-lemma upower_seqr_iter: "P \<^bold>^ n = (\<Zcomp> Q : replicate n P \<bullet> Q)"
-  by (induct n, simp_all add: upred_semiring.power_Suc)
-
-lemma assigns_power: "\<langle>f\<rangle>\<^sub>a \<^bold>^ n = \<langle>f ^\<^sub>s n\<rangle>\<^sub>a"
-  by (induct n, rel_auto+)
-
-subsection \<open> Kleene Star \<close>
-
-definition ustar :: "'\<alpha> rel \<Rightarrow> '\<alpha> rel" ("_\<^sup>\<star>" [999] 999) where
-"P\<^sup>\<star> = (\<Sqinter>i\<in>{0..} \<bullet> P\<^bold>^i)"
-
-lemma ustar_rep_eq:
-  "\<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>e = (\<lambda>b. b \<in> ({p. \<lbrakk>P\<rbrakk>\<^sub>e p}\<^sup>* ))"
-  by (simp add: ustar_def, rel_auto, simp_all add: relpow_imp_rtrancl rtrancl_imp_relpow)
-
-update_uexpr_rep_eq_thms
-
-subsection \<open> Kleene Plus \<close>
-
-purge_notation trancl ("(_\<^sup>+)" [1000] 999)
-
-definition uplus :: "'\<alpha> rel \<Rightarrow> '\<alpha> rel" ("_\<^sup>+" [999] 999) where
-[upred_defs]: "P\<^sup>+ = P \<Zcomp> P\<^sup>\<star>"
-
-lemma uplus_power_def: "P\<^sup>+ = (\<Sqinter> i \<bullet> P \<^bold>^ (Suc i))"
-  by (simp add: uplus_def ustar_def seq_UINF_distl' UINF_atLeast_Suc upred_semiring.power_Suc)
+lemma upower_seqr_iter: "P ^^ n = (\<Zcomp> Q : replicate n P \<bullet> Q)"
+  apply (induct n)
+  by (simp, metis iter_seqr_cons relpow.simps(2) relpow_commute replicate_Suc)
 
 subsection \<open> Omega \<close>
 
@@ -816,81 +766,69 @@ definition uomega :: "'\<alpha> rel \<Rightarrow> '\<alpha> rel" ("_\<^sup>\<ome
 
 subsection \<open> Relation Algebra Laws \<close>
 
-theorem RA1: "(P \<Zcomp> (Q \<Zcomp> R)) = ((P \<Zcomp> Q) \<Zcomp> R)"
-  by (simp add: seqr_assoc)
-
-theorem RA2: "(P \<Zcomp> II) = P" "(II \<Zcomp> P) = P"
-  by simp_all
-
-theorem RA3: "P\<^sup>-\<^sup>- = P"
-  by simp
-
-theorem RA4: "(P \<Zcomp> Q)\<^sup>- = (Q\<^sup>- \<Zcomp> P\<^sup>-)"
-  by simp
-
-theorem RA5: "(P \<or> Q)\<^sup>- = (P\<^sup>- \<or> Q\<^sup>-)"
-  by (rel_auto)
-
-theorem RA6: "((P \<or> Q) \<Zcomp> R) = (P\<Zcomp>R \<or> Q\<Zcomp>R)"
-  using seqr_or_distl by blast
-
-theorem RA7: "((P\<^sup>- \<Zcomp> (\<not>(P \<Zcomp> Q))) \<or> (\<not>Q)) = (\<not>Q)"
+theorem seqr_disj_cancel: "((P\<^sup>- \<Zcomp> (\<not>(P \<Zcomp> Q))) \<or> (\<not>Q)) = (\<not>Q)"
   by (rel_auto)
 
 subsection \<open> Kleene Algebra Laws \<close>
 
-lemma ustar_alt_def: "P\<^sup>\<star> = (\<Sqinter> i \<bullet> P \<^bold>^ i)"
-  by (simp add: ustar_def)
-
-theorem ustar_sub_unfoldl: "P\<^sup>\<star> \<sqsubseteq> II \<sqinter> (P\<Zcomp>P\<^sup>\<star>)"
-  by (rel_simp, simp add: rtrancl_into_trancl2 trancl_into_rtrancl)
+theorem ustar_sub_unfoldl: "P\<^sup>* \<sqsubseteq> II \<sqinter> (P\<Zcomp>P\<^sup>*)"
+  by rel_force
     
-theorem ustar_inductl:
+theorem rtrancl_inductl:
   assumes "Q \<sqsubseteq> R" "Q \<sqsubseteq> P \<Zcomp> Q"
-  shows "Q \<sqsubseteq> P\<^sup>\<star> \<Zcomp> R"
+  shows "Q \<sqsubseteq> P\<^sup>* \<Zcomp> R"
 proof -
-  have "P\<^sup>\<star> \<Zcomp> R = (\<Sqinter> i. P \<^bold>^ i \<Zcomp> R)"
-    by (simp add: ustar_def UINF_as_Sup_collect' seq_SUP_distr)
+  have "P\<^sup>* \<Zcomp> R = (\<Sqinter> i. P ^^ i \<Zcomp> R)"
+    by (simp add: relcomp_UNION_distrib2 rtrancl_is_UN_relpow)
   also have "Q \<sqsubseteq> ..."
-    by (simp add: SUP_least assms upower_inductl)
+    by (simp add: assms ref_lattice.INF_greatest upower_inductl)
   finally show ?thesis .
 qed
 
-theorem ustar_inductr:
+theorem rtrancl_inductr:
   assumes "Q \<sqsubseteq> R" "Q \<sqsubseteq> Q \<Zcomp> P"
-  shows "Q \<sqsubseteq> R \<Zcomp> P\<^sup>\<star>"
+  shows "Q \<sqsubseteq> R \<Zcomp> P\<^sup>*"
 proof -
-  have "R \<Zcomp> P\<^sup>\<star> = (\<Sqinter> i. R \<Zcomp> P \<^bold>^ i)"
-    by (simp add: ustar_def UINF_as_Sup_collect' seq_SUP_distl)
+  have "R \<Zcomp> P\<^sup>* = (\<Sqinter> i. R \<Zcomp> P ^^ i)"
+    by (metis rtrancl_is_UN_relpow relcomp_UNION_distrib)
   also have "Q \<sqsubseteq> ..."
-    by (simp add: SUP_least assms upower_inductr)
+    by (simp add: assms ref_lattice.INF_greatest upower_inductr)
   finally show ?thesis .
 qed
 
-lemma ustar_refines_nu: "(\<nu> X \<bullet> (P \<Zcomp> X) \<sqinter> II) \<sqsubseteq> P\<^sup>\<star>"
-  by (metis (no_types, lifting) lfp_greatest semilattice_sup_class.le_sup_iff 
-      semilattice_sup_class.sup_idem upred_semiring.mult_2_right 
-      upred_semiring.one_add_one ustar_inductl)
-
-lemma ustar_as_nu: "P\<^sup>\<star> = (\<nu> X \<bullet> (P \<Zcomp> X) \<sqinter> II)"
-proof (rule antisym)
-  show "(\<nu> X \<bullet> (P \<Zcomp> X) \<sqinter> II) \<sqsubseteq> P\<^sup>\<star>"
-    by (simp add: ustar_refines_nu)
-  show "P\<^sup>\<star> \<sqsubseteq> (\<nu> X \<bullet> (P \<Zcomp> X) \<sqinter> II)"
-    by (metis lfp_lowerbound upred_semiring.add_commute ustar_sub_unfoldl)
+lemma rtrancl_refines_nu: "(\<nu> X \<bullet> (P \<Zcomp> X) \<sqinter> II) \<sqsubseteq> P\<^sup>*"
+proof -
+  have mono_X: "mono (\<lambda> X. (P \<Zcomp> X) \<sqinter> II)"
+    by (smt (verit, del_insts) Un_mono monoI relcomp_distrib subset_Un_eq sup.idem)
+  { 
+    fix a b assume "(a, b) \<in> P\<^sup>*"
+    then have "(a, b) \<in> (\<nu> X \<bullet> (P \<Zcomp> X) \<sqinter> II)"
+      apply (induct rule: converse_rtrancl_induct)
+      using mono_X lfp_unfold by blast+
+  }
+  then show ?thesis
+    by rel_auto
 qed
 
-lemma ustar_unfoldl: "P\<^sup>\<star> = II \<sqinter> (P \<Zcomp> P\<^sup>\<star>)"
-  apply (simp add: ustar_as_nu)
+lemma rtrancl_as_nu: "P\<^sup>* = (\<nu> X \<bullet> (P \<Zcomp> X) \<sqinter> II)"
+proof (rule antisym)
+  show "P\<^sup>* \<subseteq> (\<nu> X \<bullet> P \<Zcomp> X \<union> II)"
+    using rtrancl_refines_nu by rel_auto
+  show "(\<nu> X \<bullet> P \<Zcomp> X \<union> II) \<subseteq> P\<^sup>*"
+    by (metis dual_order.refl lfp_lowerbound rtrancl_trancl_reflcl trancl_unfold_left)
+qed
+
+lemma rtrancl_unfoldl: "P\<^sup>* = II \<sqinter> (P \<Zcomp> P\<^sup>*)"
+  apply (simp add: rtrancl_as_nu)
   apply (subst lfp_unfold)
    apply (rule monoI)
    apply (rel_auto)+
   done
 
 text \<open> While loop can be expressed using Kleene star \<close>
-
+(*
 lemma while_star_form:
-  "while b do P od = (P \<^bold>\<lhd> b \<^bold>\<rhd> II)\<^sup>\<star> \<Zcomp> [(\<not>b)]\<^sup>\<top>"
+  "while b do P od = (P \<^bold>\<lhd> b \<^bold>\<rhd> II)\<^sup>* \<Zcomp> \<questiondown>(\<not>b)?"
 proof -
   have 1: "Continuous (\<lambda>X. P \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
     by (rel_auto)
@@ -920,23 +858,20 @@ proof -
     by (metis seq_UINF_distr ustar_def)
   finally show ?thesis .
 qed
+*)
   
 subsection \<open> Omega Algebra Laws \<close>
 
-lemma uomega_induct:
-  "P \<Zcomp> P\<^sup>\<omega> \<sqsubseteq> P\<^sup>\<omega>"
-  by (simp add: uomega_def, metis eq_refl gfp_unfold monoI seqr_mono)
+lemma uomega_induct: "P \<Zcomp> P\<^sup>\<omega> \<sqsubseteq> P\<^sup>\<omega>"
+  by (metis gfp_unfold monoI ref_by_def relcomp_mono subset_refl uomega_def)
 
 subsection \<open> Refinement Laws \<close>
 
-lemma skip_r_refine:
-  "(p \<Rightarrow> p) \<sqsubseteq> II"
-  by pred_blast
+lemma skip_r_refine: "(p \<Rightarrow> p) \<sqsubseteq> II"
+  by rel_auto
 
-lemma conj_refine_left:
-  "(Q \<Rightarrow> P) \<sqsubseteq> R \<Longrightarrow> P \<sqsubseteq> (Q \<and> R)"
+lemma conj_refine_left: "(Q \<Rightarrow> P) \<sqsubseteq> R \<Longrightarrow> P \<sqsubseteq> (Q \<and> R)"
   by (rel_auto)
-*)
 
 lemma pre_weak_rel:
   assumes "`p \<longrightarrow> I`"
@@ -1011,4 +946,5 @@ lemma assume_Pre [prepost]:
   "[Pre(P)]\<^sup>\<top> \<Zcomp> P = P"
   by (rel_auto)
 *)
+
 end

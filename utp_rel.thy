@@ -54,6 +54,7 @@ translations
   "_cond P B Q" == "CONST cond P (B)\<^sub>e Q"
   "_rcond P b Q" == "_cond P (b\<^sup><) Q"
 
+(* USE HOL CONVERSE *)
 abbreviation conv_r :: "('a \<leftrightarrow> 'b) \<Rightarrow> 'b \<leftrightarrow> 'a" ("_\<^sup>-" [999] 999) where
 "conv_r p \<equiv> {(b,a). (a,b) \<in> p}"
 
@@ -143,7 +144,7 @@ text \<open> Variable restriction - assign arbitrary values to the variable\<clo
 
 (* Not sure if this is the right definition *)
 definition rrestr :: "'s scene \<Rightarrow> 's rel \<Rightarrow> 's rel" where
-"rrestr x P = (\<Union>t t'. frame (-x) ((\<lambda>(s,s'). (t \<oplus>\<^sub>S s on x, t' \<oplus>\<^sub>S s' on x))`P))"
+[rel]: "rrestr x P = (\<Union>t t'. frame (-x) ((\<lambda>(s,s'). (t \<oplus>\<^sub>S s on x, t' \<oplus>\<^sub>S s' on x))`P))"
 
 abbreviation not_uses ("_ nuses _") where
 "not_uses P a \<equiv> P is rrestr a"
