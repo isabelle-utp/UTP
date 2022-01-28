@@ -62,7 +62,7 @@ definition assigns_rel :: "('s\<^sub>1, 's\<^sub>2) psubst \<Rightarrow> 's\<^su
 
 adhoc_overloading uassigns assigns_rel
 
-syntax "_assign" :: "svid \<Rightarrow> logic \<Rightarrow> logic" (infix ":=" 76)
+syntax "_assign" :: "svid \<Rightarrow> logic \<Rightarrow> logic" (infix ":=" 61)
 translations "_assign x e" == "CONST uassigns [x \<leadsto> e]"
 
 definition test :: "'s pred \<Rightarrow> 's rel" where
