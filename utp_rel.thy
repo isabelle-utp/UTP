@@ -54,6 +54,7 @@ translations
   "_cond P B Q" == "CONST cond P (B)\<^sub>e Q"
   "_rcond P b Q" == "_cond P (b\<^sup><) Q"
 
+(* USE HOL CONVERSE *)
 abbreviation conv_r :: "('a \<leftrightarrow> 'b) \<Rightarrow> 'b \<leftrightarrow> 'a" ("_\<^sup>-" [999] 999) where
 "conv_r p \<equiv> {(b,a). (a,b) \<in> p}"
 
@@ -72,7 +73,7 @@ syntax "_test" :: "logic \<Rightarrow> logic" ("\<questiondown>_?")
 translations "\<questiondown>P?" == "CONST test (P)\<^sub>e"
 
 definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's rel" where
-[pred]: "ndet_assign x = (\<Union> v. x := \<guillemotleft>v\<guillemotright>)"
+[rel]: "ndet_assign x = (\<Union> v. x := \<guillemotleft>v\<guillemotright>)"
 
 syntax "_ndet_assign" :: "svid \<Rightarrow> logic" ("_ := *" [75] 76)
 translations "_ndet_assign x" == "CONST ndet_assign x"
@@ -90,6 +91,23 @@ notation while_top ("while _ do _ od")
 
 definition while_bot :: "'s pred \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sub>\<bottom> _ do _ od") where 
 "while_bot b P = (\<mu> X \<bullet> ((P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
+
+text \<open> While loops with invariant decoration -- partial correctness\<close>
+
+definition while_inv :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sup>\<top> _ invr _ do _ od") where
+"while_inv b p P = while_top b P"
+
+notation while_inv ("while _ invr _ do _ od")
+
+text \<open> While loops with invariant decoration -- total correctness\<close>
+
+definition while_inv_bot :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sub>\<bottom> _ invr _ do _ od") where
+"while_inv_bot b p P = while_bot b P"
+
+text \<open> While loops with invariant and variant decoration -- total correctness \<close>
+
+definition while_vrt :: "'s pred \<Rightarrow> 's pred \<Rightarrow> (nat, 's) expr \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while _ invr _ vrt _ do _ od") where
+"while_vrt b p v P = while_bot b P"
 
 definition pre :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" 
   where "pre P = \<lbrakk>Domain P\<rbrakk>\<^sub>P"
@@ -115,6 +133,29 @@ syntax
 translations
   "_frame a P" == "CONST frame a P"
   "_frame_ext a P" == "CONST frame_ext a P"
+
+abbreviation modifies ("_ mods _") where
+"modifies P a \<equiv> P is frame a"
+
+abbreviation not_modifies ("_ nmods _") where
+"not_modifies P a \<equiv> P is frame (-a)"
+
+text \<open> Variable restriction - assign arbitrary values to the variable\<close>
+
+(* Not sure if this is the right definition *)
+definition rrestr :: "'s scene \<Rightarrow> 's rel \<Rightarrow> 's rel" where
+[rel]: "rrestr x P = (\<Union>t t'. frame (-x) ((\<lambda>(s,s'). (t \<oplus>\<^sub>S s on x, t' \<oplus>\<^sub>S s' on x))`P))"
+
+abbreviation not_uses ("_ nuses _") where
+"not_uses P a \<equiv> P is rrestr a"
+
+lemma "P nuses x \<Longrightarrow> P nmods x"
+  using rrestr_def oops
+
+lemma nuses_assign_commute:
+  assumes "mwb_lens x" "P nuses $x"
+  shows "x := \<guillemotleft>v\<guillemotright> \<Zcomp> P = P \<Zcomp> x := \<guillemotleft>v\<guillemotright>"
+  oops
 
 text \<open> Promotion takes a partial lens @{term a} and a relation @{term P}. It constructs a relation
   that firstly restricts the state to valuations where @{term a} is valid (i.e. defined), and 

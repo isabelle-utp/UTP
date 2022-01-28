@@ -168,4 +168,24 @@ lemma pred_impl_laws [simp]:
   "(true \<Rightarrow> P) = P" "(P \<Rightarrow> true) = true" "(false \<Rightarrow> P) = true" "(P \<Rightarrow> false) = (\<not> P)" "(P \<Rightarrow> P) = true"
   by pred_simp+
 
+text \<open> In accordance with \cite{hoare1998} we turn the lattice operators upside down \<close>
+bundle utp_lattice_syntax
+begin
+
+notation
+  bot ("\<top>") and
+  top ("\<bottom>") and
+  inf  (infixl "\<squnion>" 70) and
+  sup  (infixl "\<sqinter>" 65) and
+  Inf  ("\<Squnion> _" [900] 900) and
+  Sup  ("\<Sqinter> _" [900] 900)
+
+syntax
+  "_INF1"     :: "pttrns \<Rightarrow> 'b \<Rightarrow> 'b"           ("(3\<Squnion>_./ _)" [0, 10] 10)
+  "_INF"      :: "pttrn \<Rightarrow> 'a set \<Rightarrow> 'b \<Rightarrow> 'b"  ("(3\<Squnion>_\<in>_./ _)" [0, 0, 10] 10)
+  "_SUP1"     :: "pttrns \<Rightarrow> 'b \<Rightarrow> 'b"           ("(3\<Sqinter>_./ _)" [0, 10] 10)
+  "_SUP"      :: "pttrn \<Rightarrow> 'a set \<Rightarrow> 'b \<Rightarrow> 'b"  ("(3\<Sqinter>_\<in>_./ _)" [0, 0, 10] 10)
+
+end
+
 end
