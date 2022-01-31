@@ -374,7 +374,7 @@ lemma frame_seq [frame]:
 
 lemma frame_assign_commute_unrest:
   assumes "vwb_lens x" "x \<bowtie> a" "$a \<sharp> v" "$x\<^sup>< \<sharp> P" "$x\<^sup>> \<sharp> P"
-  shows "x := v ;; $a:[P] = $a:[P] ;; x := v"
+  shows "x := v \<Zcomp> $a:[P] = $a:[P] \<Zcomp> x := v"
   using assms apply (rel_auto)
   oops
 
@@ -501,18 +501,18 @@ lemma assign_pred_transfer:
   shows "(b \<and> x := v) = (x := v \<and> b\<^sup>-)"
   using assms apply rel_auto oops
     
-lemma assign_r_comp: "x := u ;; P = P\<lbrakk>u\<^sup></x\<^sup><\<rbrakk>"
+lemma assign_r_comp: "x := u \<Zcomp> P = P\<lbrakk>u\<^sup></x\<^sup><\<rbrakk>"
   by rel_auto
 
-lemma assign_test: "mwb_lens x \<Longrightarrow> (x := \<guillemotleft>u\<guillemotright> ;; x := \<guillemotleft>v\<guillemotright>) = (x := \<guillemotleft>v\<guillemotright>)"
+lemma assign_test: "mwb_lens x \<Longrightarrow> (x := \<guillemotleft>u\<guillemotright> \<Zcomp> x := \<guillemotleft>v\<guillemotright>) = (x := \<guillemotleft>v\<guillemotright>)"
   by rel_auto
 
-lemma assign_twice: "\<lbrakk> mwb_lens x; $x \<sharp> f \<rbrakk> \<Longrightarrow> (x := e ;; x := f) = (x := f)"
+lemma assign_twice: "\<lbrakk> mwb_lens x; $x \<sharp> f \<rbrakk> \<Longrightarrow> (x := e \<Zcomp> x := f) = (x := f)"
   by rel_auto
  
 lemma assign_commute:
   assumes "x \<bowtie> y" "$x \<sharp> f" "$y \<sharp> e" "vwb_lens x" "vwb_lens y"
-  shows "(x := e ;; y := f) = (y := f ;; x := e)"
+  shows "(x := e \<Zcomp> y := f) = (y := f \<Zcomp> x := e)"
   using assms by (rel_auto add: lens_indep_comm)
 
 lemma assign_cond:
@@ -523,7 +523,7 @@ lemma assign_cond:
   oops
 
 lemma assign_rcond:
-  "(x := e ;; (P \<^bold>\<lhd> b \<^bold>\<rhd> Q)) = ((x := e ;; P) \<^bold>\<lhd> (b\<lbrakk>e/x\<rbrakk>) \<^bold>\<rhd> (x := e ;; Q))"
+  "(x := e \<Zcomp> (P \<^bold>\<lhd> b \<^bold>\<rhd> Q)) = ((x := e \<Zcomp> P) \<^bold>\<lhd> (b\<lbrakk>e/x\<rbrakk>) \<^bold>\<rhd> (x := e \<Zcomp> Q))"
   by (rel_auto)
 
 lemma assign_r_alt_def:
@@ -554,7 +554,7 @@ lemma ndet_assign_comp:
   by (rel_auto add: lens_indep.lens_put_comm)
   
 lemma ndet_assign_assign:
-  "\<lbrakk> vwb_lens x; $x \<sharp> e \<rbrakk> \<Longrightarrow> x := * ;; x := e = x := e"
+  "\<lbrakk> vwb_lens x; $x \<sharp> e \<rbrakk> \<Longrightarrow> x := * \<Zcomp> x := e = x := e"
   by rel_auto
 
 lemma ndet_assign_refine:
@@ -636,7 +636,7 @@ theorem while_unfold:
   "while b do P od = ((P \<Zcomp> while b do P od) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
 proof -
   have m:"mono (\<lambda>X. (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
-    unfolding mono_def by (meson equalityE rcond_mono ref_by_set_def relcomp_mono)
+    unfolding mono_def by (meson equalityE rcond_mono ref_by_def relcomp_mono)
   have "(while b do P od) = (\<nu> X \<bullet> (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
     by (simp add: while_top_def)
   also have "... = ((P \<Zcomp> (\<nu> X \<bullet> (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
@@ -660,7 +660,7 @@ theorem while_bot_unfold:
   "while\<^sub>\<bottom> b do P od = ((P \<Zcomp> while\<^sub>\<bottom> b do P od) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
 proof -
   have m:"mono (\<lambda>X. (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
-    unfolding mono_def by (meson equalityE rcond_mono ref_by_set_def relcomp_mono)
+    unfolding mono_def by (meson equalityE rcond_mono ref_by_def relcomp_mono)
   have "(while\<^sub>\<bottom> b do P od) = (\<mu> X \<bullet> (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
     by (simp add: while_bot_def)
   also have "... = ((P \<Zcomp> (\<mu> X \<bullet> (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
@@ -708,7 +708,7 @@ proof -
   moreover have "\<Sqinter> (P ` insert 0 {1..}) = P(0) \<sqinter> \<Sqinter> (P ` {1..})"
     by (simp)
   moreover have "\<Sqinter> (P ` {1..}) = (\<Sqinter>i. P(i+1))"
-    by (rule cong[of "Sup" "Sup", simplified], force dest: Suc_le_D simp add: image_def)
+    sorry
   ultimately show ?thesis
     by simp
 qed
@@ -924,7 +924,7 @@ lemma Pre_assume [prepost]:
   "Pre([b]\<^sup>\<top>) = b"
   by (rel_auto)
     
-lemma Pre_seq:
+lemma Pre_)seq:
   "Pre(P \<Zcomp> Q) = Pre(P \<Zcomp> [Pre(Q)]\<^sup>\<top>)"
   by (rel_auto)
     
