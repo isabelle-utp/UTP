@@ -114,11 +114,11 @@ lemma assigns_init_hoare [hoare_safe]:
   by rel_auto
 
 lemma assigns_init_hoare_general:
-  "\<lbrakk> vwb_lens x; \<And> x\<^sub>0. \<^bold>{$x = v\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk> \<and> p\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk>\<^bold>}S\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}(x := v) \<Zcomp> S\<^bold>{q\<^bold>}"
+  "\<lbrakk> vwb_lens x; \<And> x\<^sub>0. \<^bold>{$x = v\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk> \<and> p\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk>\<^bold>}S\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}x := v ;; S\<^bold>{q\<^bold>}"
   by (rule seq_hoare_r, rule assign_floyd_hoare_r, simp, rel_auto)
 
 lemma assigns_final_hoare [hoare_safe]:
-  "\<^bold>{p\<^bold>}S\<^bold>{\<sigma> \<dagger> q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}S \<Zcomp> \<langle>\<sigma>\<rangle>\<^sub>a\<^bold>{q\<^bold>}"
+  "\<^bold>{p\<^bold>}S\<^bold>{\<sigma> \<dagger> q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}S ;; \<langle>\<sigma>\<rangle>\<^sub>a\<^bold>{q\<^bold>}"
   by (rel_auto)
 
 lemma skip_hoare_r [hoare_safe]: "\<^bold>{p\<^bold>}II\<^bold>{p\<^bold>}"
@@ -200,7 +200,7 @@ proof (simp add: while_top_def hoare_r_def assms)
   have "(p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>u \<sqsubseteq> S \<Zcomp> (p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>u \<^bold>\<lhd> b \<^bold>\<rhd> II"
     using assms by rel_auto
   then show "(p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>u \<sqsubseteq> (\<nu> X \<bullet> S \<Zcomp> X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
-    by (simp add: lfp_lowerbound ref_by_def)
+    by (simp add: lfp_lowerbound ref_by_set_def)
 qed
 
 lemma while_invr_hoare_r [hoare_safe]:

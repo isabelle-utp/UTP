@@ -1,9 +1,9 @@
 section \<open> UTP Predicates \<close>
 
 theory utp_pred
-    imports "Z_Toolkit.Z_Toolkit" "Shallow-Expressions.Shallow_Expressions" 
+    imports "Z_Toolkit.Z_Toolkit" "Shallow-Expressions.Shallow_Expressions"
 begin
-
+                    
 unbundle Expression_Syntax Z_Syntax
 
 subsection \<open> Core Definitions \<close>
@@ -70,24 +70,22 @@ definition iff_pred (infixr "\<Leftrightarrow>" 25) where
 
 subsection \<open> Refinement \<close>
 
-definition ref_by :: "'a set \<Rightarrow> 'a set \<Rightarrow> bool" (infix "\<sqsubseteq>" 50) where
-[pred_core]: "P \<sqsubseteq> Q = (Q \<subseteq> P)"
+instantiation "set" :: (type) refine
+begin
 
-abbreviation (input) refines (infix "\<sqsupseteq>" 50) where "Q \<sqsupseteq> P \<equiv> P \<sqsubseteq> Q"
+definition ref_by_set :: "'a set \<Rightarrow> 'a set \<Rightarrow> bool" where
+[pred_core]: "ref_by_set P Q \<equiv> Q \<subseteq> P"
 
-definition sref_by :: "'a set \<Rightarrow> 'a set \<Rightarrow> bool" (infix "\<sqsubset>" 50) where
-[pred_core]: "P \<sqsubset> Q = (Q \<subset> P)"
+definition sref_by_set :: "'a set \<Rightarrow> 'a set \<Rightarrow> bool" where
+[pred_core]: "sref_by_set P Q \<equiv> Q \<subset> P"
 
-abbreviation (input) srefines (infix "\<sqsupset>" 50) where "Q \<sqsupset> P \<equiv> P \<sqsubset> Q"
+instance by (intro_classes, unfold_locales, auto simp: ref_by_set_def sref_by_set_def)
 
-lemma refined_by_trans [trans]: "\<lbrakk> P \<sqsubseteq> Q; Q \<sqsubseteq> R \<rbrakk> \<Longrightarrow> P \<sqsubseteq> R"
-  by (simp add: ref_by_def)
-
-interpretation ref_order: order "(\<sqsubseteq>)" "(\<sqsubset>)"
-  by (unfold_locales, simp_all add: pred_core less_le_not_le)
+end
 
 interpretation ref_lattice: complete_lattice "\<Union>" "\<Inter>" "(\<union>)" "(\<sqsubseteq>)" "(\<sqsubset>)" "(\<inter>)" "UNIV" "{}"
-  by (unfold_locales, auto simp: pred_core less_le_not_le)
+  apply unfold_locales
+  by (auto simp add: pred_core)
 
 syntax
   "_mu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<mu> _ \<bullet> _" [0, 10] 10)
@@ -112,7 +110,7 @@ lemma pred_eq_iff [pred_transfer]: "P = Q \<longleftrightarrow> \<lbrakk>P\<rbra
   by (metis Collect_mem_eq SEXP_def set_pred_def)
 
 lemma pred_ref_iff [pred_transfer]: "P \<sqsubseteq> Q \<longleftrightarrow> `\<lbrakk>Q\<rbrakk>\<^sub>P \<longrightarrow> \<lbrakk>P\<rbrakk>\<^sub>P`"
-  by (auto simp add: set_pred_def taut_def ref_by_def)
+  by (auto simp add: set_pred_def taut_def ref_by_set_def)
 
 subsection \<open> Operators \<close>
 

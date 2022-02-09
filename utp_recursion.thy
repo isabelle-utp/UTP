@@ -23,7 +23,7 @@ lemma mu_refine_intro:
   shows "(C \<Rightarrow> S) \<sqsubseteq> \<mu> F"
 proof -
   from assms have "(C \<Rightarrow> S) \<sqsubseteq> \<nu> F"
-    by (meson lfp_lowerbound ref_by_def)
+    by (meson lfp_lowerbound ref_by_set_def)
   with assms show ?thesis
     by (pred_auto)
 qed
@@ -193,7 +193,7 @@ lemma mu_rec_total_utp_rule:
   shows "(p \<longrightarrow> q)\<^sub>u \<sqsubseteq> \<mu> B"  
 proof (rule mu_rec_total_pure_rule[where R=R and e=e], simp_all add: assms)
   show "\<And>f st. (p \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q)\<^sub>u \<sqsubseteq> f \<Longrightarrow> \<mu> B = f \<Longrightarrow> (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>u \<sqsubseteq> B f"
-    using M induct_step monoD order_subst2 by (simp add: ref_by_def, blast)
+    using M induct_step monoD order_subst2 by (simp add: ref_by_set_def, blast)
 qed
 
 lemma nu_rec_total_utp_rule: 
@@ -204,7 +204,7 @@ lemma nu_rec_total_utp_rule:
   shows "(p \<longrightarrow> q)\<^sub>u \<sqsubseteq> \<nu> B" 
 proof (rule nu_rec_total_pure_rule[where R=R and e=e], simp_all add: assms)
   show "\<And>f st. (p \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q)\<^sub>u \<sqsubseteq> f \<Longrightarrow> \<nu> B = f \<Longrightarrow> (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>u \<sqsubseteq> B f"
-    using M induct_step monoD order_subst2 by (simp add: ref_by_def, blast)
+    using M induct_step monoD order_subst2 by (simp add: ref_by_set_def, blast)
 qed
 
 end

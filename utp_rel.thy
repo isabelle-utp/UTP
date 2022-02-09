@@ -12,6 +12,8 @@ named_theorems rel and rel_transfer
 
 type_synonym ('s\<^sub>1, 's\<^sub>2) rpred = "('s\<^sub>1 \<times> 's\<^sub>2) pred"
 
+notation relcomp (infixr ";;" 55)
+
 lemma rel_eq_iff [rel_transfer]: "P = Q \<longleftrightarrow> (\<forall> s s'. \<lbrakk>P\<rbrakk>\<^sub>P (s, s') = \<lbrakk>Q\<rbrakk>\<^sub>P (s, s'))"
   by (simp add: set_eq_iff set_pred_def)
 
@@ -154,7 +156,7 @@ lemma "P nuses x \<Longrightarrow> P nmods x"
 
 lemma nuses_assign_commute:
   assumes "mwb_lens x" "P nuses $x"
-  shows "x := \<guillemotleft>v\<guillemotright> \<Zcomp> P = P \<Zcomp> x := \<guillemotleft>v\<guillemotright>"
+  shows "x := \<guillemotleft>v\<guillemotright> ;; P = P ;; x := \<guillemotleft>v\<guillemotright>"
   oops
 
 text \<open> Promotion takes a partial lens @{term a} and a relation @{term P}. It constructs a relation

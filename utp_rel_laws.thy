@@ -94,14 +94,14 @@ lemma seqr_right_zero [simp]:
 
 lemma seqr_mono:
   "\<lbrakk> P\<^sub>1 \<sqsubseteq> P\<^sub>2; Q\<^sub>1 \<sqsubseteq> Q\<^sub>2 \<rbrakk> \<Longrightarrow> (P\<^sub>1 \<Zcomp> Q\<^sub>1) \<sqsubseteq> (P\<^sub>2 \<Zcomp> Q\<^sub>2)"
-  unfolding ref_by_def by auto
+  unfolding ref_by_set_def by auto
     
 lemma seqr_monotonic:
   "\<lbrakk> mono P; mono Q \<rbrakk> \<Longrightarrow> mono (\<lambda> X. P X \<Zcomp> Q X)"
   by (simp add: mono_def relcomp_mono)
 
 lemma cond_seqr_mono: "mono (\<lambda>X. (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
-  unfolding mono_def by (meson equalityE rcond_mono ref_by_def relcomp_mono)
+  unfolding mono_def by (meson equalityE rcond_mono ref_by_set_def relcomp_mono)
 
 lemma mono_seqr_tail:
   assumes "mono F"
@@ -374,7 +374,7 @@ lemma frame_seq [frame]:
 
 lemma frame_assign_commute_unrest:
   assumes "vwb_lens x" "x \<bowtie> a" "$a \<sharp> v" "$x\<^sup>< \<sharp> P" "$x\<^sup>> \<sharp> P"
-  shows "x := v \<Zcomp> $a:[P] = $a:[P] \<Zcomp> x := v"
+  shows "x := v ;; $a:[P] = $a:[P] ;; x := v"
   using assms apply (rel_auto)
   oops
 
@@ -501,18 +501,18 @@ lemma assign_pred_transfer:
   shows "(b \<and> x := v) = (x := v \<and> b\<^sup>-)"
   using assms apply rel_auto oops
     
-lemma assign_r_comp: "x := u \<Zcomp> P = P\<lbrakk>u\<^sup></x\<^sup><\<rbrakk>"
+lemma assign_r_comp: "x := u ;; P = P\<lbrakk>u\<^sup></x\<^sup><\<rbrakk>"
   by rel_auto
 
-lemma assign_test: "mwb_lens x \<Longrightarrow> (x := \<guillemotleft>u\<guillemotright> \<Zcomp> x := \<guillemotleft>v\<guillemotright>) = (x := \<guillemotleft>v\<guillemotright>)"
+lemma assign_test: "mwb_lens x \<Longrightarrow> (x := \<guillemotleft>u\<guillemotright> ;; x := \<guillemotleft>v\<guillemotright>) = (x := \<guillemotleft>v\<guillemotright>)"
   by rel_auto
 
-lemma assign_twice: "\<lbrakk> mwb_lens x; $x \<sharp> f \<rbrakk> \<Longrightarrow> (x := e \<Zcomp> x := f) = (x := f)"
+lemma assign_twice: "\<lbrakk> mwb_lens x; $x \<sharp> f \<rbrakk> \<Longrightarrow> (x := e ;; x := f) = (x := f)"
   by rel_auto
  
 lemma assign_commute:
   assumes "x \<bowtie> y" "$x \<sharp> f" "$y \<sharp> e" "vwb_lens x" "vwb_lens y"
-  shows "(x := e \<Zcomp> y := f) = (y := f \<Zcomp> x := e)"
+  shows "(x := e ;; y := f) = (y := f ;; x := e)"
   using assms by (rel_auto add: lens_indep_comm)
 
 lemma assign_cond:
@@ -523,7 +523,7 @@ lemma assign_cond:
   oops
 
 lemma assign_rcond:
-  "(x := e \<Zcomp> (P \<^bold>\<lhd> b \<^bold>\<rhd> Q)) = ((x := e \<Zcomp> P) \<^bold>\<lhd> (b\<lbrakk>e/x\<rbrakk>) \<^bold>\<rhd> (x := e \<Zcomp> Q))"
+  "(x := e ;; (P \<^bold>\<lhd> b \<^bold>\<rhd> Q)) = ((x := e ;; P) \<^bold>\<lhd> (b\<lbrakk>e/x\<rbrakk>) \<^bold>\<rhd> (x := e ;; Q))"
   by (rel_auto)
 
 lemma assign_r_alt_def:
@@ -550,11 +550,11 @@ lemma assign_unfold:
 subsection \<open> Non-deterministic Assignment Laws \<close>
 
 lemma ndet_assign_comp:
-  "x \<bowtie> y \<Longrightarrow> x := * \<Zcomp> y := * = (x,y) := *"
+  "x \<bowtie> y \<Longrightarrow> x := * ;; y := * = (x,y) := *"
   by (rel_auto add: lens_indep.lens_put_comm)
   
 lemma ndet_assign_assign:
-  "\<lbrakk> vwb_lens x; $x \<sharp> e \<rbrakk> \<Longrightarrow> x := * \<Zcomp> x := e = x := e"
+  "\<lbrakk> vwb_lens x; $x \<sharp> e \<rbrakk> \<Longrightarrow> x := * ;; x := e = x := e"
   by rel_auto
 
 lemma ndet_assign_refine:
@@ -636,7 +636,7 @@ theorem while_unfold:
   "while b do P od = ((P \<Zcomp> while b do P od) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
 proof -
   have m:"mono (\<lambda>X. (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
-    unfolding mono_def by (meson equalityE rcond_mono ref_by_def relcomp_mono)
+    unfolding mono_def by (meson equalityE rcond_mono ref_by_set_def relcomp_mono)
   have "(while b do P od) = (\<nu> X \<bullet> (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
     by (simp add: while_top_def)
   also have "... = ((P \<Zcomp> (\<nu> X \<bullet> (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
@@ -660,7 +660,7 @@ theorem while_bot_unfold:
   "while\<^sub>\<bottom> b do P od = ((P \<Zcomp> while\<^sub>\<bottom> b do P od) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
 proof -
   have m:"mono (\<lambda>X. (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
-    unfolding mono_def by (meson equalityE rcond_mono ref_by_def relcomp_mono)
+    unfolding mono_def by (meson equalityE rcond_mono ref_by_set_def relcomp_mono)
   have "(while\<^sub>\<bottom> b do P od) = (\<mu> X \<bullet> (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
     by (simp add: while_bot_def)
   also have "... = ((P \<Zcomp> (\<mu> X \<bullet> (P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II)) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
@@ -863,7 +863,7 @@ qed
 subsection \<open> Omega Algebra Laws \<close>
 
 lemma uomega_induct: "P \<Zcomp> P\<^sup>\<omega> \<sqsubseteq> P\<^sup>\<omega>"
-  by (metis gfp_unfold monoI ref_by_def relcomp_mono subset_refl uomega_def)
+  by (metis gfp_unfold monoI ref_by_set_def relcomp_mono subset_refl uomega_def)
 
 subsection \<open> Refinement Laws \<close>
 
