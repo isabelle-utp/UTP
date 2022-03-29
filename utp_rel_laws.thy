@@ -708,7 +708,7 @@ proof -
   moreover have "\<Sqinter> (P ` insert 0 {1..}) = P(0) \<sqinter> \<Sqinter> (P ` {1..})"
     by (simp)
   moreover have "\<Sqinter> (P ` {1..}) = (\<Sqinter>i. P(i+1))"
-    sorry
+    by (rule cong[of "Sup" "Sup", simplified], force dest: Suc_le_D simp add: image_def)
   ultimately show ?thesis
     by simp
 qed

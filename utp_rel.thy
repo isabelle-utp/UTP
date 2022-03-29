@@ -148,15 +148,18 @@ text \<open> Variable restriction - assign arbitrary values to the variable\<clo
 definition rrestr :: "'s scene \<Rightarrow> 's rel \<Rightarrow> 's rel" where
 [rel]: "rrestr x P = (\<Union>t t'. frame (-x) ((\<lambda>(s,s'). (t \<oplus>\<^sub>S s on x, t' \<oplus>\<^sub>S s' on x))`P))"
 
-abbreviation not_uses ("_ nuses _") where
+abbreviation not_uses where
 "not_uses P a \<equiv> P is rrestr a"
 
-lemma "P nuses x \<Longrightarrow> P nmods x"
-  using rrestr_def oops
+syntax "_not_uses" :: "logic \<Rightarrow> salpha \<Rightarrow> logic" ("_ nuses _")
+translations "_not_uses P x" == "CONST not_uses P x"
+
+lemma nuses_then_nmods: "P nuses x \<Longrightarrow> P nmods x"
+  by (auto simp add: Healthy_def frame_def rrestr_def set_eq_iff)
 
 lemma nuses_assign_commute:
   assumes "mwb_lens x" "P nuses $x"
-  shows "x := \<guillemotleft>v\<guillemotright> ;; P = P ;; x := \<guillemotleft>v\<guillemotright>"
+  shows "x := \<guillemotleft>v\<guillemotright> ;; P = P ;; x := \<guillemotleft>v\<guillemotright>"  
   oops
 
 text \<open> Promotion takes a partial lens @{term a} and a relation @{term P}. It constructs a relation

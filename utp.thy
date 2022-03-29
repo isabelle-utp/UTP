@@ -1,5 +1,5 @@
 theory utp
-  imports utp_rel
+  imports utp_rel_laws
 begin 
 
 bundle UTP_Syntax
