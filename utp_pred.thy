@@ -70,22 +70,25 @@ definition iff_pred (infixr "\<Leftrightarrow>" 25) where
 
 subsection \<open> Refinement \<close>
 
-instantiation "set" :: (type) refine
+instantiation set :: (type) refine
 begin
 
 definition ref_by_set :: "'a set \<Rightarrow> 'a set \<Rightarrow> bool" where
-[pred_core]: "ref_by_set P Q \<equiv> Q \<subseteq> P"
+[pred_core]: "P \<sqsubseteq> Q = (Q \<subseteq> P)"
 
 definition sref_by_set :: "'a set \<Rightarrow> 'a set \<Rightarrow> bool" where
-[pred_core]: "sref_by_set P Q \<equiv> Q \<subset> P"
+[pred_core]: "P \<sqsubset> Q = (Q \<subset> P)"
 
-instance by (intro_classes, unfold_locales, auto simp: ref_by_set_def sref_by_set_def)
+instance
+  by (intro_classes, unfold_locales, auto simp add: pred_core)
 
 end
 
+interpretation ref_order: order "(\<sqsubseteq>) :: 'a set \<Rightarrow> 'a set \<Rightarrow> bool" "(\<sqsubset>)"
+  by (unfold_locales, simp_all add: pred_core less_le_not_le)
+
 interpretation ref_lattice: complete_lattice "\<Union>" "\<Inter>" "(\<union>)" "(\<sqsubseteq>)" "(\<sqsubset>)" "(\<inter>)" "UNIV" "{}"
-  apply unfold_locales
-  by (auto simp add: pred_core)
+  by (unfold_locales, auto simp add: pred_core)
 
 syntax
   "_mu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<mu> _ \<bullet> _" [0, 10] 10)
@@ -110,7 +113,7 @@ lemma pred_eq_iff [pred_transfer]: "P = Q \<longleftrightarrow> \<lbrakk>P\<rbra
   by (metis Collect_mem_eq SEXP_def set_pred_def)
 
 lemma pred_ref_iff [pred_transfer]: "P \<sqsubseteq> Q \<longleftrightarrow> `\<lbrakk>Q\<rbrakk>\<^sub>P \<longrightarrow> \<lbrakk>P\<rbrakk>\<^sub>P`"
-  by (auto simp add: set_pred_def taut_def ref_by_set_def)
+  by (auto simp add: set_pred_def taut_def pred_core)
 
 subsection \<open> Operators \<close>
 

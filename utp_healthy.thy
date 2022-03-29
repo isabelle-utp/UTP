@@ -8,12 +8,13 @@ subsection \<open> Main Definitions \<close>
 
 text \<open> We collect closure laws for healthiness conditions in the following theorem attribute. \<close>
 
+named_theorems closure
+
 type_synonym 'a health = "'a set \<Rightarrow> 'a set"
 text \<open> A predicate $P$ is healthy, under healthiness function $H$, if $P$ is a fixed-point of $H$. \<close>
 
 definition Healthy :: "'\<alpha> set \<Rightarrow> '\<alpha> health \<Rightarrow> bool" (infix "is" 30)
   where "P is H \<equiv> (H P = P)"
-
 
 lemma Healthy_def': "P is H \<longleftrightarrow> (H P = P)"
   unfolding Healthy_def by auto
@@ -36,7 +37,7 @@ lemma Healthy_carrier_Collect: "A \<subseteq> \<lbrakk>H\<rbrakk>\<^sub>H \<Long
 
 lemma Healthy_func:
   "\<lbrakk> F \<in> \<lbrakk>\<H>\<^sub>1\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<H>\<^sub>2\<rbrakk>\<^sub>H; P is \<H>\<^sub>1 \<rbrakk> \<Longrightarrow> F(P) = \<H>\<^sub>2(F(P))"
-  by (metis Healthy_if mem_Collect_eq rel_tfun_apply)
+  using Healthy_if by blast
 
 lemma Healthy_comp:
   "\<lbrakk> P is \<H>\<^sub>1; P is \<H>\<^sub>2 \<rbrakk> \<Longrightarrow> P is \<H>\<^sub>1 \<circ> \<H>\<^sub>2"
@@ -45,7 +46,7 @@ lemma Healthy_comp:
 lemma Healthy_apply_closed:
   assumes "F \<in> \<lbrakk>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>H\<rbrakk>\<^sub>H" "P is H"
   shows "F(P) is H"
-  by (metis assms mem_Collect_eq rel_tfun_apply)
+  using assms by auto
 
 lemma Healthy_set_image_member:
   "\<lbrakk> P \<in> F ` A; \<And> x. F x is H \<rbrakk> \<Longrightarrow> P is H"
