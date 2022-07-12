@@ -40,16 +40,7 @@ abbreviation not_uses ("_ nuses _") where
 "not_uses P a \<equiv> P is rrestr a"
 
 lemma nuses_nmods: "P nuses x \<Longrightarrow> P nmods x"
-proof -
-  assume "P nuses x"
-  then have "P = (\<Union>t t'. frame (-x) ((\<lambda>(s,s'). (t \<oplus>\<^sub>S s on \<lbrakk>x\<rbrakk>\<^sub>F, t' \<oplus>\<^sub>S s' on \<lbrakk>x\<rbrakk>\<^sub>F))`P))"
-    unfolding Healthy_def rrestr_def ..
-  then have "(s, s') \<in> P \<Longrightarrow> s \<approx>\<^sub>F s' on x" for s s'
-    unfolding frame_def by (transfer, auto)
-  then show "P nmods x"
-    unfolding Healthy_def frame_def by auto
-qed
-
+  unfolding Healthy_def rrestr_def frame_def by (transfer, auto)
     
 lemma nuses_assign_commute:
   assumes "mwb_lens x" "P nuses $x"
