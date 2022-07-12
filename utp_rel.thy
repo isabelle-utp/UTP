@@ -117,59 +117,6 @@ definition pre :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<
 definition post :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>2 \<Rightarrow> bool)" 
   where "post P = \<lbrakk>Range P\<rbrakk>\<^sub>P"
 
-definition frame :: "'s scene \<Rightarrow> 's rel \<Rightarrow> 's rel" where
-"frame a P = {(s, s'). s \<approx>\<^sub>S s' on -a \<and> (s, s') \<in> P}"
-
-text \<open> The frame extension operator take a lens @{term a}, and a relation @{term P}. It constructs
-  a relation such that all variables outside of @{term a} are unchanged, and the valuations for
-  @{term a} are drawn from @{term P}. Intuitively, this can be seen as extending the alphabet
-  of @{term P}. \<close>
-
-definition frame_ext :: "('s\<^sub>1 \<Longrightarrow> 's\<^sub>2) \<Rightarrow> 's\<^sub>1 rel \<Rightarrow> 's\<^sub>2 rel" where
-  "frame_ext a P = frame \<lbrakk>a\<rbrakk>\<^sub>\<sim> (P \<up> (a \<times> a))"
-
-syntax 
-  "_frame" :: "salpha \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]")
-  "_frame_ext" :: "svid \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]\<^sub>\<up>")
-
-translations
-  "_frame a P" == "CONST frame a P"
-  "_frame_ext a P" == "CONST frame_ext a P"
-
-abbreviation modifies ("_ mods _") where
-"modifies P a \<equiv> P is frame a"
-
-abbreviation not_modifies ("_ nmods _") where
-"not_modifies P a \<equiv> P is frame (-a)"
-
-text \<open> Variable restriction - assign arbitrary values to the variable\<close>
-
-(* Not sure if this is the right definition *)
-definition rrestr :: "'s scene \<Rightarrow> 's rel \<Rightarrow> 's rel" where
-[rel]: "rrestr x P = (\<Union>t t'. frame (-x) ((\<lambda>(s,s'). (t \<oplus>\<^sub>S s on x, t' \<oplus>\<^sub>S s' on x))`P))"
-
-abbreviation not_uses ("_ nuses _") where
-"not_uses P a \<equiv> P is rrestr a"
-
-lemma "P nuses x \<Longrightarrow> P nmods x"
-  using rrestr_def oops
-
-lemma nuses_assign_commute:
-  assumes "mwb_lens x" "P nuses $x"
-  shows "x := \<guillemotleft>v\<guillemotright> \<Zcomp> P = P \<Zcomp> x := \<guillemotleft>v\<guillemotright>"
-  oops
-
-text \<open> Promotion takes a partial lens @{term a} and a relation @{term P}. It constructs a relation
-  that firstly restricts the state to valuations where @{term a} is valid (i.e. defined), and 
-  secondly uses the lens to promote @{term P} so that it acts only on the @{term a} region of
-  the state space. \<close>
-
-definition promote :: "'c rel \<Rightarrow> ('c \<Longrightarrow> 's) \<Rightarrow> 's rel" where
-[rel]: "promote P a = \<questiondown>\<^bold>D(a)? \<Zcomp> a:[P]\<^sub>\<up>"
-
-syntax "_promote" :: "logic \<Rightarrow> svid \<Rightarrow> logic" (infix "\<Up>" 60)
-translations "_promote P a" == "CONST promote P a"
-
 subsection \<open> Predicate Semantics \<close>
 
 lemma pred_skip [pred]: "\<lbrakk>II\<rbrakk>\<^sub>P = ($\<^bold>v\<^sup>> = $\<^bold>v\<^sup><)\<^sub>e"
