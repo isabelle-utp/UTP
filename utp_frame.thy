@@ -16,7 +16,7 @@ definition frame_ext :: "('s\<^sub>1 \<Longrightarrow> ('s\<^sub>2 :: scene_spac
   "frame_ext a P = frame \<lbrace>a\<rbrace>\<^sub>F (P \<up> (a \<times> a))"
 
 syntax 
-  "_frame" :: "salpha \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]")
+  "_frame" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]")
   "_frame_ext" :: "svid \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]\<^sub>\<up>")
 
 translations
@@ -32,7 +32,6 @@ abbreviation not_modifies ("_ nmods _") where
 text \<open> Variable restriction - assign arbitrary values to a scene, effectively forbidding the 
   relation from using its value\<close>
 
-(* Not sure if this is the right definition *)
 definition rrestr :: "('s :: scene_space) frame \<Rightarrow> 's rel \<Rightarrow> 's rel" where
 [rel]: "rrestr x P = (\<Union>t t'. frame (-x) ((\<lambda>(s,s'). (t \<oplus>\<^sub>S s on \<lbrakk>x\<rbrakk>\<^sub>F, t' \<oplus>\<^sub>S s' on \<lbrakk>x\<rbrakk>\<^sub>F))`P))"
 
@@ -43,7 +42,7 @@ lemma nuses_nmods: "P nuses x \<Longrightarrow> P nmods x"
   unfolding Healthy_def rrestr_def frame_def by (transfer, auto)
     
 lemma nuses_assign_commute:
-  assumes "mwb_lens x" "P nuses $x"
+  assumes "vwb_lens x" "P nuses $x"
   shows "(x := v) \<Zcomp> P = P \<Zcomp> (x := v)"
   oops
 
@@ -52,29 +51,29 @@ text \<open> Promotion takes a partial lens @{term a} and a relation @{term P}. 
   secondly uses the lens to promote @{term P} so that it acts only on the @{term a} region of
   the state space. \<close>
 
-definition promote :: "'c rel \<Rightarrow> ('c \<Longrightarrow> 's) \<Rightarrow> 's rel" where
+definition promote :: "'c rel \<Rightarrow> ('c \<Longrightarrow> ('s::scene_space)) \<Rightarrow> 's rel" where
 [rel]: "promote P a = \<questiondown>\<^bold>D(a)? \<Zcomp> a:[P]\<^sub>\<up>"
 
 syntax "_promote" :: "logic \<Rightarrow> svid \<Rightarrow> logic" (infix "\<Up>" 60)
 translations "_promote P a" == "CONST promote P a"
 
-lemma rel_frame [rel]: "\<lbrakk>a:[P]\<rbrakk>\<^sub>P (s, s') = (s \<approx>\<^sub>S s' on -a \<and> \<lbrakk>P\<rbrakk>\<^sub>P (s, s'))"
+lemma rel_frame [rel]: "\<lbrakk>a:[P]\<rbrakk>\<^sub>P (s, s') = (s \<approx>\<^sub>F s' on -a \<and> \<lbrakk>P\<rbrakk>\<^sub>P (s, s'))"
   by (expr_auto add: frame_def)
 
 lemma rel_frame_ext [rel]: "\<lbrakk>a:[P]\<^sub>\<up>\<rbrakk>\<^sub>P (s, s') = (s \<approx>\<^sub>S s' on (-\<lbrakk>a\<rbrakk>\<^sub>\<sim>) \<and> \<lbrakk>P\<rbrakk>\<^sub>P (get\<^bsub>a\<^esub> s, get\<^bsub>a\<^esub> s'))"
-  by (expr_auto add: frame_ext_def frame_def subst_app_pred_def)
+  apply (expr_auto add: frame_ext_def frame_def subst_app_pred_def)
+  oops
 
 
 section \<open> Frame laws \<close>
 
 named_theorems frame
 
-lemma frame_all [frame]: "\<Sigma>:[P] = P"
-  by (rel_auto)
+lemma frame_all [frame]: "top:[P] = P"
+  by rel_auto
 
-lemma frame_none [frame]: "\<emptyset>:[P] = (P \<and> II)"
-  by (rel_auto add: scene_override_commute)
-
+lemma frame_none [frame]: "bot:[P] = (P \<and> II)"
+  by rel_auto
 
 lemma frame_commute:
   assumes "($y\<^sup><) \<sharp> P" "($y\<^sup>>) \<sharp> P""($x\<^sup><) \<sharp> Q" "($x\<^sup>>) \<sharp> Q" "x \<bowtie> y" 
@@ -98,16 +97,17 @@ lemma frame_miracle [simp]:
   by (rel_auto)
 
 lemma frame_skip [simp]:
-  "idem_scene x \<Longrightarrow> x:[II] = II"
+  "x:[II] = II"
   by (rel_auto)
 
 lemma frame_assign_in [frame]:
-  "\<lbrakk> vwb_lens a; x \<subseteq>\<^sub>L a \<rbrakk> \<Longrightarrow> $a:[x := v] = x := v"
-  apply rel_auto
-  by (simp add: lens_override_def scene_override_commute)
+  "\<lbrakk> var_lens a; x \<subseteq>\<^sub>L a \<rbrakk> \<Longrightarrow> (\<lbrace>a\<rbrace>\<^sub>F):[x := v] = x := v"
+  apply (rel_auto add: lens_insert_def, transfer, auto)
+  by (metis lens_override_def lens_scene_override scene_equiv_def scene_override_commute
+       var_lens.axioms(1) vwb_lens.put_eq vwb_lens_def)
 
 lemma frame_conj_true [frame]:
-  "\<lbrakk>-{x\<^sup><, x\<^sup>>} \<sharp> P; vwb_lens x \<rbrakk> \<Longrightarrow> (P \<and> $x:[true]) = $x:[P]"
+  "\<lbrakk>-{x\<^sup><, x\<^sup>>} \<sharp> P; var_lens x \<rbrakk> \<Longrightarrow> (P \<and> $x:[true]) = $x:[P]"
   by (rel_auto)
 
 (*lemma frame_is_assign [frame]:
