@@ -2,17 +2,18 @@ theory utp_frame
   imports utp_rel
 begin
 
+text \<open> The frame operator restricts the relation P to only operate on variables in the frame a \<close>
 
-definition frame :: "'s scene \<Rightarrow> 's rel \<Rightarrow> 's rel" where
-"frame a P = {(s, s'). s \<approx>\<^sub>S s' on -a \<and> (s, s') \<in> P}"
+definition frame :: "'s frame \<Rightarrow> ('s ::scene_space) rel \<Rightarrow> 's rel" where
+"frame a P = {(s, s'). s \<approx>\<^sub>F s' on - a \<and> (s, s') \<in> P}"
 
 text \<open> The frame extension operator take a lens @{term a}, and a relation @{term P}. It constructs
   a relation such that all variables outside of @{term a} are unchanged, and the valuations for
   @{term a} are drawn from @{term P}. Intuitively, this can be seen as extending the alphabet
   of @{term P}. \<close>
 
-definition frame_ext :: "('s\<^sub>1 \<Longrightarrow> 's\<^sub>2) \<Rightarrow> 's\<^sub>1 rel \<Rightarrow> 's\<^sub>2 rel" where
-  "frame_ext a P = frame \<lbrakk>a\<rbrakk>\<^sub>\<sim> (P \<up> (a \<times> a))"
+definition frame_ext :: "('s\<^sub>1 \<Longrightarrow> ('s\<^sub>2 :: scene_space)) \<Rightarrow> 's\<^sub>1 rel \<Rightarrow> 's\<^sub>2 rel" where
+  "frame_ext a P = frame \<lbrace>a\<rbrace>\<^sub>F (P \<up> (a \<times> a))"
 
 syntax 
   "_frame" :: "salpha \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]")
@@ -32,17 +33,24 @@ text \<open> Variable restriction - assign arbitrary values to a scene, effectiv
   relation from using its value\<close>
 
 (* Not sure if this is the right definition *)
-definition rrestr :: "'s scene \<Rightarrow> 's rel \<Rightarrow> 's rel" where
-[rel]: "rrestr x P = (\<Union>t t'. frame (-x) ((\<lambda>(s,s'). (t \<oplus>\<^sub>S s on x, t' \<oplus>\<^sub>S s' on x))`P))"
+definition rrestr :: "('s :: scene_space) frame \<Rightarrow> 's rel \<Rightarrow> 's rel" where
+[rel]: "rrestr x P = (\<Union>t t'. frame (-x) ((\<lambda>(s,s'). (t \<oplus>\<^sub>S s on \<lbrakk>x\<rbrakk>\<^sub>F, t' \<oplus>\<^sub>S s' on \<lbrakk>x\<rbrakk>\<^sub>F))`P))"
 
 abbreviation not_uses ("_ nuses _") where
 "not_uses P a \<equiv> P is rrestr a"
 
-lemma "P nuses x \<Longrightarrow> P nmods x"
-  apply (unfold rrestr_def frame_def)
-  apply rel_auto
-  oops
+lemma nuses_nmods: "P nuses x \<Longrightarrow> P nmods x"
+proof -
+  assume "P nuses x"
+  then have "P = (\<Union>t t'. frame (-x) ((\<lambda>(s,s'). (t \<oplus>\<^sub>S s on \<lbrakk>x\<rbrakk>\<^sub>F, t' \<oplus>\<^sub>S s' on \<lbrakk>x\<rbrakk>\<^sub>F))`P))"
+    unfolding Healthy_def rrestr_def ..
+  then have "(s, s') \<in> P \<Longrightarrow> s \<approx>\<^sub>F s' on x" for s s'
+    unfolding frame_def by (transfer, auto)
+  then show "P nmods x"
+    unfolding Healthy_def frame_def by auto
+qed
 
+    
 lemma nuses_assign_commute:
   assumes "mwb_lens x" "P nuses $x"
   shows "(x := v) \<Zcomp> P = P \<Zcomp> (x := v)"
