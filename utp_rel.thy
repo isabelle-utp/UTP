@@ -10,8 +10,6 @@ consts
 
 named_theorems rel and rel_transfer
 
-type_synonym ('s\<^sub>1, 's\<^sub>2) rpred = "('s\<^sub>1 \<times> 's\<^sub>2) pred"
-
 notation relcomp (infixr ";;" 55)
 
 lemma rel_eq_iff [rel_transfer]: "P = Q \<longleftrightarrow> (\<forall> s s'. \<lbrakk>P\<rbrakk>\<^sub>P (s, s') = \<lbrakk>Q\<rbrakk>\<^sub>P (s, s'))"
@@ -45,7 +43,7 @@ adhoc_overloading uskip Id
 
 abbreviation "true\<^sub>h \<equiv> (true :: 's rel)"
 
-definition cond :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<times> 's\<^sub>2 \<Rightarrow> bool) \<Rightarrow> ('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<leftrightarrow> 's\<^sub>2)" where
+definition cond :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> (bool, 's\<^sub>1 \<times> 's\<^sub>2) expr \<Rightarrow> ('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<leftrightarrow> 's\<^sub>2)" where
 [rel]: "cond P B Q = (((B)\<^sub>u \<and> P) \<or> ((\<not>B)\<^sub>u \<and> Q))" 
 
 syntax 
@@ -68,7 +66,7 @@ adhoc_overloading uassigns assigns_rel
 syntax "_assign" :: "svid \<Rightarrow> logic \<Rightarrow> logic" (infix ":=" 61)
 translations "_assign x e" == "CONST uassigns [x \<leadsto> e]"
 
-definition test :: "'s pred \<Rightarrow> 's rel" where
+definition test :: "('s \<Rightarrow> bool) \<Rightarrow> 's rel" where
 [rel]: "test P = Id_on (Collect P)"
 
 syntax "_test" :: "logic \<Rightarrow> logic" ("\<questiondown>_?")
@@ -86,30 +84,31 @@ definition seqr_iter :: "'a list \<Rightarrow> ('a \<Rightarrow> 'b rel) \<Right
 syntax "_seqr_iter" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> '\<sigma> rel \<Rightarrow> '\<sigma> rel" ("(3\<Zcomp> _ : _ \<bullet>/ _)" [0, 0, 10] 10)
 translations "\<Zcomp> x : l \<bullet> P" \<rightleftharpoons> "(CONST seqr_iter) l (\<lambda>x. P)"
 
-definition while_top :: "'s pred \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sup>\<top> _ do _ od") where 
+definition while_top :: "(bool, 's) expr \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sup>\<top> _ do _ od") where 
 "while_top b P = (\<nu> X \<bullet> ((P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
 
 notation while_top ("while _ do _ od")
 
-definition while_bot :: "'s pred \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sub>\<bottom> _ do _ od") where 
+definition while_bot :: "(bool, 's) expr \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sub>\<bottom> _ do _ od") where 
 "while_bot b P = (\<mu> X \<bullet> ((P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
 
 text \<open> While loops with invariant decoration -- partial correctness\<close>
 
-definition while_inv :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sup>\<top> _ invr _ do _ od") where
+definition while_inv :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sup>\<top> _ invr _ do _ od") where
 "while_inv b p P = while_top b P"
 
 notation while_inv ("while _ invr _ do _ od")
 
 text \<open> While loops with invariant decoration -- total correctness\<close>
 
-definition while_inv_bot :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sub>\<bottom> _ invr _ do _ od") where
+definition while_inv_bot :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sub>\<bottom> _ invr _ do _ od") where
 "while_inv_bot b p P = while_bot b P"
 
 text \<open> While loops with invariant and variant decoration -- total correctness \<close>
 
-definition while_vrt :: "'s pred \<Rightarrow> 's pred \<Rightarrow> (nat, 's) expr \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while _ invr _ vrt _ do _ od") where
-"while_vrt b p v P = while_bot b P"
+definition while_vrt :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> (nat, 's) expr \<Rightarrow> 's rel \<Rightarrow> 's rel"
+                        ("while _ invr _ vrt _ do _ od")
+where "while_vrt b p v P = while_bot b P"
 
 definition pre :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" 
   where "pre P = \<lbrakk>Domain P\<rbrakk>\<^sub>P"
@@ -159,12 +158,6 @@ lemma pred_pre_liberate: "pre P = (\<lbrakk>P\<rbrakk>\<^sub>P \\ out\<alpha>)\<
 
 lemma rel_pre [rel_transfer]: "pre P = (\<lambda> s. \<exists> s\<^sub>0. \<lbrakk>P\<rbrakk>\<^sub>P (s, s\<^sub>0))"
   by (auto simp add: pre_def Domain_iff set_pred_def SEXP_def)
-
-lemma rel_frame [rel]: "\<lbrakk>a:[P]\<rbrakk>\<^sub>P (s, s') = (s \<approx>\<^sub>S s' on -a \<and> \<lbrakk>P\<rbrakk>\<^sub>P (s, s'))"
-  by (expr_auto add: frame_def)
-
-lemma rel_frame_ext [rel]: "\<lbrakk>a:[P]\<^sub>\<up>\<rbrakk>\<^sub>P (s, s') = (s \<approx>\<^sub>S s' on (-\<lbrakk>a\<rbrakk>\<^sub>\<sim>) \<and> \<lbrakk>P\<rbrakk>\<^sub>P (get\<^bsub>a\<^esub> s, get\<^bsub>a\<^esub> s'))"
-  by (expr_auto add: frame_ext_def frame_def subst_app_pred_def)
 
 subsection \<open> Unrestriction Laws \<close>
 

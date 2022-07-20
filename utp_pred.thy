@@ -14,8 +14,6 @@ consts
 
 named_theorems pred and pred_core and pred_transfer
 
-type_synonym 's pred = "(bool, 's) expr"
-
 text \<open> Convert a set-based representation (e.g. a binary relation) into a predicate. \<close>
 
 definition set_pred :: "'s set \<Rightarrow> ('s \<Rightarrow> bool)" ("\<lbrakk>_\<rbrakk>\<^sub>P") where
