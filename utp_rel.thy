@@ -32,6 +32,7 @@ definition skip :: "'a hrel" where
 adhoc_overloading uskip skip
 
 abbreviation "true\<^sub>h \<equiv> (true :: 's hrel)"
+abbreviation "false\<^sub>h \<equiv> (false :: 's hrel)"
 
 definition cond :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> (bool, 's\<^sub>1 \<times> 's\<^sub>2) expr \<Rightarrow> ('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>1, 's\<^sub>2) urel"
   where [pred]: "cond P B Q = (B \<and> P \<or> \<not> B \<and> Q)\<^sub>e"
@@ -100,22 +101,19 @@ definition while_vrt :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightar
 where "while_vrt b p v P = while_bot b P"
 
 definition pre :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" 
-  where "pre P = (\<lambda> s. \<exists> s'. P (s, s'))"
+  where [pred]: "pre P = (\<lambda> s. \<exists> s'. P (s, s'))"
 
 definition post :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>2 \<Rightarrow> bool)" 
-  where "post P = (\<lambda> s'. \<exists> s. P (s, s'))"
+  where [pred]: "post P = (\<lambda> s'. \<exists> s. P (s, s'))"
+
+expr_ctr pre
+
+expr_ctr post
 
 subsection \<open> Predicate Semantics \<close>
 
 lemma pred_skip [pred]: "II = ($\<^bold>v\<^sup>> = $\<^bold>v\<^sup><)\<^sub>e"
   by pred_simp
-
-lemma rel_skip [rel]: "II (s, s') = (s = s')"
-  apply pred_simp
-  by expr_auto
-
-lemma rel_test [rel]: "\<questiondown>b? (s, s') = (b s \<and> s = s')"
-  by rel_auto
 
 lemma pred_seq_hom [pred]:
   "P ;; Q = (\<exists> v\<^sub>0. [ \<^bold>v\<^sup>> \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> ] \<dagger> P \<and> [ \<^bold>v\<^sup>< \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> ] \<dagger> Q)\<^sub>e"
@@ -125,7 +123,6 @@ lemma pred_seq [pred]:
   "P ;; Q = (\<exists> v\<^sub>0. \<lparr> \<^bold>v\<^sup>< \<leadsto> $\<^bold>v\<^sup><, \<^bold>v\<^sup>> \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> \<rparr> \<dagger> P \<and> \<lparr> \<^bold>v\<^sup>< \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright>, \<^bold>v\<^sup>> \<leadsto> $\<^bold>v\<^sup>> \<rparr> \<dagger> Q)\<^sub>e"
   by (pred_auto)
 
-
 lemma pred_pre [pred]: "pre P = (\<exists> s. P \<lbrakk>\<guillemotleft>s\<guillemotright>/\<^bold>v\<^sup>>\<rbrakk>)\<^sub><"
   by (expr_simp add: pre_def Domain_iff)
 
@@ -134,14 +131,26 @@ lemma pred_pre_liberate: "pre P = (P \\ out\<alpha>)\<^sub><"
 
 subsection \<open> Unrestriction Laws \<close>
 
-lemma unrest_iuvar [unrest]: "out\<alpha> \<sharp> ($x\<^sup><)\<^sub>e"
+syntax "_sset" :: "salpha \<Rightarrow> logic \<Rightarrow> logic" ("sset[_, _]")
+translations "_sset a P" == "CONST sset a P"
+
+term "sset[$x\<^sup><, s] \<dagger> P"
+
+term "lens_set (x ;\<^sub>L fst\<^sub>L)"
+
+lemma "out\<alpha> \<sharp>\<^sub>s \<sigma> \<Longrightarrow> \<sigma> \<dagger> (P ;; Q) = (\<sigma> \<dagger> P) ;; Q"
+  by (simp add: pred sset_def unrest_usubst_def, expr_auto)
+     (metis snd_conv)+
+
+(*
+lemma "mwb_lens x \<Longrightarrow> sset[$x\<^sup><,s] \<dagger> (P ;; Q) = (sset[$x\<^sup><,s] \<dagger> P) ;; Q"
+  by (simp add: pred sset_def, expr_auto)
+  apply (pred_simp)
+*)
+
+
+lemma unrest_seq_ivar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>< \<sharp> P \<rbrakk> \<Longrightarrow> $x\<^sup>< \<sharp> P ;; Q"
   apply unrest
-  by rel_auto
-
-lemma unrest_ouvar [unrest]: "in\<alpha> \<sharp> ($x\<^sup>>)\<^sub>u"
-  by rel_auto
-
-lemma unrest_seq_ivar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>< \<sharp> P \<rbrakk> \<Longrightarrow> $x\<^sup>< \<sharp> P \<Zcomp> Q"
   by rel_auto
 
 lemma unrest_seq_ovar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>> \<sharp> Q \<rbrakk> \<Longrightarrow> $x\<^sup>> \<sharp> P \<Zcomp> Q"
@@ -178,6 +187,9 @@ lemma rel_eq_transfer [rel_transfer]: "P = Q \<longleftrightarrow> \<lbrakk>P\<r
 lemma rel_refine_transfer [rel_transfer]: "P \<sqsubseteq> Q \<longleftrightarrow> \<lbrakk>Q\<rbrakk>\<^sub>U \<subseteq> \<lbrakk>P\<rbrakk>\<^sub>U"
   by (auto simp add: pred_rel_def pred_refine_iff)
 
+lemma rel_pointwise_transfer [rel_transfer]: "P (s, s') \<longleftrightarrow> (s, s') \<in> \<lbrakk>P\<rbrakk>\<^sub>U"
+  by (auto simp: pred_rel_def)
+
 method rel_transfer = (simp add: rel_transfer rel)
 
 method rel_simp uses add = (rel_transfer, expr_simp add: relcomp_unfold add)
@@ -191,7 +203,26 @@ definition [rel_transfer]: "Injective P = injective \<lbrakk>P\<rbrakk>\<^sub>U"
 
 subsection \<open> Algebraic Laws \<close>
 
-lemma seqr_middle: "vwb_lens x \<Longrightarrow> P ;; Q = (SUP v. P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>)"
+interpretation upred_semiring: semiring_1
+  where times = seq and one = skip and zero = false\<^sub>h and plus = Lattices.sup
+  by (unfold_locales; pred_auto add: sup_fun_def)+
+
+declare upred_semiring.power_Suc [simp del]
+
+text \<open> We introduce the power syntax derived from semirings \<close>
+
+abbreviation upower :: "'\<alpha> hrel \<Rightarrow> nat \<Rightarrow> '\<alpha> hrel" (infixr "\<^bold>^" 80) where
+"upower P n \<equiv> upred_semiring.power P n"
+
+translations
+  "P \<^bold>^ i" <= "CONST power.power II op ;; P i"
+  "P \<^bold>^ i" <= "(CONST power.power II op ;; P) i"
+
+lemma upower_interp [rel]: "\<lbrakk>P \<^bold>^ i\<rbrakk>\<^sub>U = \<lbrakk>P\<rbrakk>\<^sub>U ^^ i"
+  by (induct i arbitrary: P)
+     ((auto; pred_auto add: pred_rel_def), simp add: rel_interp(1) upred_semiring.power_Suc2)
+
+lemma seqr_middle: "vwb_lens x \<Longrightarrow> P ;; Q = (\<Sqinter> v. P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>)"
   by (pred_auto, metis vwb_lens.put_eq)
 
 lemma precond_equiv: "true ;; P = P \<longleftrightarrow> (in\<alpha> \<sharp> P)"

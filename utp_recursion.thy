@@ -6,7 +6,7 @@ section \<open> Fixed-points and Recursion \<close>
 
 subsection \<open> Fixed-point Laws \<close>
   
-lemma mu_id: "(\<mu> X \<bullet> X) = `true`"
+lemma mu_id: "(\<mu> X \<bullet> X) = true"
   by (simp add: gfp_def)
 
 lemma mu_const: "(\<mu> X \<bullet> P) = P"
