@@ -10,10 +10,10 @@ text \<open> We collect closure laws for healthiness conditions in the following
 
 named_theorems closure
 
-type_synonym 'a health = "'a set \<Rightarrow> 'a set"
+type_synonym 'a health = "'a pred \<Rightarrow> 'a pred"
 text \<open> A predicate $P$ is healthy, under healthiness function $H$, if $P$ is a fixed-point of $H$. \<close>
 
-definition Healthy :: "'\<alpha> set \<Rightarrow> '\<alpha> health \<Rightarrow> bool" (infix "is" 30)
+definition Healthy :: "'\<alpha> pred \<Rightarrow> '\<alpha> health \<Rightarrow> bool" (infix "is" 30)
   where "P is H \<equiv> (H P = P)"
 
 lemma Healthy_def': "P is H \<longleftrightarrow> (H P = P)"
@@ -25,7 +25,7 @@ lemma Healthy_if: "P is H \<Longrightarrow> (H P = P)"
 lemma Healthy_intro: "H(P) = P \<Longrightarrow> P is H"
   by (simp add: Healthy_def)
 
-abbreviation Healthy_carrier :: "'\<alpha> health \<Rightarrow> '\<alpha> set set" ("\<lbrakk>_\<rbrakk>\<^sub>H")
+abbreviation Healthy_carrier :: "'\<alpha> health \<Rightarrow> '\<alpha> pred set" ("\<lbrakk>_\<rbrakk>\<^sub>H")
 where "\<lbrakk>H\<rbrakk>\<^sub>H \<equiv> {P. P is H}"
 
 lemma Healthy_carrier_image:

@@ -1,50 +1,40 @@
 subsection \<open> UTP Relations \<close>
 
 theory utp_rel
-  imports utp_alpha utp_healthy utp_pred_laws
+  imports utp_pred (*utp_healthy utp_pred_laws*)
 begin
+
+
+text \<open> Convert a predicate into a set-based (i.e. relational) representation. \<close>
 
 consts
   uassigns :: "('a, 'b) psubst \<Rightarrow> 'c" ("\<langle>_\<rangle>\<^sub>a")
   uskip    :: "'a" ("II")
 
-named_theorems rel and rel_transfer
+type_synonym ('a, 'b) urel = "('a \<times> 'b) \<Rightarrow> bool"
 
-notation relcomp (infixr ";;" 55)
+translations
+  (type) "('a, 'b) urel" <= (type) "('a \<times> 'b) \<Rightarrow> bool"
 
-lemma rel_eq_iff [rel_transfer]: "P = Q \<longleftrightarrow> (\<forall> s s'. \<lbrakk>P\<rbrakk>\<^sub>P (s, s') = \<lbrakk>Q\<rbrakk>\<^sub>P (s, s'))"
-  by (simp add: set_eq_iff set_pred_def)
+type_synonym 'a hrel = "('a, 'a) urel"
 
-lemma rel_unrest_ivar_iff [rel_transfer]: "vwb_lens x \<Longrightarrow> ($x\<^sup>< \<sharp> P) = (\<forall>(s, s')\<in>P. \<forall> v. (put\<^bsub>x\<^esub> s v, s') \<in> P)"
-  by (simp add: unrest_var_pred, auto simp add: lens_defs prod.case_eq_if)
+definition seq :: "('a, 'b) urel \<Rightarrow> ('b, 'c) urel \<Rightarrow> ('a, 'c) urel" (infixl ";;" 65) where
+[pred]: "P ;; Q = (\<lambda> (s, s'). \<exists> s\<^sub>0. P (s, s\<^sub>0) \<and> Q (s\<^sub>0, s'))"
 
-lemma rel_unrest_ovar_iff [rel_transfer]: "vwb_lens x \<Longrightarrow> ($x\<^sup>> \<sharp> P) = (\<forall>(s, s')\<in>P. \<forall> v. (s, put\<^bsub>x\<^esub> s' v) \<in> P)"
-  by (simp add: unrest_var_pred, auto simp add: lens_defs prod.case_eq_if)
-
-lemma in_rel_transfer: "(s, s') \<in> (P)\<^sub>u \<longleftrightarrow> P (s, s')"
-  by (simp add: pred_set_def)
-
-method rel_simp uses add = (simp add: add rel_transfer rel pred_core unrest)
-
-text \<open> @{method rel_simp} simply desugars UTP notation, leaving a relational goal \<close>
-
-method rel_auto uses add = (rel_simp add: add; (expr_simp add: add)?; (auto simp add: alpha_splits relcomp_unfold Id_on_iff add)?)
-
-text \<open> @{method rel_auto} also explodes expressions and turns the relational goal into a predicative one \<close>
-
-method rel_force uses add = (rel_simp add: add; (expr_simp add: add)?; (force simp add: alpha_splits relcomp_unfold Id_on_iff add)?)
-
-subsection \<open> Operators \<close>
+expr_ctr seq (0 1)
 
 abbreviation "in\<alpha> \<equiv> var_alpha fst\<^sub>L"
 abbreviation "out\<alpha> \<equiv> var_alpha snd\<^sub>L"
 
-adhoc_overloading uskip Id
+definition skip :: "'a hrel" where
+[pred]: "skip = (\<lambda> (s, s'). s' = s)"
 
-abbreviation "true\<^sub>h \<equiv> (true :: 's rel)"
+adhoc_overloading uskip skip
 
-definition cond :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> (bool, 's\<^sub>1 \<times> 's\<^sub>2) expr \<Rightarrow> ('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<leftrightarrow> 's\<^sub>2)" where
-[rel]: "cond P B Q = (((B)\<^sub>u \<and> P) \<or> ((\<not>B)\<^sub>u \<and> Q))" 
+abbreviation "true\<^sub>h \<equiv> (true :: 's hrel)"
+
+definition cond :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> (bool, 's\<^sub>1 \<times> 's\<^sub>2) expr \<Rightarrow> ('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>1, 's\<^sub>2) urel"
+  where [pred]: "cond P B Q = (B \<and> P \<or> \<not> B \<and> Q)\<^sub>e"
 
 syntax 
   "_cond" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3_ \<lhd> _ \<rhd>/ _)" [52,0,53] 52)
@@ -54,114 +44,98 @@ translations
   "_cond P B Q" == "CONST cond P (B)\<^sub>e Q"
   "_rcond P b Q" == "_cond P (b\<^sup><) Q"
 
-(* USE HOL CONVERSE *)
-abbreviation conv_r :: "('a \<leftrightarrow> 'b) \<Rightarrow> 'b \<leftrightarrow> 'a" ("_\<^sup>-" [999] 999) where
-"conv_r p \<equiv> {(b,a). (a,b) \<in> p}"
+definition conv_r :: "('a, 'b) urel \<Rightarrow> ('b, 'a) urel" ("_\<^sup>-" [999] 999) where
+[pred]: "conv_r P = (\<lambda> (b,a). P (a,b))"
 
-definition assigns_rel :: "('s\<^sub>1, 's\<^sub>2) psubst \<Rightarrow> 's\<^sub>1 \<leftrightarrow> 's\<^sub>2" where
-[rel]: "assigns_rel \<sigma> = pfun_graph (fun_pfun \<sigma>)"
+definition assigns_rel :: "('s\<^sub>1, 's\<^sub>2) psubst \<Rightarrow> ('s\<^sub>1, 's\<^sub>2) urel" where
+[pred]: "assigns_rel \<sigma> = (\<lambda> (s, s'). s' = \<sigma> s)"
 
 adhoc_overloading uassigns assigns_rel
 
 syntax "_assign" :: "svid \<Rightarrow> logic \<Rightarrow> logic" (infix ":=" 61)
 translations "_assign x e" == "CONST uassigns [x \<leadsto> e]"
 
-definition test :: "('s \<Rightarrow> bool) \<Rightarrow> 's rel" where
-[rel]: "test P = Id_on (Collect P)"
+definition test :: "('s \<Rightarrow> bool) \<Rightarrow> 's hrel" where
+[pred]: "test b = (\<lambda> (s, s'). b s \<and> s' = s)"
 
 syntax "_test" :: "logic \<Rightarrow> logic" ("\<questiondown>_?")
 translations "\<questiondown>P?" == "CONST test (P)\<^sub>e"
 
-definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's rel" where
-[rel]: "ndet_assign x = (\<Union> v. x := \<guillemotleft>v\<guillemotright>)"
+definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's hrel" where
+[pred]: "ndet_assign x = (INF v. x := \<guillemotleft>v\<guillemotright>)"
 
 syntax "_ndet_assign" :: "svid \<Rightarrow> logic" ("_ := *" [75] 76)
 translations "_ndet_assign x" == "CONST ndet_assign x"
 
-definition seqr_iter :: "'a list \<Rightarrow> ('a \<Rightarrow> 'b rel) \<Rightarrow> 'b rel" where
-[pred]: "seqr_iter xs P = foldr (\<lambda> i Q. P(i) \<Zcomp> Q) xs II"
+definition seqr_iter :: "'a list \<Rightarrow> ('a \<Rightarrow> 'b hrel) \<Rightarrow> 'b hrel" where
+[pred]: "seqr_iter xs P = foldr (\<lambda> i Q. P(i) ;; Q) xs II"
 
 syntax "_seqr_iter" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> '\<sigma> rel \<Rightarrow> '\<sigma> rel" ("(3\<Zcomp> _ : _ \<bullet>/ _)" [0, 0, 10] 10)
 translations "\<Zcomp> x : l \<bullet> P" \<rightleftharpoons> "(CONST seqr_iter) l (\<lambda>x. P)"
 
-definition while_top :: "(bool, 's) expr \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sup>\<top> _ do _ od") where 
-"while_top b P = (\<nu> X \<bullet> ((P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
+definition while_top :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" ("while\<^sup>\<top> _ do _ od") where 
+"while_top b P = (\<nu> X \<bullet> ((P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
 
 notation while_top ("while _ do _ od")
 
-definition while_bot :: "(bool, 's) expr \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sub>\<bottom> _ do _ od") where 
-"while_bot b P = (\<mu> X \<bullet> ((P \<Zcomp> X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
+definition while_bot :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" ("while\<^sub>\<bottom> _ do _ od") where 
+"while_bot b P = (\<mu> X \<bullet> ((P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
 
 text \<open> While loops with invariant decoration -- partial correctness\<close>
 
-definition while_inv :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sup>\<top> _ invr _ do _ od") where
+definition while_inv :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" ("while\<^sup>\<top> _ invr _ do _ od") where
 "while_inv b p P = while_top b P"
 
 notation while_inv ("while _ invr _ do _ od")
 
 text \<open> While loops with invariant decoration -- total correctness\<close>
 
-definition while_inv_bot :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> 's rel \<Rightarrow> 's rel" ("while\<^sub>\<bottom> _ invr _ do _ od") where
+definition while_inv_bot :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" ("while\<^sub>\<bottom> _ invr _ do _ od") where
 "while_inv_bot b p P = while_bot b P"
 
 text \<open> While loops with invariant and variant decoration -- total correctness \<close>
 
-definition while_vrt :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> (nat, 's) expr \<Rightarrow> 's rel \<Rightarrow> 's rel"
+definition while_vrt :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> (nat, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel"
                         ("while _ invr _ vrt _ do _ od")
 where "while_vrt b p v P = while_bot b P"
 
-definition pre :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" 
-  where "pre P = \<lbrakk>Domain P\<rbrakk>\<^sub>P"
+definition pre :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" 
+  where "pre P = (\<lambda> s. \<exists> s'. P (s, s'))"
 
-definition post :: "('s\<^sub>1 \<leftrightarrow> 's\<^sub>2) \<Rightarrow> ('s\<^sub>2 \<Rightarrow> bool)" 
-  where "post P = \<lbrakk>Range P\<rbrakk>\<^sub>P"
+definition post :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>2 \<Rightarrow> bool)" 
+  where "post P = (\<lambda> s'. \<exists> s. P (s, s'))"
 
 subsection \<open> Predicate Semantics \<close>
 
-lemma pred_skip [pred]: "\<lbrakk>II\<rbrakk>\<^sub>P = ($\<^bold>v\<^sup>> = $\<^bold>v\<^sup><)\<^sub>e"
+lemma pred_skip [pred]: "II = ($\<^bold>v\<^sup>> = $\<^bold>v\<^sup><)\<^sub>e"
+  by pred_simp
+
+lemma rel_skip [rel]: "II (s, s') = (s = s')"
+  apply pred_simp
   by expr_auto
 
-lemma rel_skip [rel]: "\<lbrakk>II\<rbrakk>\<^sub>P (s, s') = (s = s')"
-  by expr_auto
-
-lemma rel_test [rel]: "\<lbrakk>\<questiondown>b?\<rbrakk>\<^sub>P (s, s') = (b s \<and> s = s')"
+lemma rel_test [rel]: "\<questiondown>b? (s, s') = (b s \<and> s = s')"
   by rel_auto
 
 lemma pred_seq_hom [pred]:
-  "\<lbrakk>P \<^bold>; Q\<rbrakk>\<^sub>P = (\<exists> v\<^sub>0. [ \<^bold>v\<^sup>> \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> ] \<dagger> \<lbrakk>P\<rbrakk>\<^sub>P \<and> [ \<^bold>v\<^sup>< \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> ] \<dagger> \<lbrakk>Q\<rbrakk>\<^sub>P)\<^sub>e"
-  by (expr_auto)
+  "P ;; Q = (\<exists> v\<^sub>0. [ \<^bold>v\<^sup>> \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> ] \<dagger> P \<and> [ \<^bold>v\<^sup>< \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> ] \<dagger> Q)\<^sub>e"
+  by pred_auto
 
 lemma pred_seq [pred]: 
-  "\<lbrakk>P \<^bold>; Q\<rbrakk>\<^sub>P = (\<exists> v\<^sub>0. \<lparr> \<^bold>v\<^sup>< \<leadsto> $\<^bold>v\<^sup><, \<^bold>v\<^sup>> \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> \<rparr> \<dagger> \<lbrakk>P\<rbrakk>\<^sub>P \<and> \<lparr> \<^bold>v\<^sup>< \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright>, \<^bold>v\<^sup>> \<leadsto> $\<^bold>v\<^sup>> \<rparr> \<dagger> \<lbrakk>Q\<rbrakk>\<^sub>P)\<^sub>e"
-  by (expr_auto)
-
-lemma rel_seq [rel]: "\<lbrakk>P \<^bold>; Q\<rbrakk>\<^sub>P (s, s') = (\<exists> s\<^sub>0. \<lbrakk>P\<rbrakk>\<^sub>P (s, s\<^sub>0) \<and> \<lbrakk>Q\<rbrakk>\<^sub>P (s\<^sub>0, s'))"
-  by expr_auto
-
-lemma pred_assigns [pred]: "\<lbrakk>\<langle>\<sigma>\<rangle>\<^sub>a\<rbrakk>\<^sub>P = ($\<^bold>v\<^sup>> = \<sigma>\<^sup><)\<^sub>e"
-  by (auto simp add: expr_defs assigns_rel_def lens_defs pfun_entries_pabs pfun_graph_pabs prod.case_eq_if)
-
-lemma rel_assigns [rel]: "\<lbrakk>\<langle>\<sigma>\<rangle>\<^sub>a\<rbrakk>\<^sub>P (s, s') = (s' = \<sigma> s)"
-  by (simp add: expr_defs assigns_rel_def pfun_entries_pabs pfun_graph_pabs)
-
-lemma rel_rcond [rel]: "\<lbrakk>P \<^bold>\<lhd> b \<^bold>\<rhd> Q\<rbrakk>\<^sub>P (s, s') = (if b s then \<lbrakk>P\<rbrakk>\<^sub>P (s, s') else \<lbrakk>Q\<rbrakk>\<^sub>P (s, s'))"
-  unfolding cond_def by rel_auto
-
-lemma rel_Domain: "Domain P = (\<Union> s. P\<lbrakk>\<guillemotleft>s\<guillemotright>/\<^bold>v\<^sup>>\<rbrakk>) \<down> \<^bold>v\<^sup><"
+  "P ;; Q = (\<exists> v\<^sub>0. \<lparr> \<^bold>v\<^sup>< \<leadsto> $\<^bold>v\<^sup><, \<^bold>v\<^sup>> \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> \<rparr> \<dagger> P \<and> \<lparr> \<^bold>v\<^sup>< \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright>, \<^bold>v\<^sup>> \<leadsto> $\<^bold>v\<^sup>> \<rparr> \<dagger> Q)\<^sub>e"
   by (pred_auto)
 
-lemma pred_pre [pred]: "pre P = (\<exists> s. \<lbrakk>P\<rbrakk>\<^sub>P \<lbrakk>\<guillemotleft>s\<guillemotright>/\<^bold>v\<^sup>>\<rbrakk>)\<^sub><"
+
+lemma pred_pre [pred]: "pre P = (\<exists> s. P \<lbrakk>\<guillemotleft>s\<guillemotright>/\<^bold>v\<^sup>>\<rbrakk>)\<^sub><"
   by (expr_simp add: pre_def Domain_iff)
 
-lemma pred_pre_liberate: "pre P = (\<lbrakk>P\<rbrakk>\<^sub>P \\ out\<alpha>)\<^sub><"
+lemma pred_pre_liberate: "pre P = (P \\ out\<alpha>)\<^sub><"
   by (expr_auto add: pre_def)
-
-lemma rel_pre [rel_transfer]: "pre P = (\<lambda> s. \<exists> s\<^sub>0. \<lbrakk>P\<rbrakk>\<^sub>P (s, s\<^sub>0))"
-  by (auto simp add: pre_def Domain_iff set_pred_def SEXP_def)
 
 subsection \<open> Unrestriction Laws \<close>
 
-lemma unrest_iuvar [unrest]: "out\<alpha> \<sharp> ($x\<^sup><)\<^sub>u"
+lemma unrest_iuvar [unrest]: "out\<alpha> \<sharp> ($x\<^sup><)\<^sub>e"
+  apply unrest
   by rel_auto
 
 lemma unrest_ouvar [unrest]: "in\<alpha> \<sharp> ($x\<^sup>>)\<^sub>u"
@@ -173,33 +147,76 @@ lemma unrest_seq_ivar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>< \<sharp> P \<r
 lemma unrest_seq_ovar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>> \<sharp> Q \<rbrakk> \<Longrightarrow> $x\<^sup>> \<sharp> P \<Zcomp> Q"
   by rel_auto
 
+subsection \<open> Relational Transfer Method \<close>
+
+definition pred_rel :: "('s \<Rightarrow> bool) \<Rightarrow> 's set" ("\<lbrakk>_\<rbrakk>\<^sub>U") where
+"pred_rel = Collect"
+
+syntax "_pred_rel" :: "logic \<Rightarrow> logic" ("'(_')\<^sub>U")
+translations "(p)\<^sub>U" == "CONST pred_rel (p)\<^sub>e"
+
+named_theorems rel and rel_transfer
+
+lemma rel_pred_interp [rel]: 
+  "\<lbrakk>true\<rbrakk>\<^sub>U = UNIV" "\<lbrakk>false\<rbrakk>\<^sub>U = {}" 
+  "\<lbrakk>P \<and> Q\<rbrakk>\<^sub>U = (\<lbrakk>P\<rbrakk>\<^sub>U \<inter> \<lbrakk>Q\<rbrakk>\<^sub>U)" "\<lbrakk>P \<or> Q\<rbrakk>\<^sub>U = (\<lbrakk>P\<rbrakk>\<^sub>U \<union> \<lbrakk>Q\<rbrakk>\<^sub>U)" "\<lbrakk>\<not> P\<rbrakk>\<^sub>U = - \<lbrakk>P\<rbrakk>\<^sub>U"
+  by (auto simp add: pred_rel_def pred)
+
+lemma rel_interp [rel]:
+  "\<lbrakk>P ;; Q\<rbrakk>\<^sub>U = \<lbrakk>P\<rbrakk>\<^sub>U \<Zcomp> \<lbrakk>Q\<rbrakk>\<^sub>U" "\<lbrakk>II\<rbrakk>\<^sub>U = Id"
+  by (auto simp add: pred_rel_def pred)
+
+lemma rel_pre [rel_transfer]: "\<lbrakk>pre P\<rbrakk>\<^sub>U = Domain \<lbrakk>P\<rbrakk>\<^sub>U"
+  by (auto simp add: pre_def Domain_def pred_rel_def)
+
+lemma rel_post [rel_transfer]: "\<lbrakk>post P\<rbrakk>\<^sub>U = Range \<lbrakk>P\<rbrakk>\<^sub>U"
+  by (auto simp add: post_def Range_def pred_rel_def)
+
+lemma rel_eq_transfer [rel_transfer]: "P = Q \<longleftrightarrow> \<lbrakk>P\<rbrakk>\<^sub>U = \<lbrakk>Q\<rbrakk>\<^sub>U"
+  by (auto simp add: pred_rel_def)
+
+lemma rel_refine_transfer [rel_transfer]: "P \<sqsubseteq> Q \<longleftrightarrow> \<lbrakk>Q\<rbrakk>\<^sub>U \<subseteq> \<lbrakk>P\<rbrakk>\<^sub>U"
+  by (auto simp add: pred_rel_def pred_refine_iff)
+
+method rel_transfer = (simp add: rel_transfer rel)
+
+method rel_simp uses add = (rel_transfer, expr_simp add: relcomp_unfold add)
+method rel_auto uses add = (rel_transfer, expr_auto add: relcomp_unfold add)
+
+subsection \<open> Relational Properties \<close>
+
+definition [rel_transfer]: "Functional P = functional \<lbrakk>P\<rbrakk>\<^sub>U"
+
+definition [rel_transfer]: "Injective P = injective \<lbrakk>P\<rbrakk>\<^sub>U"
+
 subsection \<open> Algebraic Laws \<close>
 
-lemma seqr_middle: "vwb_lens x \<Longrightarrow> P \<Zcomp> Q = (\<Union> v. P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> \<^bold>; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>)"
-  by (rel_auto, metis vwb_lens.put_eq)
+lemma seqr_middle: "vwb_lens x \<Longrightarrow> P ;; Q = (SUP v. P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>)"
+  by (pred_auto, metis vwb_lens.put_eq)
 
-lemma precond_equiv: "true \<Zcomp> P = P \<longleftrightarrow> (in\<alpha> \<sharp> P)"
-  by (rel_auto)
+lemma precond_equiv: "true ;; P = P \<longleftrightarrow> (in\<alpha> \<sharp> P)"
+  by pred_auto
 
-lemma precond_simp [simp]: "in\<alpha> \<sharp> P \<Longrightarrow> true \<Zcomp> P = P"
+lemma precond_simp [simp]: "in\<alpha> \<sharp> P \<Longrightarrow> true ;; P = P"
   by (simp add: precond_equiv)
 
-lemma postcond_equiv: "P \<Zcomp> true = P \<longleftrightarrow> (out\<alpha> \<sharp> P)"
-  by (rel_auto)
+lemma postcond_equiv: "P ;; true = P \<longleftrightarrow> (out\<alpha> \<sharp> P)"
+  by (pred_auto)
 
-lemma postcond_simp: "out\<alpha> \<sharp> P \<Longrightarrow> P \<Zcomp> true = P"
+lemma postcond_simp: "out\<alpha> \<sharp> P \<Longrightarrow> P ;; true = P"
   by (simp add: postcond_equiv)
 
-lemma "($x\<^sup>< = $x\<^sup>>)\<^sub>u \<Zcomp> ($x\<^sup>< = $x\<^sup>>)\<^sub>u = ($x\<^sup>< = $x\<^sup>>)\<^sub>u"
-  by rel_auto
+lemma "($x\<^sup>< = $x\<^sup>>)\<^sub>e ;; ($x\<^sup>< = $x\<^sup>>)\<^sub>e = ($x\<^sup>< = $x\<^sup>>)\<^sub>e"
+  by pred_auto
 
 lemma assigns_skip: "\<langle>id\<rangle>\<^sub>a = II"
-  by rel_auto
+  by pred_auto
 
-lemma assigns_comp: "\<langle>\<sigma>\<rangle>\<^sub>a \<Zcomp> \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<rho> \<circ>\<^sub>s \<sigma>\<rangle>\<^sub>a"
-  by rel_auto
+lemma assigns_comp: "\<langle>\<sigma>\<rangle>\<^sub>a ;; \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<rho> \<circ>\<^sub>s \<sigma>\<rangle>\<^sub>a"
+  by pred_auto
 
 lemma assigns_cond: "\<langle>\<sigma>\<rangle>\<^sub>a \<^bold>\<lhd> b \<^bold>\<rhd> \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<sigma> \<triangleleft> b \<triangleright> \<rho>\<rangle>\<^sub>a"
-  by rel_auto
+  by pred_auto
 
 end
+

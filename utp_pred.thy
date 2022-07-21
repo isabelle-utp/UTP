@@ -12,23 +12,67 @@ consts
   utrue  :: "'p" ("true")
   ufalse :: "'p" ("false")
 
+type_synonym 's pred = "'s \<Rightarrow> bool"
+
+named_theorems pred
+
+definition true_pred :: "'s pred" where [pred]: "true_pred = (True)\<^sub>e"
+definition false_pred :: "'s pred" where [pred]: "false_pred = (False)\<^sub>e"
+
+lemma pred_refine_iff: "P \<sqsubseteq> Q \<longleftrightarrow> (\<forall> s. Q s \<longrightarrow> P s)"
+  by (simp add: ref_by_bool_def ref_by_fun_def)
+
+method pred_simp uses add = (expr_simp add: pred_refine_iff pred add)
+method pred_auto uses add = (expr_auto add: pred_refine_iff pred add)
+
+adhoc_overloading utrue true_pred and ufalse false_pred
+
+consts 
+  uconj :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"
+  udisj :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" 
+  unot  :: "'a \<Rightarrow> 'a" 
+
+bundle UTP_Logic_Syntax
+begin
+
+no_notation conj (infixr "\<and>" 35) and disj (infixr "\<or>" 30) and Not ("\<not> _" [40] 40)
+notation uconj (infixr "\<and>" 35) and udisj (infixr "\<or>" 30) and unot ("\<not> _" [40] 40)
+
+end
+
+unbundle UTP_Logic_Syntax
+
+definition conj_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
+[pred]: "conj_pred = inf"
+
+definition disj_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
+[pred]: "disj_pred = sup"
+
+definition not_pred :: "'s pred \<Rightarrow> 's pred" where
+[pred]: "not_pred = uminus"
+
+definition diff_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
+[pred]: "diff_pred = minus"
+
+adhoc_overloading 
+  uconj conj and uconj conj_pred and
+  udisj disj and udisj disj_pred and
+  unot Not and unot not_pred
+
+(*
+definition impl_pred (infixr "\<Rightarrow>" 25) where
+[pred]: "impl_pred P Q = (- P) \<union> Q"
+
+definition iff_pred (infixr "\<Leftrightarrow>" 25) where
+[pred_core]: "iff_pred P Q = ((P \<Rightarrow> Q) \<and> (Q \<Rightarrow> P))"
+*)
+
+
+(*
 named_theorems pred and pred_core and pred_transfer
+*)
 
-text \<open> Convert a set-based representation (e.g. a binary relation) into a predicate. \<close>
-
-definition set_pred :: "'s set \<Rightarrow> ('s \<Rightarrow> bool)" ("\<lbrakk>_\<rbrakk>\<^sub>P") where
-[expr_defs]: "\<lbrakk>P\<rbrakk>\<^sub>P = [\<lambda> s. s \<in> P]\<^sub>e"
-
-expr_ctr set_pred
-
-text \<open> Convert a predicate into a set-based representation. \<close>
-
-definition pred_set :: "('s \<Rightarrow> bool) \<Rightarrow> 's set" ("\<lbrakk>_\<rbrakk>\<^sub>u") where
-[expr_defs]: "pred_set = Collect"
-
-syntax "_pred_set" :: "logic \<Rightarrow> logic" ("'(_')\<^sub>u")
-translations "(p)\<^sub>u" == "CONST pred_set (p)\<^sub>e"
-
+(*
 definition [pred_core]: "true_pred = UNIV"
 definition [pred_core]: "false_pred = {}"
 
@@ -87,6 +131,7 @@ interpretation ref_order: order "(\<sqsubseteq>) :: 'a set \<Rightarrow> 'a set 
 
 interpretation ref_lattice: complete_lattice "\<Union>" "\<Inter>" "(\<union>)" "(\<sqsubseteq>)" "(\<sqsubset>)" "(\<inter>)" "UNIV" "{}"
   by (unfold_locales, auto simp add: pred_core)
+*)
 
 syntax
   "_mu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<mu> _ \<bullet> _" [0, 10] 10)
@@ -99,6 +144,8 @@ translations
   "\<nu> X \<bullet> P" == "CONST lfp (\<lambda> X. P)"
   "\<mu> X \<bullet> P" == "CONST gfp (\<lambda> X. P)"
 
+
+(*
 subsection \<open> Proof Strategy \<close>
 
 text \<open> The proof strategy converts a set-based representation into a predicate, and then uses the
@@ -166,6 +213,7 @@ interpretation pred_ba: boolean_algebra diff_pred not_pred conj_pred "(\<sqsupse
 lemma pred_impl_laws [simp]: 
   "(true \<Rightarrow> P) = P" "(P \<Rightarrow> true) = true" "(false \<Rightarrow> P) = true" "(P \<Rightarrow> false) = (\<not> P)" "(P \<Rightarrow> P) = true"
   by pred_simp+
+*)
 
 text \<open> In accordance with \cite{hoare1998} we turn the lattice operators upside down \<close>
 bundle utp_lattice_syntax
@@ -186,5 +234,7 @@ syntax
   "_SUP"      :: "pttrn \<Rightarrow> 'a set \<Rightarrow> 'b \<Rightarrow> 'b"  ("(3\<Sqinter>_\<in>_./ _)" [0, 0, 10] 10)
 
 end
+
+unbundle utp_lattice_syntax
 
 end
