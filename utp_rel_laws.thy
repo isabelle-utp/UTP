@@ -74,7 +74,7 @@ theorem postcond_equiv:
 theorem precond_left_zero:
   assumes "out\<alpha> \<sharp> p" "p \<noteq> false"
   shows "(true ;; p) = true"
-  using assms by (pred_auto)
+  by (pred_auto assms: assms)
 
 (*theorem feasibile_iff_true_right_zero:
   "P ;; true = true \<longleftrightarrow> (\<exists> out\<alpha> \<bullet> P)\<^sub>e"
@@ -108,7 +108,7 @@ lemma cond_seqr_mono: "mono (\<lambda>X. (P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd
 lemma mono_seqr_tail:
   assumes "mono F"
   shows "mono (\<lambda> X. P ;; F(X))"
-  using assms by (pred_auto add: mono_def)
+  by (pred_auto assms: assms add: mono_def)
 
 lemma seqr_liberate_left: "vwb_lens x \<Longrightarrow> ((P  \\ $x\<^sup><) ;; Q) = ((P ;; Q) \\ $x\<^sup><)"
   by (pred_auto)
@@ -153,8 +153,7 @@ lemma seqr_middle:
 lemma seqr_left_one_point:
   assumes "vwb_lens x"
   shows "(P \<and> ($x\<^sup>> = \<guillemotleft>v\<guillemotright>)\<^sub>e) ;; Q = P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>"
-  using assms
-  by (pred_auto, metis vwb_lens_wb wb_lens.get_put)
+  by (pred_auto assms: assms, metis vwb_lens_wb wb_lens.get_put)
 
 lemma seqr_right_one_point:
   assumes "vwb_lens x"
@@ -186,17 +185,17 @@ lemma seqr_right_one_point_false:
 lemma seqr_insert_ident_left:
   assumes "vwb_lens x" "$x\<^sup>> \<sharp> P" "$x\<^sup>< \<sharp> Q"
   shows "((($x\<^sup>> = $x\<^sup><)\<^sub>e \<and> P) ;; Q) = (P ;; Q)"
-  using assms by (pred_auto, meson vwb_lens_wb wb_lens_weak weak_lens.put_get)
+  by (pred_auto assms: assms, meson vwb_lens_def wb_lens_weak weak_lens.put_get)
 
 lemma seqr_insert_ident_right:
   assumes "vwb_lens x" "$x\<^sup>> \<sharp> P" "$x\<^sup>< \<sharp> Q"
   shows "(P ;; (($x\<^sup>> = $x\<^sup><)\<^sub>e \<and> Q)) = (P ;; Q)"
-  using assms by (pred_auto, metis (no_types, opaque_lifting) vwb_lens_def wb_lens_def weak_lens.put_get)
+  by (pred_auto assms: assms, metis (no_types, opaque_lifting) vwb_lens_def wb_lens_def weak_lens.put_get)
 
 lemma seq_var_ident_lift:
   assumes "vwb_lens x" "$x\<^sup>> \<sharp> P" "$x\<^sup>< \<sharp> Q"
   shows "((($x\<^sup>> = $x\<^sup><)\<^sub>e \<and> P) ;; (($x\<^sup>> = $x\<^sup><)\<^sub>e \<and> Q)) = (($x\<^sup>> = $x\<^sup><)\<^sub>e \<and> (P ;; Q))"
-  using assms by (pred_auto, metis (no_types, lifting) vwb_lens_wb wb_lens_weak weak_lens.put_get)
+  by (pred_auto assms: assms, metis (no_types, lifting) vwb_lens_wb wb_lens_weak weak_lens.put_get)
 
 lemma seqr_bool_split:
   assumes "vwb_lens x"
