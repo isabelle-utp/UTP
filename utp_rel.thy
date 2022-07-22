@@ -56,7 +56,7 @@ definition test :: "('s \<Rightarrow> bool) \<Rightarrow> 's hrel" where
 adhoc_overloading utest test
 
 definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's hrel" where
-[pred]: "ndet_assign x = (INF v. x := \<guillemotleft>v\<guillemotright>)"
+[pred]: "ndet_assign x = (\<Sqinter> v. x := \<guillemotleft>v\<guillemotright>)"
 
 syntax "_ndet_assign" :: "svid \<Rightarrow> logic" ("_ := *" [75] 76)
 translations "_ndet_assign x" == "CONST ndet_assign x"

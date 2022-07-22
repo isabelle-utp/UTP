@@ -71,11 +71,11 @@ lemma wlp_rel_aext_usedby [wp]: "\<lbrakk> vwb_lens a; a \<natural> b \<rbrakk> 
 lemma wlp_gcmd [wp]:
  "((b \<longrightarrow> P) wlp c)\<^sub>e = (b \<longrightarrow> P wlp c)\<^sub>e"
   by (simp add: rgcmd_def wp)
-
+*)
 
 
 theorem wlp_hoare_link:
-  "({p\<^bold>}Q\<^bold>{r\<^bold>} ,`p \<longrightarrow> Q wlp r`)urel"
+  "\<^bold>{p\<^bold>}Q\<^bold>{r\<^bold>} \<longleftrightarrow> `p \<longrightarrow> Q wlp r`"
   by pred_auto
 
 
@@ -86,8 +86,7 @@ method hoare_wlp_auto uses defs = (simp add: wlp_hoare_link wp unrest usubst def
 text \<open> If two programs have the same weakest precondition for any postcondition then the programs
   are the same. \<close>
 
-theorem wlp_eq_intro: "\<lbrakk> \<And> r. P wlp r = Q wlp r \<rbrakk> \<longrightarrow> P = Q"
-  by (pred_auto robust, fastforce+)
-*)
+theorem wlp_eq_intro: "\<lbrakk> \<And> r. P wlp r = Q wlp r \<rbrakk> \<Longrightarrow> P = Q"
+  by (pred_auto, fastforce+)
 
 end

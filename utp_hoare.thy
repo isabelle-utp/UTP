@@ -226,26 +226,26 @@ text \<open> Total correctness law for Hoare logic, based on constructive chains
   variants that have naturals numbers as their range. \<close>
     
 lemma while_term_hoare_r:
-  assumes "\<Sqinter> z::nat. \<^bold>{p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<^bold>}S\<^bold>{p \<and> v < \<guillemotleft>z\<guillemotright>\<^bold>}"
+  assumes "\<And> z::nat. \<^bold>{p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<^bold>}S\<^bold>{p \<and> v < \<guillemotleft>z\<guillemotright>\<^bold>}"
   shows "\<^bold>{p\<^bold>}while\<^sub>\<bottom> b do S od\<^bold>{\<not>b \<and> p\<^bold>}"
 proof -
   have "((p\<^sup><)\<^sub>e \<longrightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>e) \<sqsubseteq> (\<mu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
   proof (rule mu_refine_intro)
-    from assms show "((p\<^sup><)\<^sub>u \<Rightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>u) \<sqsubseteq> S ;; ((p\<^sup><)\<^sub>u \<Rightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>u) \<^bold>\<lhd> b \<^bold>\<rhd> II"
+    from assms show "((p\<^sup><)\<^sub>e \<longrightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>e) \<sqsubseteq> S ;; ((p\<^sup><)\<^sub>e \<longrightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>e) \<^bold>\<lhd> b \<^bold>\<rhd> II"
       by (pred_auto; smt (z3) hoare_meaning)+
-    let ?E = "\<lambda> n. \<lbrakk>(p \<and> v < \<guillemotleft>n\<guillemotright>)\<^sup><\<rbrakk>\<^sub>u"
-    show "((p\<^sup><)\<^sub>u \<and> (\<mu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)) = ((p\<^sup><)\<^sub>u \<and> (\<nu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II))"
+    let ?E = "\<lambda> n. ((p \<and> v < \<guillemotleft>n\<guillemotright>)\<^sup><)\<^sub>e"
+    show "((p\<^sup><)\<^sub>e \<and> (\<mu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)) = ((p\<^sup><)\<^sub>e \<and> (\<nu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II))"
     proof (rule constr_fp_uniq[where E="?E"])
       show "mono (\<lambda>X. S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
         by (rule cond_seqr_mono)
       show "constr (\<lambda>X. S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II) ?E"
         apply (rule constrI, rule chainI)
-          apply (pred_auto)+
+          apply (pred_auto, pred_auto, pred_auto)
         by (smt (verit, del_insts) assms hoare_meaning less_Suc_eq order_less_trans)+
     qed pred_auto (* Couldn't pattern match last goal *)
   qed
   thus ?thesis
-    by (pred_auto add: while_bot_def)
+    by (simp add: SEXP_def while_bot_def hoare_r_def impl_pred_def)
 qed
 
 lemma while_vrt_hoare_r [hoare_safe]:

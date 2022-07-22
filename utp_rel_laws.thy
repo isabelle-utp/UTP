@@ -3,7 +3,7 @@ section \<open> Relational Calculus Laws \<close>
 theory utp_rel_laws
   imports 
     utp_rel
-    (*utp_recursion*)
+    utp_recursion
 (*    utp_liberate *)begin
 
 section \<open> Cond laws \<close>
