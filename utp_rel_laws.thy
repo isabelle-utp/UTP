@@ -201,7 +201,7 @@ lemma seqr_bool_split:
   shows "P ;; Q = (P\<lbrakk>True/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>True/x\<^sup><\<rbrakk> \<or> P\<lbrakk>False/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>False/x\<^sup><\<rbrakk>)"
   using assms apply (subst seqr_middle[of x], simp_all)
   apply pred_auto
-  apply metis
+  apply (metis (full_types))
   done
 
 lemma cond_inter_var_split:
@@ -252,6 +252,7 @@ lemma seqr_to_conj: "\<lbrakk> out\<alpha> \<sharp> P; in\<alpha> \<sharp> Q \<r
 lemma liberate_seq_unfold:
   "vwb_lens x \<Longrightarrow> $x \<sharp> Q \<Longrightarrow> (P \\ $x) ;; Q = (P ;; Q) \\ $x"
   apply (pred_auto)
+
   oops
 
 (*
@@ -325,13 +326,13 @@ text \<open>Extend the alphabet of a substitution\<close>
 definition subst_aext :: "'a subst \<Rightarrow> ('a \<Longrightarrow> 'b) \<Rightarrow> 'b subst"
   where [rel]: "subst_aext \<sigma> x = (\<lambda> s. put\<^bsub>x\<^esub> s (\<sigma> (get\<^bsub>x\<^esub> s)))"
 
-(*
+
 lemma assigns_subst: "(subst_aext \<sigma> fst\<^sub>L) \<dagger> \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<rho> \<circ>\<^sub>s \<sigma>\<rangle>\<^sub>a"
-  by pred_auto
+  apply pred_auto
+  by (simp_all add: utp_rel_laws.subst_aext_def)
 
 lemma assigns_r_comp: "(\<langle>\<sigma>\<rangle>\<^sub>a ;; P) = ((\<lambda> s. put\<^bsub>fst\<^sub>L\<^esub> s (\<sigma> (get\<^bsub>fst\<^sub>L\<^esub> s))) \<dagger> P)"
   by (pred_auto)
-*)
 
 lemma assigns_r_feasible:
   "(\<langle>\<sigma>\<rangle>\<^sub>a ;; true) = true"
@@ -393,7 +394,7 @@ lemma assign_commute:
 
 lemma assign_cond:
   assumes "out\<alpha> \<sharp> b"
-  shows "(x := e ;; (P \<lhd> b \<rhd> Q)) = ((x := e ;; P) \<lhd> b \<rhd> (x := e ;; Q))"
+  shows "(x := e ;; (P \<^bold>\<lhd> b \<^bold>\<rhd> Q)) = ((x := e ;; P) \<^bold>\<lhd> b \<^bold>\<rhd> (x := e ;; Q))"
   apply pred_auto
      defer
   oops
@@ -408,14 +409,18 @@ lemma assign_r_alt_def:
   by (pred_auto)
 
 lemma assigns_r_func: "Functional \<langle>f\<rangle>\<^sub>a"
-  oops
+  unfolding Functional_def assigns_rel_def single_valued_def pred_rel_def
+  by simp
 
+lemma assigns_r_injective: "inj f \<Longrightarrow> Injective \<langle>f\<rangle>\<^sub>a"
+  unfolding Injective_def pred_rel_def injective_def 
+  apply auto
+    apply (metis Functional_def assigns_r_func pred_rel_def)
+    apply (simp add: assigns_rel_def injD)
+  done
 (*
-lemma assigns_r_uinj: "inj\<^sub>s f \<Longrightarrow> uinj \<langle>f\<rangle>\<^sub>a"
-  apply (rel_simp, simp add: inj_eq) 
-    
 lemma assigns_r_swap_uinj:
-  "\<lbrakk> vwb_lens x; vwb_lens y; x \<bowtie> y \<rbrakk> \<Longrightarrow> uinj ((x,y) := (&y,&x))"
+  "\<lbrakk> vwb_lens x; vwb_lens y; x \<bowtie> y \<rbrakk> \<Longrightarrow> (x,y) := (y,x)"
   by (metis assigns_r_uinj pr_var_def swap_usubst_inj)
 
 lemma assign_unfold:

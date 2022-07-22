@@ -6,7 +6,7 @@ text \<open> The frame operator restricts the relation P to only operate on vari
 
 definition frame :: "'s frame \<Rightarrow> ('s ::scene_space) rel \<Rightarrow> 's rel" where
 "frame a P = {(s, s'). s \<approx>\<^sub>F s' on - a \<and> (s, s') \<in> P}"
-
+(*
 text \<open> The frame extension operator take a lens @{term a}, and a relation @{term P}. It constructs
   a relation such that all variables outside of @{term a} are unchanged, and the valuations for
   @{term a} are drawn from @{term P}. Intuitively, this can be seen as extending the alphabet
@@ -144,7 +144,7 @@ lemma rel_frext_seq [frame]:
   apply (rel_auto)
   oops (* gets nitpicked *)
 
-(*
+
 lemma rel_frext_assigns [frame]:
   "vwb_lens a \<Longrightarrow> a:[\<langle>\<sigma>\<rangle>\<^sub>a]\<^sup>+ = \<langle>\<sigma> \<oplus>\<^sub>s a\<rangle>\<^sub>a"
   by (rel_auto)
@@ -188,9 +188,11 @@ lemma nameset_skip_ra: "vwb_lens x \<Longrightarrow> (\<^bold>n\<^bold>s x \<bul
   by (rel_auto)
     
 declare sublens_def [lens_defs]
-*)
+
 
 
 subsection \<open> Modification laws \<close>
 lemma "(rrestr x P) nmods x"
   oops
+*)
+end
