@@ -19,16 +19,28 @@ named_theorems pred
 definition true_pred :: "'s pred" where [pred]: "true_pred = (True)\<^sub>e"
 definition false_pred :: "'s pred" where [pred]: "false_pred = (False)\<^sub>e"
 
-
-
 lemma pred_refine_iff: "P \<sqsubseteq> Q \<longleftrightarrow> (\<forall> s. Q s \<longrightarrow> P s)"
   by (simp add: ref_by_bool_def ref_by_fun_def)
 
 method pred_simp uses assms add = (insert assms, simp add: pred expr_simps add; expr_simp add: pred_refine_iff add)
 method pred_auto uses assms add = (insert assms, simp add: pred expr_simps add; expr_auto add: pred_refine_iff add)
 
+definition conj_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
+[pred]: "conj_pred = inf"
+
+definition disj_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
+[pred]: "disj_pred = sup"
+
+definition not_pred :: "'s pred \<Rightarrow> 's pred" where
+[pred]: "not_pred = uminus"
+
+definition diff_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
+[pred]: "diff_pred = minus"
+
+definition impl_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
+[pred]: "impl_pred P Q = (\<lambda>s. P s \<longrightarrow> Q s)"
+
 adhoc_overloading utrue true_pred and ufalse false_pred
-term "P \<longrightarrow> Q"
 consts 
   uconj :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"
   udisj :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" 
@@ -48,20 +60,6 @@ end
 
 unbundle UTP_Logic_Syntax
 
-definition conj_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
-[pred]: "conj_pred = inf"
-
-definition disj_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
-[pred]: "disj_pred = sup"
-
-definition not_pred :: "'s pred \<Rightarrow> 's pred" where
-[pred]: "not_pred = uminus"
-
-definition diff_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
-[pred]: "diff_pred = minus"
-
-definition impl_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
-[pred]: "impl_pred P Q = (\<lambda>s. P s \<longrightarrow> Q s)"
 
 adhoc_overloading 
   uconj conj and uconj conj_pred and
