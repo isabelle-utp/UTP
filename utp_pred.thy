@@ -19,6 +19,8 @@ named_theorems pred
 definition true_pred :: "'s pred" where [pred]: "true_pred = (True)\<^sub>e"
 definition false_pred :: "'s pred" where [pred]: "false_pred = (False)\<^sub>e"
 
+
+
 lemma pred_refine_iff: "P \<sqsubseteq> Q \<longleftrightarrow> (\<forall> s. Q s \<longrightarrow> P s)"
   by (simp add: ref_by_bool_def ref_by_fun_def)
 
@@ -26,17 +28,21 @@ method pred_simp uses assms add = (insert assms, simp add: pred expr_simps add; 
 method pred_auto uses assms add = (insert assms, simp add: pred expr_simps add; expr_auto add: pred_refine_iff add)
 
 adhoc_overloading utrue true_pred and ufalse false_pred
-
+term "P \<longrightarrow> Q"
 consts 
   uconj :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"
   udisj :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" 
   unot  :: "'a \<Rightarrow> 'a" 
+  uimplies :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"
 
 bundle UTP_Logic_Syntax
 begin
 
-no_notation conj (infixr "\<and>" 35) and disj (infixr "\<or>" 30) and Not ("\<not> _" [40] 40)
-notation uconj (infixr "\<and>" 35) and udisj (infixr "\<or>" 30) and unot ("\<not> _" [40] 40)
+no_notation conj (infixr "\<and>" 35)
+        and disj (infixr "\<or>" 30)
+        and Not ("\<not> _" [40] 40)
+        and implies (infixr "\<longrightarrow>" 25)
+notation uconj (infixr "\<and>" 35) and udisj (infixr "\<or>" 30) and unot ("\<not> _" [40] 40) and uimplies (infixr "\<longrightarrow>" 25)
 
 end
 
@@ -54,10 +60,14 @@ definition not_pred :: "'s pred \<Rightarrow> 's pred" where
 definition diff_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
 [pred]: "diff_pred = minus"
 
+definition impl_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
+[pred]: "impl_pred P Q = (\<lambda>s. P s \<longrightarrow> Q s)"
+
 adhoc_overloading 
   uconj conj and uconj conj_pred and
   udisj disj and udisj disj_pred and
-  unot Not and unot not_pred
+  unot Not and unot not_pred and
+  uimplies implies and uimplies impl_pred
 
 (*
 definition impl_pred (infixr "\<Rightarrow>" 25) where
