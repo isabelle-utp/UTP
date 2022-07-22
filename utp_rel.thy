@@ -1,15 +1,12 @@
 subsection \<open> UTP Relations \<close>
 
 theory utp_rel
-  imports utp_pred (*utp_pred_laws*)
+  imports utp_pred utp_pred_laws utp_rel_syntax
 begin
 
+unbundle UTP_Logic_Syntax
 
 text \<open> Convert a predicate into a set-based (i.e. relational) representation. \<close>
-
-consts
-  uassigns :: "('a, 'b) psubst \<Rightarrow> 'c" ("\<langle>_\<rangle>\<^sub>a")
-  uskip    :: "'a" ("II")
 
 type_synonym ('a, 'b) urel = "('a \<times> 'b) \<Rightarrow> bool"
 
@@ -53,14 +50,10 @@ definition assigns_rel :: "('s\<^sub>1, 's\<^sub>2) psubst \<Rightarrow> ('s\<^s
 
 adhoc_overloading uassigns assigns_rel
 
-syntax "_assign" :: "svid \<Rightarrow> logic \<Rightarrow> logic" (infix ":=" 61)
-translations "_assign x e" == "CONST uassigns [x \<leadsto> e]"
-
 definition test :: "('s \<Rightarrow> bool) \<Rightarrow> 's hrel" where
 [pred]: "test b = (\<lambda> (s, s'). b s \<and> s' = s)"
 
-syntax "_test" :: "logic \<Rightarrow> logic" ("\<questiondown>_?")
-translations "\<questiondown>P?" == "CONST test (P)\<^sub>e"
+adhoc_overloading utest test
 
 definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's hrel" where
 [pred]: "ndet_assign x = (INF v. x := \<guillemotleft>v\<guillemotright>)"

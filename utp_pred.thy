@@ -22,8 +22,11 @@ definition false_pred :: "'s pred" where [pred]: "false_pred = (False)\<^sub>e"
 lemma pred_refine_iff: "P \<sqsubseteq> Q \<longleftrightarrow> (\<forall> s. Q s \<longrightarrow> P s)"
   by (simp add: ref_by_bool_def ref_by_fun_def)
 
-method pred_simp uses assms add = (insert assms, simp add: pred expr_simps add; expr_simp add: pred_refine_iff add)
-method pred_auto uses assms add = (insert assms, simp add: pred expr_simps add; expr_auto add: pred_refine_iff add)
+lemma pred_ref_iff_le: "(f :: 's pred) \<sqsubseteq> g \<longleftrightarrow> g \<le> f"
+  by (simp add: le_fun_def pred_refine_iff)
+
+method pred_simp uses assms add = (insert assms, (simp add: pred expr_simps add)?; expr_simp add: pred_refine_iff add)
+method pred_auto uses assms add = (insert assms, (simp add: pred expr_simps add)?; expr_auto add: pred_refine_iff add)
 
 definition conj_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
 [pred]: "conj_pred = inf"
