@@ -1,7 +1,7 @@
 section \<open> Healthiness Conditions \<close>
 
 theory utp_healthy
-  imports utp_pred_laws
+  imports utp_pred_laws 
 begin
 
 subsection \<open> Main Definitions \<close>
@@ -181,13 +181,13 @@ lemma Conjunctive_distr_disj:
   using assms unfolding Conjunctive_def
   by (metis conj_pred_def disj_pred_def inf_sup_distrib2)
 
-(* Cond not defined
 lemma Conjunctive_distr_cond:
   assumes "Conjunctive(HC)"
   shows "HC(P \<triangleleft> b \<triangleright> Q) = (HC(P) \<triangleleft> b \<triangleright> HC(Q))"
   using assms unfolding Conjunctive_def
-  by (metis cond_conj_distr utp_pred_laws.inf_commute) *)
-
+  apply pred_simp
+  by force
+  
 lemma FunctionalConjunctive_Monotonic:
   "FunctionalConjunctive(H) \<Longrightarrow> Monotonic(H)"
   unfolding FunctionalConjunctive_def

@@ -1,7 +1,7 @@
 subsection \<open> UTP Relations \<close>
 
 theory utp_rel
-  imports utp_pred utp_healthy (*utp_pred_laws*)
+  imports utp_pred (*utp_pred_laws*)
 begin
 
 
