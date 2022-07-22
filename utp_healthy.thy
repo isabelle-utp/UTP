@@ -85,7 +85,7 @@ subsection \<open> Properties of Healthiness Conditions \<close>
 definition Idempotent :: "'\<alpha> health \<Rightarrow> bool" where
   "Idempotent(H) \<longleftrightarrow> (\<forall> P. H(H(P)) = H(P))"
 
-(*
+
 abbreviation Monotonic :: "'\<alpha> health \<Rightarrow> bool" where
   "Monotonic(H) \<equiv> mono H"
 
@@ -105,10 +105,10 @@ definition WeakConjunctive :: "'\<alpha> health \<Rightarrow> bool" where
   "WeakConjunctive(H) \<longleftrightarrow> (\<forall> P. \<exists> Q. H(P) = (P \<and> Q))"
 
 definition Disjunctuous :: "'\<alpha> health \<Rightarrow> bool" where
-  [pred]: "Disjunctuous H = (\<forall> P Q. H(P \<union> Q) = (H(P) \<union> H(Q)))"
+  [pred]: "Disjunctuous H = (\<forall> P Q. H(P \<or> Q) = (H(P) \<or> H(Q)))"
 
 definition Continuous :: "'\<alpha> health \<Rightarrow> bool" where
-  [pred]: "Continuous H = (\<forall> A. A \<noteq> {} \<longrightarrow> H (\<Union> A) = \<Union> (H ` A))"
+  [pred]: "Continuous H = (\<forall> A. A \<noteq> {} \<longrightarrow> H (\<Sqinter> A) = \<Sqinter> (H ` A))"
 
 lemma Healthy_Idempotent:
   "Idempotent H \<Longrightarrow> H(P) is H"
@@ -144,8 +144,9 @@ lemma Monotonic_comp [intro]:
 
 lemma Monotonic_inf:
   assumes "Monotonic P" "Monotonic Q"
-  shows "Monotonic (\<lambda> X. P(X) \<union> Q(X))"
-  using assms by (simp add: mono_def; blast)
+  shows "Monotonic (\<lambda> X. P(X) \<or> Q(X))"
+  apply (insert assms)
+  by (smt (verit) disj_pred_def le_iff_sup mono_def mono_sup sup.assoc sup.commute sup.idem)
 
 (* Not defined until rel
 lemma Monotonic_cond:
@@ -155,30 +156,30 @@ lemma Monotonic_cond:
     
 lemma Conjuctive_Idempotent:
   "Conjunctive(H) \<Longrightarrow> Idempotent(H)"
-  by (auto simp add: Conjunctive_def Idempotent_def)
+  by (auto simp add: Conjunctive_def Idempotent_def conj_pred_def)
 
 lemma Conjunctive_Monotonic:
   "Conjunctive(H) \<Longrightarrow> Monotonic(H)"
   unfolding Conjunctive_def mono_def
-  by (metis dual_order.trans Int_subset_iff conj_pred_def order_refl)
+  by (metis (no_types, opaque_lifting) conj_pred_def le_inf_iff order.trans order_refl)
 
 lemma Conjunctive_conj:
   assumes "Conjunctive(HC)"
   shows "HC(P \<and> Q) = (HC(P) \<and> Q)"
   using assms unfolding Conjunctive_def
-  by (metis pred_ba.inf.assoc pred_ba.inf_commute)
+  by (metis conj_pred_def inf.commute inf_sup_aci(2))
 
 lemma Conjunctive_distr_conj:
   assumes "Conjunctive(HC)"
   shows "HC(P \<and> Q) = (HC(P) \<and> HC(Q))"
   using assms unfolding Conjunctive_def
-  by (metis Conjunctive_conj assms pred_ba.inf.assoc pred_ba.inf.right_idem)
+  by (metis Conjunctive_conj assms conj_pred_def inf.right_idem inf_sup_aci(2))
 
 lemma Conjunctive_distr_disj:
   assumes "Conjunctive(HC)"
   shows "HC(P \<or> Q) = (HC(P) \<or> HC(Q))"
   using assms unfolding Conjunctive_def
-  by (metis pred_ba.inf_sup_distrib2)
+  by (metis conj_pred_def disj_pred_def inf_sup_distrib2)
 
 (* Cond not defined
 lemma Conjunctive_distr_cond:
@@ -195,7 +196,8 @@ lemma FunctionalConjunctive_Monotonic:
 lemma WeakConjunctive_Refinement:
   assumes "WeakConjunctive(HC)"
   shows "P \<sqsubseteq> HC(P)"
-  using assms unfolding WeakConjunctive_def by (metis pred_ba.inf.cobounded1)
+  using assms unfolding WeakConjunctive_def
+  by (metis conj_pred_def inf1D1 pred_refine_iff)
 
 lemma WeakCojunctive_Healthy_Refinement:
   assumes "WeakConjunctive(HC)" and "P is HC"
@@ -206,31 +208,26 @@ lemma WeakConjunctive_implies_WeakConjunctive:
   "Conjunctive(H) \<Longrightarrow> WeakConjunctive(H)"
   unfolding WeakConjunctive_def Conjunctive_def by pred_auto
 
-declare Conjunctive_def [upred_defs]
-declare mono_def [upred_defs]
-
 lemma Disjunctuous_Monotonic: "Disjunctuous H \<Longrightarrow> Monotonic H"
-  by (metis Disjunctuous_def mono_def semilattice_sup_class.le_iff_sup)
+  by (metis (no_types, lifting) Disjunctuous_def disj_pred_def le_iff_sup mono_def)
 
-lemma ContinuousD [dest]: "\<lbrakk> Continuous H; A \<noteq> {} \<rbrakk> \<Longrightarrow> H (\<Union> A) = (\<Union> P\<in>A. H(P))"
+lemma ContinuousD [dest]: "\<lbrakk> Continuous H; A \<noteq> {} \<rbrakk> \<Longrightarrow> H (\<Sqinter> A) = (\<Sqinter> P\<in>A. H(P))"
   by (simp add: Continuous_def)
 
 lemma Continuous_Disjunctous: "Continuous H \<Longrightarrow> Disjunctuous H"
   apply (auto simp add: Continuous_def Disjunctuous_def)
-  apply (rename_tac P Q)
-  apply (drule_tac x="{P,Q}" in spec)
-  apply (simp)
-  done
+  by (metis SUP_insert Sup_insert cSup_singleton disj_pred_def insert_not_empty)
 
 lemma Continuous_choice_dist: "Continuous H \<Longrightarrow> H(P \<sqinter> Q) = H(P) \<sqinter> H(Q)"
-  using Continuous_Disjunctous Disjunctuous_def by blast
+  using Continuous_Disjunctous Disjunctuous_def
+  by (metis disj_pred_def)
 
 lemma Continuous_Monotonic [closure]: "Continuous H \<Longrightarrow> Monotonic H"
   by (simp add: Continuous_Disjunctous Disjunctuous_Monotonic)
 
 lemma Continuous_comp [intro]:
   "\<lbrakk> Continuous f; Continuous g \<rbrakk> \<Longrightarrow> Continuous (f \<circ> g)"
-  by (simp add: Continuous_def)
+  unfolding Continuous_def by (simp, blast)
 
 lemma Continuous_const [closure]: "Continuous (\<lambda> X. P)"
   by pred_auto
@@ -241,7 +238,7 @@ lemma Continuous_cond [closure]:
   using assms by (pred_auto)
 
 text \<open> Closure laws derived from continuity \<close>
-
+(*
 lemma Sup_Continuous_closed [closure]:
   "\<lbrakk> Continuous H; \<And> i. i \<in> A \<Longrightarrow> P(i) is H; A \<noteq> {} \<rbrakk> \<Longrightarrow> (\<Union> i\<in>A. P(i)) is H"
   by (drule ContinuousD[of H "P ` A"], simp add: UINF_as_Sup[THEN sym])
