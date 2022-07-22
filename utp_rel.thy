@@ -11,9 +11,6 @@ consts
   uassigns :: "('a, 'b) psubst \<Rightarrow> 'c" ("\<langle>_\<rangle>\<^sub>a")
   uskip    :: "'a" ("II")
 
-expr_ctr uassigns
-expr_ctr uskip
-
 type_synonym ('a, 'b) urel = "('a \<times> 'b) \<Rightarrow> bool"
 
 translations
@@ -66,7 +63,7 @@ syntax "_test" :: "logic \<Rightarrow> logic" ("\<questiondown>_?")
 translations "\<questiondown>P?" == "CONST test (P)\<^sub>e"
 
 definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's hrel" where
-[pred]: "ndet_assign x = (\<Sqinter> v. x := \<guillemotleft>v\<guillemotright>)"
+[pred]: "ndet_assign x = (INF v. x := \<guillemotleft>v\<guillemotright>)"
 
 syntax "_ndet_assign" :: "svid \<Rightarrow> logic" ("_ := *" [75] 76)
 translations "_ndet_assign x" == "CONST ndet_assign x"
@@ -138,17 +135,16 @@ declare seq_def [expr_defs]
 
 thm usubst_eval
 
-lemma subst_seq_left [usubst]: "out\<alpha> \<sharp>\<^sub>s \<sigma> \<Longrightarrow> \<sigma> \<dagger> (P ;; Q) = (\<sigma> \<dagger> P) ;; Q"
+text \<open> subst_unrest needs a lens - I would like to write in\<alpha> and out\<alpha> here but that does not typecheck\<close>
+
+lemma subst_seq_left [usubst]: "snd_lens \<sharp>\<^sub>s \<sigma> \<Longrightarrow> \<sigma> \<dagger> (P ;; Q) = (\<sigma> \<dagger> P) ;; Q"
   by pred_auto (metis snd_conv)+
 
 lemma subst_seq_right [usubst]:
-  "in\<alpha> \<sharp>\<^sub>s \<sigma> \<Longrightarrow> \<sigma> \<dagger> (P ;; Q) = P ;; (\<sigma> \<dagger> Q)"
+  "fst_lens \<sharp>\<^sub>s \<sigma> \<Longrightarrow> \<sigma> \<dagger> (P ;; Q) = P ;; (\<sigma> \<dagger> Q)"
   by pred_auto (metis fst_conv)+
 
 subsection \<open> Unrestriction Laws \<close>
-
-lemma "mwb_lens x \<Longrightarrow> sset[$x\<^sup><,s] \<dagger> (P ;; Q) = (sset[$x\<^sup><,s] \<dagger> P) ;; Q"
-  by (subst_eval)
 
 lemma unrest_seq_ivar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>< \<sharp> P \<rbrakk> \<Longrightarrow> $x\<^sup>< \<sharp> P ;; Q"
   by (pred_auto)
@@ -221,6 +217,9 @@ translations
 lemma upower_interp [rel]: "\<lbrakk>P \<^bold>^ i\<rbrakk>\<^sub>U = \<lbrakk>P\<rbrakk>\<^sub>U ^^ i"
   by (induct i arbitrary: P)
      ((auto; pred_auto add: pred_rel_def), simp add: rel_interp(1) upred_semiring.power_Suc2)
+
+definition kleene :: "'\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("_\<^sup>\<star>" [999] 999) where
+"P\<^sup>\<star> = (\<Sqinter>i\<in>{0..}. P\<^bold>^i)"
 
 lemma seqr_middle: "vwb_lens x \<Longrightarrow> P ;; Q = (\<Sqinter> v. P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>)"
   by (pred_auto, metis vwb_lens.put_eq)
