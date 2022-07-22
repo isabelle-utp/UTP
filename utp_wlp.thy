@@ -56,19 +56,17 @@ lemma wlp_UINF_ind [wp]: "(\<Sqinter> i . P(i)) wlp b = (\<forall> i . P(i) wlp 
 lemma wlp_USUP_pre [wp]:
   shows "P wlp (\<forall> i  . Q(i)) = (\<forall> i. P wlp Q(i))\<^sub>e"
   by (pred_auto; blast)
-(*
-lemma wlp_test [wp]: "(?[b] wlp c)\<^sub>e = (b \<rightarrow> c)\<^sub>e"
+
+lemma wlp_test [wp]: "(\<questiondown>b? wlp c)\<^sub>e = (b \<longrightarrow> c)\<^sub>e"
   by (pred_auto)
 
-
+(*
 lemma wlp_rel_aext_unrest [wp]: "(\<lbrakk> vwb_lens a; a \<sharp> b \<rbrakk> \<longrightarrow> a:[P]\<^sup>+ wlp b)\<^sub>e = ((P wlp false) \<up>\<^sub>p a \<or> b)\<^sub>e"
   by (rel_simp, metis mwb_lens_def vwb_lens_def weak_lens.put_get)
 
 
 lemma wlp_rel_aext_usedby [wp]: "\<lbrakk> vwb_lens a; a \<natural> b \<rbrakk> \<Longrightarrow> a:[P]\<^sup>+ wlp b = (P wlp (b \<restriction>\<^sub>e a)) \<oplus>\<^sub>p a"
   by (pred_auto, metis mwb_lens_def vwb_lens_mwb weak_lens.put_get)
-
-
  
 lemma wlp_gcmd [wp]:
  "((b \<longrightarrow> P) wlp c)\<^sub>e = (b \<longrightarrow> P wlp c)\<^sub>e"
