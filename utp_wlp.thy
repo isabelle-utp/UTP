@@ -41,12 +41,8 @@ theorem wlp_abort [wp]:
   "true wlp r =( False)\<^sub>e"
   using assms by pred_auto
 
-(*
-lemma wlp_nd_assign [wp]: "(x := * ) wlp b = (\<forall> v. [x\<leadsto>v]\<dagger>b)\<^sub>e"
-  apply pred_simp
-  apply rule+
-  nitpick
-*)
+lemma wlp_nd_assign [wp]: "(x := * ) wlp b = (\<forall> v. [x\<leadsto>v] \<dagger> b)\<^sub>e"
+  by pred_auto
 
 theorem wlp_choice [wp]: "(P \<sqinter> Q) wlp R = (P wlp R \<and> Q wlp R)\<^sub>e"
   by (pred_auto)

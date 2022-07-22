@@ -11,6 +11,9 @@ consts
   uassigns :: "('a, 'b) psubst \<Rightarrow> 'c" ("\<langle>_\<rangle>\<^sub>a")
   uskip    :: "'a" ("II")
 
+expr_ctr uassigns
+expr_ctr uskip
+
 type_synonym ('a, 'b) urel = "('a \<times> 'b) \<Rightarrow> bool"
 
 translations
@@ -63,7 +66,7 @@ syntax "_test" :: "logic \<Rightarrow> logic" ("\<questiondown>_?")
 translations "\<questiondown>P?" == "CONST test (P)\<^sub>e"
 
 definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's hrel" where
-[pred]: "ndet_assign x = (INF v. x := \<guillemotleft>v\<guillemotright>)"
+[pred]: "ndet_assign x = (\<Sqinter> v. x := \<guillemotleft>v\<guillemotright>)"
 
 syntax "_ndet_assign" :: "svid \<Rightarrow> logic" ("_ := *" [75] 76)
 translations "_ndet_assign x" == "CONST ndet_assign x"
