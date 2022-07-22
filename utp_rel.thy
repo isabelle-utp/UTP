@@ -1,7 +1,7 @@
 subsection \<open> UTP Relations \<close>
 
 theory utp_rel
-  imports utp_pred (*utp_healthy utp_pred_laws*)
+  imports utp_pred utp_healthy (*utp_pred_laws*)
 begin
 
 
@@ -18,7 +18,7 @@ translations
 
 type_synonym 'a hrel = "('a, 'a) urel"
 
-definition seq :: "('a, 'b) urel \<Rightarrow> ('b, 'c) urel \<Rightarrow> ('a, 'c) urel" (infixl ";;" 65) where
+definition seq :: "('a, 'b) urel \<Rightarrow> ('b, 'c) urel \<Rightarrow> ('a, 'c) urel" (infixl ";;" 55) where
 [pred]: "P ;; Q = (\<lambda> (s, s'). \<exists> s\<^sub>0. P (s, s\<^sub>0) \<and> Q (s\<^sub>0, s'))"
 
 expr_ctr seq (0 1)
@@ -155,7 +155,7 @@ lemma unrest_seq_ovar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>> \<sharp> Q \<r
 
 subsection \<open> Relational Transfer Method \<close>
 
-definition pred_rel :: "('s \<Rightarrow> bool) \<Rightarrow> 's set" ("\<lbrakk>_\<rbrakk>\<^sub>U") where
+definition pred_rel :: "'s pred \<Rightarrow> 's set" ("\<lbrakk>_\<rbrakk>\<^sub>U") where
 "pred_rel = Collect"
 
 syntax "_pred_rel" :: "logic \<Rightarrow> logic" ("'(_')\<^sub>U")
@@ -244,7 +244,7 @@ lemma assigns_comp: "\<langle>\<sigma>\<rangle>\<^sub>a ;; \<langle>\<rho>\<rang
   by pred_auto
 
 lemma assigns_cond: "\<langle>\<sigma>\<rangle>\<^sub>a \<^bold>\<lhd> b \<^bold>\<rhd> \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<sigma> \<triangleleft> b \<triangleright> \<rho>\<rangle>\<^sub>a"
-  by pred_auto
+  by pred_auto  
 
 end
 
