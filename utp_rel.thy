@@ -71,8 +71,8 @@ translations "_ndet_assign x" == "CONST ndet_assign x"
 definition seqr_iter :: "'a list \<Rightarrow> ('a \<Rightarrow> 'b hrel) \<Rightarrow> 'b hrel" where
 [pred]: "seqr_iter xs P = foldr (\<lambda> i Q. P(i) ;; Q) xs II"
 
-syntax "_seqr_iter" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> '\<sigma> rel \<Rightarrow> '\<sigma> rel" ("(3\<Zcomp> _ : _ \<bullet>/ _)" [0, 0, 10] 10)
-translations "\<Zcomp> x : l \<bullet> P" \<rightleftharpoons> "(CONST seqr_iter) l (\<lambda>x. P)"
+syntax "_seqr_iter" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3;; _ : _ \<bullet>/ _)" [0, 0, 10] 10)
+translations ";; x : l \<bullet> P" \<rightleftharpoons> "(CONST seqr_iter) l (\<lambda>x. P)"
 
 definition while_top :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" ("while\<^sup>\<top> _ do _ od") where 
 "while_top b P = (\<nu> X \<bullet> ((P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
@@ -129,32 +129,29 @@ lemma pred_pre [pred]: "pre P = (\<exists> s. P \<lbrakk>\<guillemotleft>s\<guil
 lemma pred_pre_liberate: "pre P = (P \\ out\<alpha>)\<^sub><"
   by (expr_auto add: pre_def)
 
+subsection \<open> Substitution Laws \<close>
+
+declare seq_def [expr_defs]
+
+thm usubst_eval
+
+lemma subst_seq_left [usubst]: "out\<alpha> \<sharp>\<^sub>s \<sigma> \<Longrightarrow> \<sigma> \<dagger> (P ;; Q) = (\<sigma> \<dagger> P) ;; Q"
+  by pred_auto (metis snd_conv)+
+
+lemma subst_seq_right [usubst]:
+  "in\<alpha> \<sharp>\<^sub>s \<sigma> \<Longrightarrow> \<sigma> \<dagger> (P ;; Q) = P ;; (\<sigma> \<dagger> Q)"
+  by pred_auto (metis fst_conv)+
+
 subsection \<open> Unrestriction Laws \<close>
 
-syntax "_sset" :: "salpha \<Rightarrow> logic \<Rightarrow> logic" ("sset[_, _]")
-translations "_sset a P" == "CONST sset a P"
-
-term "sset[$x\<^sup><, s] \<dagger> P"
-
-term "lens_set (x ;\<^sub>L fst\<^sub>L)"
-
-lemma "out\<alpha> \<sharp>\<^sub>s \<sigma> \<Longrightarrow> \<sigma> \<dagger> (P ;; Q) = (\<sigma> \<dagger> P) ;; Q"
-  by (simp add: pred sset_def unrest_usubst_def, expr_auto)
-     (metis snd_conv)+
-
-(*
 lemma "mwb_lens x \<Longrightarrow> sset[$x\<^sup><,s] \<dagger> (P ;; Q) = (sset[$x\<^sup><,s] \<dagger> P) ;; Q"
-  by (simp add: pred sset_def, expr_auto)
-  apply (pred_simp)
-*)
-
+  by (subst_eval)
 
 lemma unrest_seq_ivar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>< \<sharp> P \<rbrakk> \<Longrightarrow> $x\<^sup>< \<sharp> P ;; Q"
-  apply unrest
-  by rel_auto
+  by (pred_auto)
 
-lemma unrest_seq_ovar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>> \<sharp> Q \<rbrakk> \<Longrightarrow> $x\<^sup>> \<sharp> P \<Zcomp> Q"
-  by rel_auto
+lemma unrest_seq_ovar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>> \<sharp> Q \<rbrakk> \<Longrightarrow> $x\<^sup>> \<sharp> P ;; Q"
+  by pred_auto
 
 subsection \<open> Relational Transfer Method \<close>
 
