@@ -1,10 +1,15 @@
 subsection \<open> UTP Relations \<close>
 
 theory utp_rel
-  imports utp_pred utp_rel_syntax utp_healthy (*utp_pred_laws*)
+  imports utp_pred (*utp_pred_laws*)
 begin
 
-unbundle UTP_Logic_Syntax
+
+text \<open> Convert a predicate into a set-based (i.e. relational) representation. \<close>
+
+consts
+  uassigns :: "('a, 'b) psubst \<Rightarrow> 'c" ("\<langle>_\<rangle>\<^sub>a")
+  uskip    :: "'a" ("II")
 
 type_synonym ('a, 'b) urel = "('a \<times> 'b) \<Rightarrow> bool"
 
@@ -12,7 +17,6 @@ translations
   (type) "('a, 'b) urel" <= (type) "('a \<times> 'b) \<Rightarrow> bool"
 
 type_synonym 'a hrel = "('a, 'a) urel"
-
 
 definition seq :: "('a, 'b) urel \<Rightarrow> ('b, 'c) urel \<Rightarrow> ('a, 'c) urel" (infixl ";;" 55) where
 [pred]: "P ;; Q = (\<lambda> (s, s'). \<exists> s\<^sub>0. P (s, s\<^sub>0) \<and> Q (s\<^sub>0, s'))"
@@ -49,10 +53,14 @@ definition assigns_rel :: "('s\<^sub>1, 's\<^sub>2) psubst \<Rightarrow> ('s\<^s
 
 adhoc_overloading uassigns assigns_rel
 
+syntax "_assign" :: "svid \<Rightarrow> logic \<Rightarrow> logic" (infix ":=" 61)
+translations "_assign x e" == "CONST uassigns [x \<leadsto> e]"
+
 definition test :: "('s \<Rightarrow> bool) \<Rightarrow> 's hrel" where
 [pred]: "test b = (\<lambda> (s, s'). b s \<and> s' = s)"
 
-adhoc_overloading utest test
+syntax "_test" :: "logic \<Rightarrow> logic" ("\<questiondown>_?")
+translations "\<questiondown>P?" == "CONST test (P)\<^sub>e"
 
 definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's hrel" where
 [pred]: "ndet_assign x = (INF v. x := \<guillemotleft>v\<guillemotright>)"
@@ -210,8 +218,53 @@ lemma upower_interp [rel]: "\<lbrakk>P \<^bold>^ i\<rbrakk>\<^sub>U = \<lbrakk>P
   by (induct i arbitrary: P)
      ((auto; pred_auto add: pred_rel_def), simp add: rel_interp(1) upred_semiring.power_Suc2)
 
-definition kleene :: "'\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("_\<^sup>\<star>" [999] 999) where
-"P\<^sup>\<star> = (\<Sqinter>i\<in>{0..}. P\<^bold>^i)"
+lemma upower_inductl: "Q \<sqsubseteq> ((P ;; Q) \<sqinter> R) \<Longrightarrow> Q \<sqsubseteq> P \<^bold>^ n ;; R"
+proof (induct n)
+  case 0
+  then show ?case apply rel_auto
+    by (metis (no_types, lifting) rel_pointwise_transfer subsetD)
+next
+  case (Suc n)
+  then show ?case
+    apply rel_auto
+    by (smt (verit, ccfv_SIG) rel_interp(1) rel_pointwise_transfer rel_refine_transfer relcomp.intros relpow_Suc_D2' subset_iff upower_interp)
+qed
+
+lemma upower_inductr:
+  assumes "Q \<sqsubseteq> R \<sqinter> (Q ;; P)"
+  shows "Q \<sqsubseteq> R ;; (P \<^bold>^ n)"
+  apply (induct n)
+    apply (rel_auto, metis assms pred_refine_iff rel_pointwise_transfer sup1I1)
+    apply (rel_auto, smt (verit, ccfv_SIG) Collect_mono_iff assms old.prod.case pred_refine_iff pred_rel_def rel_interp(1) rel_pointwise_transfer relcomp.relcompI sup1CI) 
+  done
+
+definition kleene_star :: "'\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("_\<^sup>\<star>" [999] 999) where
+"P\<^sup>\<star> = (\<Sqinter>i. P\<^bold>^i)"
+
+lemma kleene_rep_eq[rel]: "\<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U = \<lbrakk>P\<rbrakk>\<^sub>U\<^sup>*"
+proof 
+  have "((a, b) \<in> \<lbrakk>P\<rbrakk>\<^sub>U\<^sup>*) \<Longrightarrow> (a,b) \<in> \<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U" for a b
+    apply (induct rule: rtrancl.induct)
+     apply (simp_all add: pred_rel_def kleene_star_def)
+     apply (metis (full_types) power.power.power_0 prod.simps(2) skip_def)
+    by (metis (mono_tags, lifting) case_prodI upred_semiring.power_Suc2 utp_rel.seq_def)
+  then show "\<lbrakk>P\<rbrakk>\<^sub>U\<^sup>* \<subseteq> \<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U"
+    by auto
+next
+  have "((a, b) \<in> \<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U) \<Longrightarrow> (a,b) \<in> \<lbrakk>P\<rbrakk>\<^sub>U\<^sup>*" for a b
+    apply (simp add: kleene_star_def pred_rel_def)
+    by (metis mem_Collect_eq pred_rel_def rtrancl_power upower_interp)
+  then show "\<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U \<subseteq> \<lbrakk>P\<rbrakk>\<^sub>U\<^sup>*"
+    by force
+qed
+
+theorem ustar_inductl:
+  assumes "Q \<sqsubseteq> R" "Q \<sqsubseteq> P ;; Q"
+  shows "Q \<sqsubseteq> P\<^sup>\<star> ;; R"
+  apply (insert assms)
+  apply (rel_auto)
+  oops
+  
 
 lemma seqr_middle: "vwb_lens x \<Longrightarrow> P ;; Q = (\<Sqinter> v. P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>)"
   by (pred_auto, metis vwb_lens.put_eq)
