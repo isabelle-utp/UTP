@@ -37,7 +37,7 @@ lemma Healthy_carrier_Collect: "A \<subseteq> \<lbrakk>H\<rbrakk>\<^sub>H \<Long
 
 lemma Healthy_func:
   "\<lbrakk> F \<in> \<lbrakk>\<H>\<^sub>1\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>\<H>\<^sub>2\<rbrakk>\<^sub>H; P is \<H>\<^sub>1 \<rbrakk> \<Longrightarrow> F(P) = \<H>\<^sub>2(F(P))"
-  using Healthy_if by blast
+  by (metis Healthy_if PiE mem_Collect_eq)
 
 lemma Healthy_comp:
   "\<lbrakk> P is \<H>\<^sub>1; P is \<H>\<^sub>2 \<rbrakk> \<Longrightarrow> P is \<H>\<^sub>1 \<circ> \<H>\<^sub>2"
@@ -57,11 +57,11 @@ lemma Healthy_case_prod:
   by (simp add: prod.case_eq_if)
 
 lemma Healthy_SUPREMUM:
-  "A \<subseteq> \<lbrakk>H\<rbrakk>\<^sub>H \<Longrightarrow> Sup (H ` A) = \<Union> A"
+  "A \<subseteq> \<lbrakk>H\<rbrakk>\<^sub>H \<Longrightarrow> Sup (H ` A) = \<Sqinter> A"
   by (drule Healthy_carrier_image, presburger)
 
 lemma Healthy_INFIMUM:
-  "A \<subseteq> \<lbrakk>H\<rbrakk>\<^sub>H \<Longrightarrow> Inf (H ` A) = \<Inter> A"
+  "A \<subseteq> \<lbrakk>H\<rbrakk>\<^sub>H \<Longrightarrow> Inf (H ` A) = \<Squnion> A"
   by (drule Healthy_carrier_image, presburger)
 
 lemma Healthy_nu [closure]:
@@ -75,8 +75,8 @@ lemma Healthy_mu [closure]:
   by (metis (mono_tags) Healthy_def Healthy_func assms eq_id_iff gfp_unfold)
 
 lemma Healthy_subset_member: "\<lbrakk> A \<subseteq> \<lbrakk>H\<rbrakk>\<^sub>H; P \<in> A \<rbrakk> \<Longrightarrow> H(P) = P"
-  by (meson Ball_Collect Healthy_if)
-
+  using Healthy_if by blast
+  
 lemma is_Healthy_subset_member: "\<lbrakk> A \<subseteq> \<lbrakk>H\<rbrakk>\<^sub>H; P \<in> A \<rbrakk> \<Longrightarrow> P is H"
   by blast
 

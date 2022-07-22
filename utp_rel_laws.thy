@@ -3,7 +3,7 @@ section \<open> Relational Calculus Laws \<close>
 theory utp_rel_laws
   imports 
     utp_rel
-    utp_recursion
+    (*utp_recursion*)
 (*    utp_liberate *)begin
 
 section \<open> Cond laws \<close>
@@ -319,145 +319,19 @@ lemma skip_res_as_ra:
   done
 *)
 
-section \<open> Frame laws \<close>
-
-named_theorems frame
-
-lemma frame_all [frame]: "\<Sigma>:[P] = P"
-  by (pred_auto)
-
-lemma frame_none [frame]: "\<emptyset>:[P] = (P \<and> II)"
-  by (pred_auto add: scene_override_commute)
-
-
-lemma frame_commute:
-  assumes "($y\<^sup><) \<sharp> P" "($y\<^sup>>) \<sharp> P""($x\<^sup><) \<sharp> Q" "($x\<^sup>>) \<sharp> Q" "x \<bowtie> y" 
-  shows "$x:[P] ;; $y:[Q] = $y:[Q] ;; $x:[P]"
-  oops
-  (*apply (insert assms)
-  apply (pred_auto)
-   apply (rename_tac s s' s\<^sub>0)
-   apply (subgoal_tac "(s \<oplus>\<^sub>L s' on y) \<oplus>\<^sub>L s\<^sub>0 on x = s\<^sub>0 \<oplus>\<^sub>L s' on y")
-    apply (metis lens_indep_get lens_indep_sym lens_override_def)
-   apply (simp add: lens_indep.lens_put_comm lens_override_def)
-  apply (rename_tac s s' s\<^sub>0)
-  apply (subgoal_tac "put\<^bsub>y\<^esub> (put\<^bsub>x\<^esub> s (get\<^bsub>x\<^esub> (put\<^bsub>x\<^esub> s\<^sub>0 (get\<^bsub>x\<^esub> s')))) (get\<^bsub>y\<^esub> (put\<^bsub>y\<^esub> s (get\<^bsub>y\<^esub> s\<^sub>0))) 
-                      = put\<^bsub>x\<^esub> s\<^sub>0 (get\<^bsub>x\<^esub> s')")
-   apply (metis lens_indep_get lens_indep_sym)
-  apply (metis lens_indep.lens_put_comm)
-  done*)
- 
-lemma frame_miracle [simp]:
-  "x:[false] = false"
-  by (pred_auto)
-
-lemma frame_skip [simp]:
-  "idem_scene x \<Longrightarrow> x:[II] = II"
-  by (pred_auto)
-
-lemma frame_assign_in [frame]:
-  "\<lbrakk> vwb_lens a; x \<subseteq>\<^sub>L a \<rbrakk> \<Longrightarrow> $a:[x := v] = x := v"
-  apply pred_auto
-  by (simp add: lens_override_def scene_override_commute)
-
-lemma frame_conj_true [frame]:
-  "\<lbrakk>-{x\<^sup><, x\<^sup>>} \<sharp> P; vwb_lens x \<rbrakk> \<Longrightarrow> (P \<and> $x:[true]) = $x:[P]"
-  by (pred_auto)
-
-(*lemma frame_is_assign [frame]:
-  "vwb_lens x \<Longrightarrow> x:[$x\<acute> =\<^sub>u \<lceil>v\<rceil>\<^sub><] = x := v"
-  by (pred_auto)
-  *)  
-lemma frame_seq [frame]:
-  assumes "vwb_lens x" "-{x\<^sup>>,x\<^sup><} \<sharp> P" "-{x\<^sup><,x\<^sup>>} \<sharp> Q"
-  shows "$x:[P ;; Q] = $x:[P] ;; $x:[Q]"
-  unfolding frame_def apply (pred_auto)
-  oops
-
-lemma frame_assign_commute_unrest:
-  assumes "vwb_lens x" "x \<bowtie> a" "$a \<sharp> v" "$x\<^sup>< \<sharp> P" "$x\<^sup>> \<sharp> P"
-  shows "x := v ;; $a:[P] = $a:[P] ;; x := v"
-  using assms apply (pred_auto)
-  oops
-
-lemma frame_to_antiframe [frame]:
-  "\<lbrakk> x \<bowtie>\<^sub>S y; x \<squnion>\<^sub>S y = \<top>\<^sub>S \<rbrakk> \<Longrightarrow> x:[P] = (-y):[P]"
-  apply pred_auto
-  by (metis scene_indep_compat scene_indep_override scene_override_commute scene_override_id scene_override_union)+
-
-lemma rel_frext_miracle [frame]: 
-  "a:[false]\<^sup>+ = false"
-  by (metis false_pred_def frame_miracle trancl_empty)
-    
-lemma rel_frext_skip [frame]: 
-  "idem_scene a \<Longrightarrow> a:[II]\<^sup>+ = II"
-  by (metis frame_skip rtrancl_empty rtrancl_trancl_absorb)
-
-lemma rel_frext_seq [frame]:
-  "idem_scene a \<Longrightarrow> a:[P ;; Q]\<^sup>+ = (a:[P]\<^sup>+ ;; a:[Q]\<^sup>+)"
-  apply (pred_auto)
-  oops (* gets nitpicked *)
-
-(*
-lemma rel_frext_assigns [frame]:
-  "vwb_lens a \<Longrightarrow> a:[\<langle>\<sigma>\<rangle>\<^sub>a]\<^sup>+ = \<langle>\<sigma> \<oplus>\<^sub>s a\<rangle>\<^sub>a"
-  by (pred_auto)
-
-lemma rel_frext_rcond [frame]:
-  "a:[P \<triangleleft> b \<triangleright>\<^sub>r Q]\<^sup>+ = (a:[P]\<^sup>+ \<triangleleft> b \<oplus>\<^sub>p a \<triangleright>\<^sub>r a:[Q]\<^sup>+)"
-  by (pred_auto)
-
-lemma rel_frext_commute: 
-  "x \<bowtie> y \<Longrightarrow> x:[P]\<^sup>+ ;; y:[Q]\<^sup>+ = y:[Q]\<^sup>+ ;; x:[P]\<^sup>+"
-  apply (pred_auto)
-   apply (rename_tac a c b)
-   apply (subgoal_tac "\<And>b a. get\<^bsub>y\<^esub> (put\<^bsub>x\<^esub> b a) = get\<^bsub>y\<^esub> b")
-    apply (metis (no_types, hide_lams) lens_indep_comm lens_indep_get)
-   apply (simp add: lens_indep.lens_put_irr2)
-  apply (subgoal_tac "\<And>b c. get\<^bsub>x\<^esub> (put\<^bsub>y\<^esub> b c) = get\<^bsub>x\<^esub> b")
-   apply (subgoal_tac "\<And>b a. get\<^bsub>y\<^esub> (put\<^bsub>x\<^esub> b a) = get\<^bsub>y\<^esub> b")
-    apply (metis (mono_tags, lifting) lens_indep_comm)
-   apply (simp_all add: lens_indep.lens_put_irr2)    
-  done
-    
-lemma antiframe_disj [frame]: "(x:\<lbrakk>P\<rbrakk> \<or> x:\<lbrakk>Q\<rbrakk>) = x:\<lbrakk>P \<or> Q\<rbrakk>"
-  by (pred_auto)
-
-lemma antiframe_seq [frame]:
-  "\<lbrakk> vwb_lens x; $x\<acute> \<sharp> P; $x \<sharp> Q \<rbrakk>  \<Longrightarrow> (x:\<lbrakk>P\<rbrakk> ;; x:\<lbrakk>Q\<rbrakk>) = x:\<lbrakk>P ;; Q\<rbrakk>"
-  apply (pred_auto)
-   apply (metis vwb_lens_wb wb_lens_def weak_lens.put_get)
-  apply (metis vwb_lens_wb wb_lens.put_twice wb_lens_def weak_lens.put_get)
-  done
-
-lemma antiframe_copy_assign:
-  "vwb_lens x \<Longrightarrow> (x := \<guillemotleft>v\<guillemotright> ;; x:\<lbrakk>P\<rbrakk> ;; x := \<guillemotleft>v\<guillemotright>) = (x := \<guillemotleft>v\<guillemotright> ;; x:\<lbrakk>P\<rbrakk>)"
-  by pred_auto
-
-  
-lemma nameset_skip: "vwb_lens x \<Longrightarrow> (\<^bold>n\<^bold>s x \<bullet> II) = II\<^bsub>x\<^esub>"
-  by (pred_auto, meson vwb_lens_wb wb_lens.get_put)
-    
-lemma nameset_skip_ra: "vwb_lens x \<Longrightarrow> (\<^bold>n\<^bold>s x \<bullet> II\<^bsub>x\<^esub>) = II\<^bsub>x\<^esub>"
-  by (pred_auto)
-    
-declare sublens_def [lens_defs]
-*)
-subsection \<open> Modification laws \<close>
-lemma "(rrestr x P) nmods x"
-  oops
-
 subsection \<open> Assignment Laws \<close>
 
 text \<open>Extend the alphabet of a substitution\<close>
 definition subst_aext :: "'a subst \<Rightarrow> ('a \<Longrightarrow> 'b) \<Rightarrow> 'b subst"
   where [rel]: "subst_aext \<sigma> x = (\<lambda> s. put\<^bsub>x\<^esub> s (\<sigma> (get\<^bsub>x\<^esub> s)))"
 
+(*
 lemma assigns_subst: "(subst_aext \<sigma> fst\<^sub>L) \<dagger> \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<rho> \<circ>\<^sub>s \<sigma>\<rangle>\<^sub>a"
   by pred_auto
 
 lemma assigns_r_comp: "(\<langle>\<sigma>\<rangle>\<^sub>a ;; P) = ((\<lambda> s. put\<^bsub>fst\<^sub>L\<^esub> s (\<sigma> (get\<^bsub>fst\<^sub>L\<^esub> s))) \<dagger> P)"
   by (pred_auto)
+*)
 
 lemma assigns_r_feasible:
   "(\<langle>\<sigma>\<rangle>\<^sub>a ;; true) = true"
@@ -533,8 +407,8 @@ lemma assign_r_alt_def:
   shows "x := v = II\<lbrakk>v\<^sup></x\<^sup><\<rbrakk>"
   by (pred_auto)
 
-lemma assigns_r_func: "functional \<langle>f\<rangle>\<^sub>a"
-  by (pred_auto)
+lemma assigns_r_func: "Functional \<langle>f\<rangle>\<^sub>a"
+  oops
 
 (*
 lemma assigns_r_uinj: "inj\<^sub>s f \<Longrightarrow> uinj \<langle>f\<rangle>\<^sub>a"
@@ -551,6 +425,7 @@ lemma assign_unfold:
 
 subsection \<open> Non-deterministic Assignment Laws \<close>
 
+(*
 lemma ndet_assign_comp:
   "x \<bowtie> y \<Longrightarrow> x := * ;; y := * = (x,y) := *"
   by (pred_auto add: lens_indep.lens_put_comm)
@@ -562,6 +437,7 @@ lemma ndet_assign_assign:
 lemma ndet_assign_refine:
   "x := * \<sqsubseteq> x := e"
   by pred_auto
+*)
 
 subsection \<open> Converse Laws \<close>
 
@@ -610,7 +486,7 @@ lemma post_convr [simp]: "\<lceil>p\<rceil>\<^sub>>\<^sup>- = \<lceil>p\<rceil>\
 
 subsection \<open> Assertion and Assumption Laws \<close>
 
-
+(*
 declare sublens_def [lens_defs del]
   
 lemma assume_false: "\<questiondown>false? = false"
@@ -714,6 +590,7 @@ proof -
   ultimately show ?thesis
     by simp
 qed
+*)
 (*
 lemma Sup_upto_Suc: "(\<Sqinter>i\<in>{0..Suc n}. P \<^bold>^ i) = (\<Sqinter>i\<in>{0..n}. P \<^bold>^ i) \<sqinter> P \<^bold>^ Suc n"
 proof -
@@ -729,6 +606,7 @@ text \<open> The following two proofs are adapted from the AFP entry
   \href{https://www.isa-afp.org/entries/Kleene_Algebra.shtml}{Kleene Algebra}. 
   See also~\cite{Armstrong2012,Armstrong2015}. \<close>
 
+(*
 lemma upower_inductl: "Q \<sqsubseteq> ((P ;; Q) \<sqinter> R) \<Longrightarrow> Q \<sqsubseteq> P ^^ n ;; R"
 proof (induct n)
   case 0
@@ -760,9 +638,11 @@ lemma SUP_atLeastAtMost_first:
 lemma upower_seqr_iter: "P ^^ n = (;; Q : replicate n P \<bullet> Q)"
   apply (induct n)
   by (simp, metis iter_seqr_cons relpow.simps(2) relpow_commute replicate_Suc)
+*)
 
 subsection \<open> Omega \<close>
 
+(*
 definition uomega :: "'\<alpha> rel \<Rightarrow> '\<alpha> rel" ("_\<^sup>\<omega>" [999] 999) where
 "P\<^sup>\<omega> = (\<mu> X \<bullet> P ;; X)"
 
@@ -770,12 +650,17 @@ subsection \<open> Relation Algebra Laws \<close>
 
 theorem seqr_disj_cancel: "((P\<^sup>- ;; (\<not>(P ;; Q))) \<or> (\<not>Q)) = (\<not>Q)"
   by (pred_auto)
+*)
 
 subsection \<open> Kleene Algebra Laws \<close>
 
-theorem ustar_sub_unfoldl: "P\<^sup>* \<sqsubseteq> II \<sqinter> (P;;P\<^sup>*)"
-  by rel_force
-    
+
+(*
+theorem ustar_sub_unfoldl: "undefined"
+  oops
+*)
+
+(*
 theorem rtrancl_inductl:
   assumes "Q \<sqsubseteq> R" "Q \<sqsubseteq> P ;; Q"
   shows "Q \<sqsubseteq> P\<^sup>* ;; R"
@@ -820,12 +705,13 @@ proof (rule antisym)
     by (metis dual_order.refl lfp_lowerbound rtrancl_trancl_reflcl trancl_unfold_left)
 qed
 
-lemma rtrancl_unfoldl: "P\<^sup>* = II \<sqinter> (P ;; P\<^sup>*)"
+lemma rtrancl_unfoldl: "undefined"
   apply (simp add: rtrancl_as_nu)
   apply (subst lfp_unfold)
    apply (rule monoI)
    apply (pred_auto)+
   done
+*)
 
 text \<open> While loop can be expressed using Kleene star \<close>
 (*
@@ -864,6 +750,7 @@ qed
   
 subsection \<open> Omega Algebra Laws \<close>
 
+(*
 lemma uomega_induct: "P ;; P\<^sup>\<omega> \<sqsubseteq> P\<^sup>\<omega>"
   by (metis gfp_unfold monoI ref_by_set_def relcomp_mono subset_refl uomega_def)
 
@@ -880,6 +767,7 @@ lemma pre_weak_rel:
   and     "(I \<longrightarrow> q)\<^sub>e \<sqsubseteq> P"
   shows "(p \<longrightarrow> q)\<^sub>e \<sqsubseteq> P"
   using assms by(pred_auto)
+*)
 
 (*
 lemma cond_refine_rel: 
