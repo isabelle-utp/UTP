@@ -1,5 +1,9 @@
 theory utp
-  imports utp_rel_laws utp_healthy
+  imports 
+    utp_rel_laws 
+    utp_healthy
+    utp_hoare
+    utp_wlp
 begin 
 
 bundle UTP_Syntax

@@ -129,17 +129,17 @@ lemma skip_hoare_impl_r [hoare_safe]: "`p \<longrightarrow> q` \<Longrightarrow>
 subsection \<open> Conditional Laws \<close>
 
 lemma cond_hoare_r [hoare_safe]: "\<lbrakk> \<^bold>{b \<and> p\<^bold>}S\<^bold>{q\<^bold>} ; \<^bold>{\<not>b \<and> p\<^bold>}T\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}S \<^bold>\<lhd> b \<^bold>\<rhd> T\<^bold>{q\<^bold>}"
-  unfolding cond_def by rel_simp pred_auto
+  by pred_auto
 
 lemma cond_hoare_r_wp: 
   assumes "\<^bold>{p'\<^bold>}S\<^bold>{q\<^bold>}" and "\<^bold>{p''\<^bold>}T\<^bold>{q\<^bold>}"
   shows "\<^bold>{(b \<and> p') \<sqinter> (\<not>b \<and> p'')\<^bold>} S \<^bold>\<lhd> b \<^bold>\<rhd> T \<^bold>{q\<^bold>}"
-  using assms unfolding cond_def by rel_simp pred_auto
+  using assms by pred_auto
 
 lemma cond_hoare_r_sp:
   assumes "\<^bold>{(b \<and> p)\<^bold>}S\<^bold>{q\<^bold>}" and "\<^bold>{\<not>b \<and> p\<^bold>}T\<^bold>{s\<^bold>}"
   shows "\<^bold>{p\<^bold>}S \<^bold>\<lhd> b \<^bold>\<rhd> T\<^bold>{q \<sqinter> s\<^bold>}"
-  using assms unfolding cond_def by rel_simp pred_auto
+  using assms by pred_auto
 
 lemma hoare_ndet [hoare_safe]: 
   assumes "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>}" "\<^bold>{p\<^bold>}Q\<^bold>{q\<^bold>}"
@@ -155,7 +155,6 @@ lemma hoare_UINF [hoare_safe]:
   assumes "\<And>i. i \<in> A \<Longrightarrow> \<^bold>{p\<^bold>}P(i)\<^bold>{q\<^bold>}"
   shows "\<^bold>{p\<^bold>}(\<Sqinter> {P(i)|i. i\<in>A})\<^bold>{q\<^bold>}"
   by (pred_auto assms: assms)
-
 
 subsection \<open> Recursion Laws \<close>
 
@@ -249,7 +248,7 @@ proof -
 qed
 
 lemma while_vrt_hoare_r [hoare_safe]:
-  assumes "\<Sqinter> z::nat. \<^bold>{p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<^bold>}S\<^bold>{p \<and> v < \<guillemotleft>z\<guillemotright>\<^bold>}" "`p' \<longrightarrow> p`" "`(\<not>b \<and> p) \<longrightarrow> q'`"
+  assumes "\<And> z::nat. \<^bold>{p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<^bold>}S\<^bold>{p \<and> v < \<guillemotleft>z\<guillemotright>\<^bold>}" "`p' \<longrightarrow> p`" "`(\<not>b \<and> p) \<longrightarrow> q'`"
   shows "\<^bold>{p'\<^bold>}while b invr p vrt v do S od\<^bold>{q'\<^bold>}"
   apply (rule hoare_r_conseq[OF _ assms(2) assms(3)])
   apply (simp add: while_vrt_def)
@@ -258,10 +257,11 @@ lemma while_vrt_hoare_r [hoare_safe]:
   
 text \<open> General total correctness law based on well-founded induction \<close>
 
+(*
 lemma while_wf_hoare_r:
   assumes WF: "wf R"
   assumes I0: "`p' \<longrightarrow> p`"
-  assumes induct_step:"\<Sqinter> st. \<^bold>{b \<and> p \<and> e = \<guillemotleft>st\<guillemotright>\<^bold>}Q\<^bold>{p \<and> (e, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>\<^bold>}"
+  assumes induct_step:"\<And> st. \<^bold>{b \<and> p \<and> e = \<guillemotleft>st\<guillemotright>\<^bold>}Q\<^bold>{p \<and> (e, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>\<^bold>}"
   assumes PHI:"`(\<not>b \<and> p) \<longrightarrow> q'`"  
   shows "\<^bold>{p'\<^bold>}while\<^sub>\<bottom> b invr p do Q od\<^bold>{q'\<^bold>}"
   unfolding hoare_r_def while_inv_bot_def while_bot_def
@@ -283,7 +283,7 @@ next
   qed
   then show ?case by simp
 qed
-
+*)
 
 subsection \<open> Frame Rules \<close>
 
@@ -293,6 +293,7 @@ text \<open> Frame rule: If starting $S$ in a state satisfying $p establishes q$
 
 (* TODO - Fix all these metis proofs *)
 
+(*
 lemma frame_hoare_r:
   assumes "idem_scene a" "a \<sharp> r" "-a \<sharp> q" "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>}"
   shows "\<^bold>{p \<and> r\<^bold>}a:[P]\<^bold>{q \<and> r\<^bold>}"
@@ -335,6 +336,7 @@ lemma nmods_invariant:
   shows "\<^bold>{p\<^bold>}S\<^bold>{p\<^bold>}"
   using assms apply pred_auto
   by (metis Healthy_def SEXP_def rel_frame scene_equiv_def scene_override_commute set_pred_def)
+*)
 
 (*
 lemma hoare_r_ghost:
