@@ -1,13 +1,34 @@
+section \<open> Fixed-points and Recursion \<close>
+
 theory utp_recursion
-  imports utp_rel  
+  imports utp_pred_laws
 begin
 
-section \<open> Fixed-points and Recursion \<close>
+subsection \<open> Syntax \<close>
+
+syntax
+  "_utp_mu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<mu> _ \<bullet> _" [0, 10] 10)
+  "_utp_nu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<nu> _ \<bullet> _" [0, 10] 10)
+
+notation lfp ("\<nu>")
+notation gfp ("\<mu>")
+
+translations
+  "\<nu> X \<bullet> P" == "CONST lfp (\<lambda> X. P)"
+  "\<mu> X \<bullet> P" == "CONST gfp (\<lambda> X. P)"
+
+text \<open> The mu and nu operators correspond to the greatest and least fixed-points of the refinement lattice. \<close>
+
+lemma lfp_is_ref_gfp: "lfp = ref_lattice.gfp"
+  by (simp add: lfp_def ref_lattice.gfp_def fun_eq_iff pred_ref_iff_le)
+
+lemma gfp_is_ref_lfp: "gfp = ref_lattice.lfp"
+  by (simp add: gfp_def ref_lattice.lfp_def fun_eq_iff pred_ref_iff_le)
 
 subsection \<open> Fixed-point Laws \<close>
   
 lemma mu_id: "(\<mu> X \<bullet> X) = true"
-  by (simp add: antisym gfp_upperbound predicate1I true_pred_def)
+  by (simp add: gfp_eqI mono_def predicate1I true_pred_def)
 
 lemma mu_const: "(\<mu> X \<bullet> P) = P"
   by (simp add: gfp_const)

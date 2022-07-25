@@ -1,7 +1,7 @@
 subsection \<open> UTP Relations \<close>
 
 theory utp_rel
-  imports utp_pred utp_pred_laws utp_rel_syntax
+  imports utp_pred utp_pred_laws utp_rel_syntax utp_recursion
 begin
 
 unbundle UTP_Logic_Syntax
@@ -160,6 +160,14 @@ lemma rel_pred_interp [rel]:
   "\<lbrakk>P \<and> Q\<rbrakk>\<^sub>U = (\<lbrakk>P\<rbrakk>\<^sub>U \<inter> \<lbrakk>Q\<rbrakk>\<^sub>U)" "\<lbrakk>P \<or> Q\<rbrakk>\<^sub>U = (\<lbrakk>P\<rbrakk>\<^sub>U \<union> \<lbrakk>Q\<rbrakk>\<^sub>U)" "\<lbrakk>\<not> P\<rbrakk>\<^sub>U = - \<lbrakk>P\<rbrakk>\<^sub>U"
   by (auto simp add: pred_rel_def pred)
 
+lemma rel_lattice_interp [rel]:
+  "\<lbrakk>P \<sqinter> Q\<rbrakk>\<^sub>U = \<lbrakk>P\<rbrakk>\<^sub>U \<union> \<lbrakk>Q\<rbrakk>\<^sub>U" "\<lbrakk>P \<squnion> Q\<rbrakk>\<^sub>U = \<lbrakk>P\<rbrakk>\<^sub>U \<inter> \<lbrakk>Q\<rbrakk>\<^sub>U" "\<lbrakk>\<top>\<rbrakk>\<^sub>U = {}" "\<lbrakk>\<bottom>\<rbrakk>\<^sub>U = UNIV"
+  by (auto simp add: pred_rel_def)
+
+lemma rel_complete_lattice_interp [rel]:
+  "\<lbrakk>\<Sqinter> i\<in>I. P(i)\<rbrakk>\<^sub>U = (\<Union> i\<in>I. \<lbrakk>P(i)\<rbrakk>\<^sub>U)" "\<lbrakk>\<Squnion> i\<in>I. P(i)\<rbrakk>\<^sub>U = (\<Inter> i\<in>I. \<lbrakk>P(i)\<rbrakk>\<^sub>U)"
+  by (auto simp add: pred_rel_def)
+
 lemma rel_interp [rel]:
   "\<lbrakk>P ;; Q\<rbrakk>\<^sub>U = \<lbrakk>P\<rbrakk>\<^sub>U \<Zcomp> \<lbrakk>Q\<rbrakk>\<^sub>U" "\<lbrakk>II\<rbrakk>\<^sub>U = Id"
   by (auto simp add: pred_rel_def pred)
@@ -176,10 +184,12 @@ lemma rel_eq_transfer [rel_transfer]: "P = Q \<longleftrightarrow> \<lbrakk>P\<r
 lemma rel_refine_transfer [rel_transfer]: "P \<sqsubseteq> Q \<longleftrightarrow> \<lbrakk>Q\<rbrakk>\<^sub>U \<subseteq> \<lbrakk>P\<rbrakk>\<^sub>U"
   by (auto simp add: pred_rel_def pred_refine_iff)
 
-lemma rel_pointwise_transfer [rel_transfer]: "P (s, s') \<longleftrightarrow> (s, s') \<in> \<lbrakk>P\<rbrakk>\<^sub>U"
+(* I think this law is too general to be a transfer law *)
+
+lemma rel_pointwise_transfer (*[rel_transfer]*): "P (s, s') \<longleftrightarrow> (s, s') \<in> \<lbrakk>P\<rbrakk>\<^sub>U"
   by (auto simp: pred_rel_def)
 
-method rel_transfer = (simp add: rel_transfer rel)
+method rel_transfer = (simp only: rel_transfer rel)
 
 method rel_simp uses add = (rel_transfer, expr_simp add: relcomp_unfold add)
 method rel_auto uses add = (rel_transfer, expr_auto add: relcomp_unfold add)
@@ -198,8 +208,9 @@ interpretation upred_semiring: semiring_1
 
 declare upred_semiring.power_Suc [simp del]
 
-text \<open> We introduce the power syntax derived from semirings \<close>
-
+text \<open> We introduce the power syntax derived from semirings. We can't use the standard @{class power},
+  because this would need to apply to any relation, whereas power only applies to homogeneous relations. \<close>
+ 
 abbreviation upower :: "'\<alpha> hrel \<Rightarrow> nat \<Rightarrow> '\<alpha> hrel" (infixr "\<^bold>^" 80) where
 "upower P n \<equiv> upred_semiring.power P n"
 
@@ -207,57 +218,8 @@ translations
   "P \<^bold>^ i" <= "CONST power.power II op ;; P i"
   "P \<^bold>^ i" <= "(CONST power.power II op ;; P) i"
 
-lemma upower_interp [rel]: "\<lbrakk>P \<^bold>^ i\<rbrakk>\<^sub>U = \<lbrakk>P\<rbrakk>\<^sub>U ^^ i"
-  by (induct i arbitrary: P)
-     ((auto; pred_auto add: pred_rel_def), simp add: rel_interp(1) upred_semiring.power_Suc2)
-
-lemma upower_inductl: "Q \<sqsubseteq> ((P ;; Q) \<sqinter> R) \<Longrightarrow> Q \<sqsubseteq> P \<^bold>^ n ;; R"
-proof (induct n)
-  case 0
-  then show ?case apply rel_auto
-    by (metis (no_types, lifting) rel_pointwise_transfer subsetD)
-next
-  case (Suc n)
-  then show ?case
-    apply rel_auto
-    by (smt (verit, ccfv_SIG) rel_interp(1) rel_pointwise_transfer rel_refine_transfer relcomp.intros relpow_Suc_D2' subset_iff upower_interp)
-qed
-
-lemma upower_inductr:
-  assumes "Q \<sqsubseteq> R \<sqinter> (Q ;; P)"
-  shows "Q \<sqsubseteq> R ;; (P \<^bold>^ n)"
-  apply (induct n)
-    apply (rel_auto, metis assms pred_refine_iff rel_pointwise_transfer sup1I1)
-    apply (rel_auto, smt (verit, ccfv_SIG) Collect_mono_iff assms old.prod.case pred_refine_iff pred_rel_def rel_interp(1) rel_pointwise_transfer relcomp.relcompI sup1CI) 
-  done
-
-definition kleene_star :: "'\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("_\<^sup>\<star>" [999] 999) where
+definition ustar :: "'\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("_\<^sup>\<star>" [999] 999) where
 "P\<^sup>\<star> = (\<Sqinter>i. P\<^bold>^i)"
-
-lemma kleene_rep_eq[rel]: "\<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U = \<lbrakk>P\<rbrakk>\<^sub>U\<^sup>*"
-proof 
-  have "((a, b) \<in> \<lbrakk>P\<rbrakk>\<^sub>U\<^sup>*) \<Longrightarrow> (a,b) \<in> \<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U" for a b
-    apply (induct rule: rtrancl.induct)
-     apply (simp_all add: pred_rel_def kleene_star_def)
-     apply (metis (full_types) power.power.power_0 prod.simps(2) skip_def)
-    by (metis (mono_tags, lifting) case_prodI upred_semiring.power_Suc2 utp_rel.seq_def)
-  then show "\<lbrakk>P\<rbrakk>\<^sub>U\<^sup>* \<subseteq> \<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U"
-    by auto
-next
-  have "((a, b) \<in> \<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U) \<Longrightarrow> (a,b) \<in> \<lbrakk>P\<rbrakk>\<^sub>U\<^sup>*" for a b
-    apply (simp add: kleene_star_def pred_rel_def)
-    by (metis mem_Collect_eq pred_rel_def rtrancl_power upower_interp)
-  then show "\<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U \<subseteq> \<lbrakk>P\<rbrakk>\<^sub>U\<^sup>*"
-    by force
-qed
-
-theorem ustar_inductl:
-  assumes "Q \<sqsubseteq> R" "Q \<sqsubseteq> P ;; Q"
-  shows "Q \<sqsubseteq> P\<^sup>\<star> ;; R"
-  apply (insert assms)
-  apply (rel_auto)
-  oops
-  
 
 lemma seqr_middle: "vwb_lens x \<Longrightarrow> P ;; Q = (\<Sqinter> v. P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>)"
   by (pred_auto, metis vwb_lens.put_eq)

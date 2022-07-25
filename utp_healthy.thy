@@ -1,7 +1,7 @@
 section \<open> Healthiness Conditions \<close>
 
 theory utp_healthy
-  imports utp_pred_laws 
+  imports utp_pred_laws utp_recursion
 begin
 
 subsection \<open> Main Definitions \<close>
@@ -84,7 +84,6 @@ subsection \<open> Properties of Healthiness Conditions \<close>
 
 definition Idempotent :: "'\<alpha> health \<Rightarrow> bool" where
   "Idempotent(H) \<longleftrightarrow> (\<forall> P. H(H(P)) = H(P))"
-
 
 abbreviation Monotonic :: "'\<alpha> health \<Rightarrow> bool" where
   "Monotonic(H) \<equiv> mono H"
@@ -238,72 +237,46 @@ lemma Continuous_cond [closure]:
   using assms by (pred_auto)
 
 text \<open> Closure laws derived from continuity \<close>
-(*
-lemma Sup_Continuous_closed [closure]:
-  "\<lbrakk> Continuous H; \<And> i. i \<in> A \<Longrightarrow> P(i) is H; A \<noteq> {} \<rbrakk> \<Longrightarrow> (\<Union> i\<in>A. P(i)) is H"
-  by (drule ContinuousD[of H "P ` A"], simp add: UINF_as_Sup[THEN sym])
-     (metis (no_types, lifting) Healthy_def' SUP_cong image_image)
 
+lemma Sup_Continuous_closed [closure]:
+  "\<lbrakk> Continuous H; \<And> i. i \<in> A \<Longrightarrow> P(i) is H; A \<noteq> {} \<rbrakk> \<Longrightarrow> (\<Sqinter> i\<in>A. P(i)) is H"
+  by (drule ContinuousD[of H "P ` A"], auto) (metis (no_types, lifting) Healthy_def' SUP_cong image_image)
+
+(*
 lemma UINF_mem_Continuous_closed [closure]:
   "\<lbrakk> Continuous H; \<And> i. i \<in> A \<Longrightarrow> P(i) is H; A \<noteq> {} \<rbrakk> \<Longrightarrow> (\<Union> i\<in>A. P(i)) is H"
   by (simp add: Sup_Continuous_closed UINF_as_Sup_collect)
+*)
 
-lemma UINF_mem_Continuous_closed_pair [closure]:
+lemma Sup_mem_Continuous_closed_pair [closure]:
   assumes "Continuous H" "\<And> i j. (i, j) \<in> A \<Longrightarrow> P i j is H" "A \<noteq> {}"
-  shows "(\<Union> (i,j)\<in>A. P i j) is H"
-proof -
-  have "(\<Union> (i,j)\<in>A. P i j) = (\<Union> x\<in>A. P (fst x) (snd x))"
-    by (rel_auto)
-  also have "... is H"
-    by (metis (mono_tags) UINF_mem_Continuous_closed assms(1) assms(2) assms(3) prod.collapse)
-  finally show ?thesis .
-qed
+  shows "(\<Sqinter> (i,j)\<in>A. P i j) is H"
+  by (simp add: Sup_Continuous_closed assms split_beta)
 
-lemma UINF_mem_Continuous_closed_triple:
+lemma Sup_mem_Continuous_closed_triple:
   assumes "Continuous H" "\<And> i j k. (i, j, k) \<in> A \<Longrightarrow> P i j k is H" "A \<noteq> {}"
-  shows "(\<Union> (i,j,k)\<in>A. P i j k) is H"
-proof -
-  have "(\<Union> (i,j,k)\<in>A. P i j k) = (\<Union> x\<in>A. P (fst x) (fst (snd x)) (snd (snd x)))"
-    using prod.case_eq_if by auto
-  also have "... is H"
-    by (smt (verit, best) ContinuousD Healthy_if Healthy_intro Inf.INF_cong UN_extend_simps(10)
-        assms image_is_empty prod.collapse)
-  finally show ?thesis .
-qed
+  shows "(\<Sqinter> (i,j,k)\<in>A. P i j k) is H"
+  by (simp add: Sup_Continuous_closed assms split_beta)
 
-lemma UINF_mem_Continuous_closed_quad:
+lemma Sup_mem_Continuous_closed_quad:
   assumes "Continuous H" "\<And> i j k l. (i, j, k, l) \<in> A \<Longrightarrow> P i j k l is H" "A \<noteq> {}"
-  shows "(\<Union> (i,j,k,l)\<in>A. P i j k l) is H"
-proof -
-  have "(\<Union> (i,j,k,l)\<in>A. P i j k l) = (\<Union> x\<in>A. P (fst x) (fst (snd x)) (fst (snd (snd x))) (snd (snd (snd x))))"
-    using prod.case_eq_if by auto
-  also have "... is H"
-    by (smt (verit, ccfv_SIG) ContinuousD Healthy_if Healthy_intro Inf.INF_cong 
-        UN_extend_simps(10) assms image_is_empty prod.collapse)
-  finally show ?thesis .
-qed
+  shows "(\<Sqinter> (i,j,k,l)\<in>A. P i j k l) is H"
+  by (simp add: Sup_Continuous_closed assms split_beta)
 
-lemma UINF_mem_Continuous_closed_quint:
+lemma Sup_mem_Continuous_closed_quint:
   assumes "Continuous H" "\<And> i j k l m. (i, j, k, l, m) \<in> A \<Longrightarrow> P i j k l m is H" "A \<noteq> {}"
-  shows "(\<Union> (i,j,k,l,m)\<in>A. P i j k l m) is H"
-proof -
-  have "(\<Union> (i,j,k,l,m)\<in>A. P i j k l m) 
-         = (\<Union> x\<in>A. P (fst x) (fst (snd x)) (fst (snd (snd x))) (fst (snd (snd (snd x)))) (snd (snd (snd (snd x)))))"
-    by (rel_auto)
-  also have "... is H"
-    by (metis (mono_tags) UINF_mem_Continuous_closed assms(1) assms(2) assms(3) prod.collapse)
-  finally show ?thesis .
-qed
+  shows "(\<Sqinter> (i,j,k,l,m)\<in>A. P i j k l m) is H"
+  by (simp add: Sup_Continuous_closed assms split_beta)
 
 text \<open> All continuous functions are also Scott-continuous \<close>
 
 lemma sup_continuous_Continuous [closure]: "Continuous F \<Longrightarrow> sup_continuous F"
-  by (simp add: Continuous_def sup_continuous_def)
+  by (auto simp add: Continuous_def sup_continuous_def)
 
-lemma USUP_healthy: "A \<subseteq> \<lbrakk>H\<rbrakk>\<^sub>H \<Longrightarrow> (\<Squnion> P\<in>A. F(P)) = (\<Squnion> P\<in>A. F(H(P)))"
-  by (rule USUP_cong, simp add: Healthy_subset_member)
+lemma Inf_healthy: "A \<subseteq> \<lbrakk>H\<rbrakk>\<^sub>H \<Longrightarrow> (\<Squnion> P\<in>A. F(P)) = (\<Squnion> P\<in>A. F(H(P)))"
+  by (rule INF_cong, auto simp add: Healthy_subset_member)
 
-lemma UINF_healthy: "A \<subseteq> \<lbrakk>H\<rbrakk>\<^sub>H \<Longrightarrow> (\<Union> P\<in>A. F(P)) = (\<Union> P\<in>A. F(H(P)))"
-  by (rule UINF_cong, simp add: Healthy_subset_member)
-  *)
+lemma Sup_healthy: "A \<subseteq> \<lbrakk>H\<rbrakk>\<^sub>H \<Longrightarrow> (\<Sqinter> P\<in>A. F(P)) = (\<Sqinter> P\<in>A. F(H(P)))"
+  by (rule SUP_cong, auto simp add: Healthy_subset_member)
+  
 end

@@ -1,7 +1,10 @@
 section \<open> UTP Predicates \<close>
 
 theory utp_pred
-    imports "Z_Toolkit.Z_Toolkit" "Shallow-Expressions.Shallow_Expressions"
+  imports 
+    "HOL-Library.Order_Continuity"
+    "Z_Toolkit.Z_Toolkit" 
+    "Shallow-Expressions.Shallow_Expressions"
 begin
                     
 unbundle Expression_Syntax Z_Syntax
@@ -144,18 +147,6 @@ interpretation ref_lattice: complete_lattice "\<Union>" "\<Inter>" "(\<union>)" 
   by (unfold_locales, auto simp add: pred_core)
 *)
 
-syntax
-  "_mu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<mu> _ \<bullet> _" [0, 10] 10)
-  "_nu" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic" ("\<nu> _ \<bullet> _" [0, 10] 10)
-
-notation gfp ("\<mu>")
-notation lfp ("\<nu>")
-
-translations
-  "\<nu> X \<bullet> P" == "CONST lfp (\<lambda> X. P)"
-  "\<mu> X \<bullet> P" == "CONST gfp (\<lambda> X. P)"
-
-
 (*
 subsection \<open> Proof Strategy \<close>
 
@@ -226,6 +217,18 @@ lemma pred_impl_laws [simp]:
   by pred_simp+
 *)
 
+interpretation pred_ba: boolean_algebra diff_pred not_pred conj_pred "(\<sqsupseteq>)" "(\<sqsupset>)"
+  disj_pred false_pred true_pred
+  by (unfold_locales; pred_auto add: sref_by_fun_def)
+
+lemmas ref_antisym = pred_ba.order.antisym
+
+interpretation ref_lattice: complete_lattice Sup Inf sup "(\<sqsubseteq>)" "(\<sqsubset>)" inf true_pred false_pred
+  by (unfold_locales, pred_auto)+
+
+lemma ref_by_pred_is_leq: "((\<sqsubseteq>) :: 'a pred \<Rightarrow> 'a pred \<Rightarrow> bool) = (\<ge>)"
+  by (simp add: fun_eq_iff pred_ref_iff_le)
+
 text \<open> In accordance with \cite{hoare1998} we turn the lattice operators upside down \<close>
 bundle utp_lattice_syntax
 begin
@@ -247,5 +250,21 @@ syntax
 end
 
 unbundle utp_lattice_syntax
+
+named_theorems mono
+
+lemma mono_id [mono]: "mono (\<lambda> X. X)"
+  by (simp add: mono_def)
+
+lemma mono_const [mono]: "mono (\<lambda> X. P)"
+  by (simp add: mono_def)
+
+lemma mono_sup [mono]:
+  fixes P::"'a::complete_lattice \<Rightarrow> 'b::complete_lattice"
+  assumes "mono P" "mono Q"
+  shows "mono (\<lambda> X. P X \<sqinter> Q X)"
+  using assms unfolding mono_def by (meson sup_mono)
+
+
 
 end
