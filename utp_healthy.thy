@@ -144,8 +144,7 @@ lemma Monotonic_comp [intro]:
 lemma Monotonic_inf:
   assumes "Monotonic P" "Monotonic Q"
   shows "Monotonic (\<lambda> X. P(X) \<or> Q(X))"
-  apply (insert assms)
-  by (smt (verit) disj_pred_def le_iff_sup mono_def mono_sup sup.assoc sup.commute sup.idem)
+  by (insert assms, simp add: disj_pred_def utp_pred.mono_sup)
 
 (* Not defined until rel
 lemma Monotonic_cond:
