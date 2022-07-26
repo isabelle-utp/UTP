@@ -11,6 +11,7 @@ text \<open> We collect closure laws for healthiness conditions in the following
 named_theorems closure
 
 type_synonym 'a health = "'a pred \<Rightarrow> 'a pred"
+
 text \<open> A predicate $P$ is healthy, under healthiness function $H$, if $P$ is a fixed-point of $H$. \<close>
 
 definition Healthy :: "'\<alpha> pred \<Rightarrow> '\<alpha> health \<Rightarrow> bool" (infix "is" 30)
@@ -126,31 +127,40 @@ lemma Idempotent_comp [intro]:
 lemma Idempotent_image: "Idempotent f \<Longrightarrow> f ` (f ` A) = (f ` A)"
   by (metis (mono_tags, lifting) Idempotent_def image_cong image_image)
 
+named_theorems mono
+
+lemma Monotonic_refine: "Monotonic F \<longleftrightarrow> (\<forall> P Q. P \<sqsubseteq> Q \<longrightarrow> F(P) \<sqsubseteq> F(Q))"
+  by (metis monoE monoI pred_ref_iff_le)
+
 lemma Monotonic_id [simp]: "Monotonic id"
   by (simp add: monoI)
 
-lemma Monotonic_id': 
+lemma Monotonic_id' [mono]: 
   "mono (\<lambda> X. X)" 
   by (simp add: monoI)
     
-lemma Monotonic_const:
+lemma Monotonic_const [mono]:
   "Monotonic (\<lambda> x. c)"
   by (simp add: mono_def)
     
-lemma Monotonic_comp [intro]:
+lemma Monotonic_comp [intro, mono]:
   "\<lbrakk> Monotonic f; Monotonic g \<rbrakk> \<Longrightarrow> Monotonic (f \<circ> g)"
   by (simp add: mono_def)
 
-lemma Monotonic_inf:
+lemma Monotonic_sup [mono]:
+  assumes "Monotonic P" "Monotonic Q"
+  shows "Monotonic (\<lambda> X. P X \<sqinter> Q X)"
+  using assms unfolding mono_def by (meson sup_mono)
+
+lemma Monotonic_disj [mono]:
   assumes "Monotonic P" "Monotonic Q"
   shows "Monotonic (\<lambda> X. P(X) \<or> Q(X))"
-  by (insert assms, simp add: disj_pred_def utp_pred.mono_sup)
+  by (insert assms, simp add: disj_pred_def Monotonic_sup)
 
-(* Not defined until rel
 lemma Monotonic_cond:
   assumes "Monotonic P" "Monotonic Q"
-  shows "Monotonic (\<lambda> X. P(X) \<Zdres> b \<Zrres> Q(X))"
-  by (simp add: assms cond_monotonic)*)
+  shows "Monotonic (\<lambda> X. P(X) \<lhd> b \<rhd> Q(X))"
+  by (insert assms, simp add: mono_def pred le_fun_def)
     
 lemma Conjuctive_Idempotent:
   "Conjunctive(H) \<Longrightarrow> Idempotent(H)"

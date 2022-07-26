@@ -31,16 +31,14 @@ adhoc_overloading uskip skip
 abbreviation "true\<^sub>h \<equiv> (true :: 's hrel)"
 abbreviation "false\<^sub>h \<equiv> (false :: 's hrel)"
 
-definition cond :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> (bool, 's\<^sub>1 \<times> 's\<^sub>2) expr \<Rightarrow> ('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>1, 's\<^sub>2) urel"
-  where [pred]: "cond P B Q = (B \<and> P \<or> \<not> B \<and> Q)\<^sub>e"
+abbreviation rcond :: "('a, 'b) urel \<Rightarrow> 'a pred \<Rightarrow> ('a, 'b) urel \<Rightarrow> ('a, 'b) urel" where
+"rcond P b Q \<equiv> cond P (b\<^sup><) Q"
 
-syntax 
-  "_cond" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3_ \<lhd> _ \<rhd>/ _)" [52,0,53] 52)
+syntax
   "_rcond" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3_ \<^bold>\<lhd> _ \<^bold>\<rhd>/ _)" [52,0,53] 52)
 
 translations
-  "_cond P B Q" == "CONST cond P (B)\<^sub>e Q"
-  "_rcond P b Q" == "_cond P (b\<^sup><) Q"
+  "_rcond P b Q" == "CONST rcond P (b)\<^sub>e Q"
 
 definition conv_r :: "('a, 'b) urel \<Rightarrow> ('b, 'a) urel" ("_\<^sup>-" [999] 999) where
 [pred]: "conv_r P = (\<lambda> (b,a). P (a,b))"

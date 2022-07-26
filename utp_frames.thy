@@ -4,7 +4,45 @@ theory utp_frames
   imports utp_rel_laws
 begin
 
-section \<open> Frame laws \<close>
+subsection \<open> Operators \<close>
+
+text \<open> The frame operator restricts the relation P to only operate on variables in the frame a \<close>
+
+definition frame :: "('s::scene_space) frame \<Rightarrow> 's hrel \<Rightarrow> 's hrel" where
+"frame a P = (\<lambda> (s, s'). s \<approx>\<^sub>F s' on - a \<and> P (s, s'))"
+
+text \<open> The frame extension operator take a lens @{term a}, and a relation @{term P}. It constructs
+  a relation such that all variables outside of @{term a} are unchanged, and the valuations for
+  @{term a} are drawn from @{term P}. Intuitively, this can be seen as extending the alphabet
+  of @{term P}. \<close>
+
+definition frame_ext :: "('s\<^sub>1 \<Longrightarrow> ('s\<^sub>2 :: scene_space)) \<Rightarrow> 's\<^sub>1 hrel \<Rightarrow> 's\<^sub>2 hrel" where
+  "frame_ext a P = frame \<lbrace>a\<rbrace>\<^sub>F (P \<up> (a \<times> a))"
+
+syntax 
+  "_frame" :: "sframe \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]")
+  "_frame_ext" :: "svid \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]\<^sub>\<up>")
+
+translations
+  "_frame a P" == "CONST frame a P"
+  "_frame_ext a P" == "CONST frame_ext a P"
+
+abbreviation modifies ("_ mods _") where
+"modifies P a \<equiv> P is frame a"
+
+abbreviation not_modifies ("_ nmods _") where
+"not_modifies P a \<equiv> P is frame (-a)"
+
+text \<open> Variable restriction - assign arbitrary values to a scene, effectively forbidding the 
+  relation from using its value\<close>
+
+definition rrestr :: "('s :: scene_space) frame \<Rightarrow> 's rel \<Rightarrow> 's rel" where
+[rel]: "rrestr x P = (\<Union>t t'. frame (-x) ((\<lambda>(s,s'). (t \<oplus>\<^sub>S s on \<lbrakk>x\<rbrakk>\<^sub>F, t' \<oplus>\<^sub>S s' on \<lbrakk>x\<rbrakk>\<^sub>F))`P))"
+
+abbreviation not_uses ("_ nuses _") where
+"not_uses P a \<equiv> P is rrestr a"
+
+subsection \<open> Frame laws \<close>
 
 named_theorems frame
 
@@ -13,6 +51,10 @@ lemma frame_all [frame]: "\<Sigma>:[P] = P"
 
 lemma frame_none [frame]: "\<emptyset>:[P] = (P \<and> II)"
   by (pred_auto add: scene_override_commute)
+
+lemma frame_commute:
+  assumes "\<lbrace>y\<^sup><, y\<^sup>>\<rbrace> \<sharp> P" 
+  shows "$x:[P] ;; $y:[Q] = $y:[Q] ;; $x:[P]"
 
 
 lemma frame_commute:
