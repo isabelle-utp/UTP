@@ -20,7 +20,7 @@ definition frame_ext :: "('s\<^sub>1 \<Longrightarrow> ('s\<^sub>2 :: scene_spac
   "frame_ext a P = frame \<lbrace>a\<rbrace>\<^sub>F (P \<up> (a \<times> a))"
 
 syntax 
-  "_frame" :: "sframe \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]")
+  "_frame" :: "salpha \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]")
   "_frame_ext" :: "svid \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]\<^sub>\<up>")
 
 translations
@@ -37,13 +37,6 @@ lemma nmods_iff [pred]: "P nmods A \<longleftrightarrow> (\<forall> s s'. P (s, 
   by (pred_auto add: Healthy_def)
 
 
-definition not_reads :: "'a::scene_space hrel \<Rightarrow> 'a frame \<Rightarrow> bool" where
-"not_reads P a = (\<forall> s\<^sub>1 s\<^sub>2 s\<^sub>1' s\<^sub>2'. s\<^sub>1 \<approx>\<^sub>F s\<^sub>2 on (-a) \<and> P (s\<^sub>1, s\<^sub>1') \<and> P (s\<^sub>2, s\<^sub>2') \<longrightarrow> s\<^sub>1' \<approx>\<^sub>F s\<^sub>2' on (-a))"
-
-lemma "ebasis_lens x \<Longrightarrow> not_reads (x := \<guillemotleft>v\<guillemotright>) A"
-  apply (simp add: not_reads_def pred, expr_auto)
-  using put_eq_ebasis_lens by blast
-
 text \<open> Variable restriction - assign arbitrary values to a scene, effectively forbidding the 
   relation from using its value\<close>
 
@@ -53,7 +46,7 @@ definition rrestr :: "'s scene \<Rightarrow> 's hrel \<Rightarrow> 's hrel" wher
 abbreviation not_uses ("_ nuses _") where
 "not_uses P a \<equiv> P is rrestr a"
 
-lemma nuses_iff: "idem_scene A \<Longrightarrow> (P nuses A) \<longleftrightarrow> (\<forall> s s' s\<^sub>0. P (s, s') \<longrightarrow> (s \<approx>\<^sub>S s' on A \<and> P (s \<oplus>\<^sub>S s\<^sub>0 on A, s' \<oplus>\<^sub>S s\<^sub>0 on A)))"
+lemma nuses_iff [pred]: "idem_scene A \<Longrightarrow> (P nuses A) \<longleftrightarrow> (\<forall> s s' s\<^sub>0. P (s, s') \<longrightarrow> (s \<approx>\<^sub>S s' on A \<and> P (s \<oplus>\<^sub>S s\<^sub>0 on A, s' \<oplus>\<^sub>S s\<^sub>0 on A)))"
   apply (pred_auto add: Healthy_def)
   apply (metis scene_override_idem scene_override_overshadow_right)
   apply (metis scene_override_overshadow_left scene_override_overshadow_right)
@@ -63,7 +56,7 @@ lemma nuses_iff: "idem_scene A \<Longrightarrow> (P nuses A) \<longleftrightarro
   done
 
 lemma nuses_converse_commute: "\<lbrakk> idem_scene A; P nuses A; Q nuses (- A) \<rbrakk> \<Longrightarrow> P ;; Q = Q ;; P"
-  apply (pred_auto add: nuses_iff)
+  apply (pred_auto)
   apply (smt (verit) scene_override_commute scene_override_idem scene_override_overshadow_left)
   apply (metis scene_equiv_def scene_equiv_sym scene_override_commute)
   done
@@ -78,6 +71,9 @@ lemma frame_all [frame]: "\<Sigma>:[P] = P"
 
 lemma frame_none [frame]: "\<emptyset>:[P] = (P \<and> II)"
   by (pred_auto add: scene_override_commute)
+
+lemma "basis_lens y \<Longrightarrow> \<lbrace>y\<^sup><, y\<^sup>>\<rbrace> \<sharp> P \<Longrightarrow> P nuses \<lbrace>y\<rbrace>\<^sub>F"
+  oops
 
 lemma frame_commute:
   assumes "\<lbrace>y\<^sup><, y\<^sup>>\<rbrace> \<sharp> P" 
