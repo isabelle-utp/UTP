@@ -27,11 +27,24 @@ translations
   "_frame a P" == "CONST frame a P"
   "_frame_ext a P" == "CONST frame_ext a P"
 
+lemma frame_commute:
+  fixes A :: "'s::scene_space frame"
+  assumes "A\<^sup>< \<sharp> P" 
+  shows "A:[P] ;; B:[Q] = A:[Q] ;; B:[P]"
+  oops
+
 abbreviation modifies ("_ mods _") where
 "modifies P a \<equiv> P is frame a"
 
 abbreviation not_modifies ("_ nmods _") where
 "not_modifies P a \<equiv> P is frame (-a)"
+
+definition not_reads :: "'a::scene_space hrel \<Rightarrow> 'a frame \<Rightarrow> bool" where
+"not_reads P a = (\<forall> s\<^sub>1 s\<^sub>2 s\<^sub>1' s\<^sub>2'. s\<^sub>1 \<approx>\<^sub>F s\<^sub>2 on (-a) \<and> P (s\<^sub>1, s\<^sub>1') \<and> P (s\<^sub>2, s\<^sub>2') \<longrightarrow> s\<^sub>1' \<approx>\<^sub>F s\<^sub>2' on (-a))"
+
+lemma "ebasis_lens x \<Longrightarrow> not_reads (x := \<guillemotleft>v\<guillemotright>) A"
+  apply (simp add: not_reads_def pred, expr_auto)
+  using put_eq_ebasis_lens by blast
 
 text \<open> Variable restriction - assign arbitrary values to a scene, effectively forbidding the 
   relation from using its value\<close>
