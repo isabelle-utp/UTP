@@ -31,14 +31,14 @@ adhoc_overloading uskip skip
 abbreviation "true\<^sub>h \<equiv> (true :: 's hrel)"
 abbreviation "false\<^sub>h \<equiv> (false :: 's hrel)"
 
-abbreviation rcond :: "('a, 'b) urel \<Rightarrow> 'a pred \<Rightarrow> ('a, 'b) urel \<Rightarrow> ('a, 'b) urel" where
-"rcond P b Q \<equiv> cond P (b\<^sup><) Q"
+abbreviation cond_rel :: "('a, 'b) urel \<Rightarrow> ('a \<times> 'b) pred \<Rightarrow> ('a, 'b) urel \<Rightarrow> ('a, 'b) urel" where
+"cond_rel P B Q \<equiv> cond P B Q"
 
 syntax
   "_rcond" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3_ \<^bold>\<lhd> _ \<^bold>\<rhd>/ _)" [52,0,53] 52)
 
 translations
-  "_rcond P b Q" == "CONST rcond P (b)\<^sub>e Q"
+  "_rcond P b Q" == "CONST cond_rel P (b\<^sup><)\<^sub>e Q"
 
 definition conv_r :: "('a, 'b) urel \<Rightarrow> ('b, 'a) urel" ("_\<^sup>-" [999] 999) where
 [pred]: "conv_r P = (\<lambda> (b,a). P (a,b))"
