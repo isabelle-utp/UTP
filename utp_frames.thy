@@ -8,8 +8,8 @@ subsection \<open> Operators \<close>
 
 text \<open> The frame operator restricts the relation P to only operate on variables in the frame a \<close>
 
-definition frame :: "('s::scene_space) frame \<Rightarrow> 's hrel \<Rightarrow> 's hrel" where
-"frame a P = (\<lambda> (s, s'). s \<approx>\<^sub>F s' on - a \<and> P (s, s'))"
+definition frame :: "'s scene \<Rightarrow> 's hrel \<Rightarrow> 's hrel" where
+ [pred]: "frame a P = (\<lambda> (s, s'). s \<approx>\<^sub>S s' on - a \<and> P (s, s'))"
 
 text \<open> The frame extension operator take a lens @{term a}, and a relation @{term P}. It constructs
   a relation such that all variables outside of @{term a} are unchanged, and the valuations for
@@ -27,17 +27,15 @@ translations
   "_frame a P" == "CONST frame a P"
   "_frame_ext a P" == "CONST frame_ext a P"
 
-lemma frame_commute:
-  fixes A :: "'s::scene_space frame"
-  assumes "A\<^sup>< \<sharp> P" 
-  shows "A:[P] ;; B:[Q] = A:[Q] ;; B:[P]"
-  oops
-
 abbreviation modifies ("_ mods _") where
 "modifies P a \<equiv> P is frame a"
 
 abbreviation not_modifies ("_ nmods _") where
 "not_modifies P a \<equiv> P is frame (-a)"
+
+lemma nmods_iff [pred]: "P nmods A \<longleftrightarrow> (\<forall> s s'. P (s, s') \<longrightarrow> s \<approx>\<^sub>S s' on A)"
+  by (pred_auto add: Healthy_def)
+
 
 definition not_reads :: "'a::scene_space hrel \<Rightarrow> 'a frame \<Rightarrow> bool" where
 "not_reads P a = (\<forall> s\<^sub>1 s\<^sub>2 s\<^sub>1' s\<^sub>2'. s\<^sub>1 \<approx>\<^sub>F s\<^sub>2 on (-a) \<and> P (s\<^sub>1, s\<^sub>1') \<and> P (s\<^sub>2, s\<^sub>2') \<longrightarrow> s\<^sub>1' \<approx>\<^sub>F s\<^sub>2' on (-a))"
@@ -49,11 +47,27 @@ lemma "ebasis_lens x \<Longrightarrow> not_reads (x := \<guillemotleft>v\<guille
 text \<open> Variable restriction - assign arbitrary values to a scene, effectively forbidding the 
   relation from using its value\<close>
 
-definition rrestr :: "('s :: scene_space) frame \<Rightarrow> 's rel \<Rightarrow> 's rel" where
-[rel]: "rrestr x P = (\<Union>t t'. frame (-x) ((\<lambda>(s,s'). (t \<oplus>\<^sub>S s on \<lbrakk>x\<rbrakk>\<^sub>F, t' \<oplus>\<^sub>S s' on \<lbrakk>x\<rbrakk>\<^sub>F))`P))"
+definition rrestr :: "'s scene \<Rightarrow> 's hrel \<Rightarrow> 's hrel" where
+[pred]: "rrestr A P = (\<lambda> (s, s'). (\<exists> s\<^sub>0 s\<^sub>0'. P (s \<oplus>\<^sub>S s\<^sub>0 on A, s' \<oplus>\<^sub>S s\<^sub>0' on A)) \<and> s' \<approx>\<^sub>S s on A)" 
 
 abbreviation not_uses ("_ nuses _") where
 "not_uses P a \<equiv> P is rrestr a"
+
+lemma nuses_iff: "idem_scene A \<Longrightarrow> (P nuses A) \<longleftrightarrow> (\<forall> s s' s\<^sub>0. P (s, s') \<longrightarrow> (s \<approx>\<^sub>S s' on A \<and> P (s \<oplus>\<^sub>S s\<^sub>0 on A, s' \<oplus>\<^sub>S s\<^sub>0 on A)))"
+  apply (pred_auto add: Healthy_def)
+  apply (metis scene_override_idem scene_override_overshadow_right)
+  apply (metis scene_override_overshadow_left scene_override_overshadow_right)
+  apply (metis scene_override_idem scene_override_overshadow_left)
+  apply blast
+  apply (metis scene_override_idem scene_override_overshadow_right)
+  done
+
+lemma nuses_converse_commute: "\<lbrakk> idem_scene A; P nuses A; Q nuses (- A) \<rbrakk> \<Longrightarrow> P ;; Q = Q ;; P"
+  apply (pred_auto add: nuses_iff)
+  apply (smt (verit) scene_override_commute scene_override_idem scene_override_overshadow_left)
+  apply (metis scene_equiv_def scene_equiv_sym scene_override_commute)
+  done
+
 
 subsection \<open> Frame laws \<close>
 
