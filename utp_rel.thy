@@ -1,12 +1,19 @@
-subsection \<open> UTP Relations \<close>
+subsection \<open> Alphabetised Relations \<close>
 
 theory utp_rel
   imports utp_pred utp_pred_laws utp_rel_syntax utp_recursion
 begin
 
+subsection \<open> Relational Types \<close>
+
 unbundle UTP_Logic_Syntax
 
-text \<open> Convert a predicate into a set-based (i.e. relational) representation. \<close>
+text \<open> An alphabetised relation is simply a predicate whose state-space is a product type. In this
+  theory we construct the core operators of the relational calculus, and prove a libary of 
+  associated theorems, based on Chapters 2 and 5 of the UTP book~\cite{Hoare&98}. 
+
+  We create type synonyms for alphabetised relations where the input and output alphabet can
+  be different, and also homogeneous relations. \<close>
 
 type_synonym ('a, 'b) urel = "('a \<times> 'b) \<Rightarrow> bool"
 
@@ -15,13 +22,47 @@ translations
 
 type_synonym 'a hrel = "('a, 'a) urel"
 
+subsection \<open> Relational Alphabets \<close>
+  
+text \<open> We set up convenient syntax to refer to the input and output parts of the alphabet, as is
+  common in UTP. Since we are in a product space, these are simply the lenses @{term "fst\<^sub>L"} and
+  @{term "snd\<^sub>L"} lifted into alphabets. \<close>
+
+definition in\<alpha> :: "('\<alpha> \<times> '\<beta>) scene" where
+[lens_defs, expr_simps]: "in\<alpha> = var_alpha fst\<^sub>L"
+
+definition out\<alpha> :: "('\<alpha> \<times> '\<beta>) scene" where
+[lens_defs, expr_simps]: "out\<alpha> \<equiv> var_alpha snd\<^sub>L"
+
+lemma in\<alpha>_idem_scene [simp]: "idem_scene in\<alpha>"
+  by (simp add: in\<alpha>_def)
+
+lemma out\<alpha>_idem_scene [simp]: "idem_scene out\<alpha>"
+  by (simp add: out\<alpha>_def)
+
+lemma in\<alpha>_out\<alpha>_indeps [simp]: "in\<alpha> \<bowtie>\<^sub>S out\<alpha>" "out\<alpha> \<bowtie>\<^sub>S in\<alpha>"
+  by (simp_all add: in\<alpha>_def out\<alpha>_def)
+
+lemma alpha_in_out: "in\<alpha> \<squnion>\<^sub>S out\<alpha> = \<top>\<^sub>S"
+proof -
+  have "fst\<^sub>L +\<^sub>L snd\<^sub>L \<approx>\<^sub>L 1\<^sub>L"
+    by (simp add: fst_snd_id_lens)
+  hence "\<lbrakk>fst\<^sub>L\<rbrakk>\<^sub>\<sim> \<squnion>\<^sub>S \<lbrakk>snd\<^sub>L\<rbrakk>\<^sub>\<sim> = \<top>\<^sub>S"
+    by (simp add: fst_snd_id_lens one_lens_scene scene_space_lemmas(1))
+  thus ?thesis
+    by (simp add: in\<alpha>_def out\<alpha>_def var_alpha_def)
+qed
+
+subsection \<open> Relational Operators \<close>
+
+
+definition lift_rcond :: "'a pred \<Rightarrow> ('a, 'b) urel" ("\<lceil>_\<rceil>\<^sub>\<leftarrow>") where
+[pred]: "\<lceil>b\<rceil>\<^sub>\<leftarrow> = b\<^sup><"
+
 definition seq :: "('a, 'b) urel \<Rightarrow> ('b, 'c) urel \<Rightarrow> ('a, 'c) urel" (infixl ";;" 55) where
 [pred]: "P ;; Q = (\<lambda> (s, s'). \<exists> s\<^sub>0. P (s, s\<^sub>0) \<and> Q (s\<^sub>0, s'))"
 
 expr_ctr seq (0 1)
-
-abbreviation "in\<alpha> \<equiv> var_alpha fst\<^sub>L"
-abbreviation "out\<alpha> \<equiv> var_alpha snd\<^sub>L"
 
 definition skip :: "'a hrel" where
 [pred]: "skip = (\<lambda> (s, s'). s' = s)"
