@@ -19,23 +19,11 @@ text \<open> The frame extension operator take a lens @{term a}, and a relation 
 definition frame_ext :: "('s\<^sub>1 \<Longrightarrow> ('s\<^sub>2 :: scene_space)) \<Rightarrow> 's\<^sub>1 hrel \<Rightarrow> 's\<^sub>2 hrel" where
   "frame_ext a P = frame \<lbrace>a\<rbrace>\<^sub>F (P \<up> (a \<times> a))"
 
-syntax 
-  "_frame" :: "salpha \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]")
-  "_frame_ext" :: "svid \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]\<^sub>\<up>")
-
-translations
-  "_frame a P" == "CONST frame a P"
-  "_frame_ext a P" == "CONST frame_ext a P"
-
-abbreviation modifies ("_ mods _") where
+abbreviation modifies :: "'s hrel \<Rightarrow> 's scene \<Rightarrow> bool" where
 "modifies P a \<equiv> P is frame a"
 
-abbreviation not_modifies ("_ nmods _") where
+abbreviation not_modifies :: "'s hrel \<Rightarrow> 's scene \<Rightarrow> bool" where
 "not_modifies P a \<equiv> P is frame (-a)"
-
-lemma nmods_iff [pred]: "P nmods A \<longleftrightarrow> (\<forall> s s'. P (s, s') \<longrightarrow> s \<approx>\<^sub>S s' on A)"
-  by (pred_auto add: Healthy_def)
-
 
 text \<open> Variable restriction - assign arbitrary values to a scene, effectively forbidding the 
   relation from using its value\<close>
@@ -43,11 +31,38 @@ text \<open> Variable restriction - assign arbitrary values to a scene, effectiv
 definition rrestr :: "'s scene \<Rightarrow> 's hrel \<Rightarrow> 's hrel" where
 [pred]: "rrestr A P = (\<lambda> (s, s'). (\<exists> s\<^sub>0 s\<^sub>0'. P (s \<oplus>\<^sub>S s\<^sub>0 on A, s' \<oplus>\<^sub>S s\<^sub>0' on A)) \<and> s' \<approx>\<^sub>S s on A)" 
 
-abbreviation not_uses ("_ nuses _") where
+abbreviation not_uses :: "'s hrel \<Rightarrow> 's scene \<Rightarrow> bool" where
 "not_uses P a \<equiv> P is rrestr a"
 
-lemma nuses_iff [pred]: "idem_scene A \<Longrightarrow> (P nuses A) \<longleftrightarrow> (\<forall> s s' s\<^sub>0. P (s, s') \<longrightarrow> (s \<approx>\<^sub>S s' on A \<and> P (s \<oplus>\<^sub>S s\<^sub>0 on A, s' \<oplus>\<^sub>S s\<^sub>0 on A)))"
-  apply (pred_auto add: Healthy_def)
+syntax 
+  "_frame" :: "salpha \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]")
+  "_frame_ext" :: "svid \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]\<^sub>\<up>")
+  \<comment> \<open> Modifies Predicate \<close>
+  "_modifies"     :: "logic \<Rightarrow> salpha \<Rightarrow> logic" (infix "mods" 30)
+  \<comment> \<open> Not Modifies Predicate \<close>
+  "_not_modifies" :: "logic \<Rightarrow> salpha \<Rightarrow> logic" (infix "nmods" 30)
+  \<comment> \<open> Not Uses Predicate \<close>
+  "_not_uses"     :: "logic \<Rightarrow> salpha \<Rightarrow> logic" (infix "nuses" 30)
+
+translations
+  "_frame a P" == "CONST frame a P"
+  "\<lbrace>A\<rbrace>:[P]" <= "_frame \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F P"
+  "_frame_ext a P" == "CONST frame_ext a P"
+  "_modifies P a" == "CONST modifies P a"
+  "P mods \<lbrace>A\<rbrace>" <= "_modifies P \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F"
+  "_not_modifies P a" == "CONST not_modifies P a"
+  "P nmods \<lbrace>A\<rbrace>" <= "_not_modifies P \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F"
+  "_not_uses P a" == "CONST not_uses P a"
+  "P nuses \<lbrace>A\<rbrace>" <= "_not_uses P \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F"
+
+lemma nmods_iff [pred]: "P nmods A \<longleftrightarrow> (\<forall> s s'. P (s, s') \<longrightarrow> s \<approx>\<^sub>S s' on A)"
+  by (pred_auto add: Healthy_def)
+
+
+lemma nuses_iff [pred]: 
+  assumes "idem_scene A"
+  shows "P nuses A \<longleftrightarrow> (\<forall> s s' s\<^sub>0. P (s, s') \<longrightarrow> (s \<approx>\<^sub>S s' on A \<and> P (s \<oplus>\<^sub>S s\<^sub>0 on A, s' \<oplus>\<^sub>S s\<^sub>0 on A)))"
+  apply (pred_auto assms: assms add: Healthy_def)
   apply (metis scene_override_idem scene_override_overshadow_right)
   apply (metis scene_override_overshadow_left scene_override_overshadow_right)
   apply (metis scene_override_idem scene_override_overshadow_left)
@@ -61,7 +76,13 @@ lemma nuses_converse_commute: "\<lbrakk> idem_scene A; P nuses A; Q nuses (- A) 
   apply (metis scene_equiv_def scene_equiv_sym scene_override_commute)
   done
 
+lemma subst_indep_commute: "\<lbrakk> idem_scene A; A \<sharp>\<^sub>s \<sigma>; -A \<sharp>\<^sub>s \<rho> \<rbrakk> \<Longrightarrow> \<sigma> \<circ>\<^sub>s \<rho> = \<rho> \<circ>\<^sub>s \<sigma>"
+  by (expr_auto, metis scene_override_commute scene_override_idem)
 
+lemma nuses_assigns: "\<lbrakk> idem_scene A; A \<sharp>\<^sub>s \<sigma> \<rbrakk> \<Longrightarrow> \<langle>\<sigma>\<rangle>\<^sub>a nuses A"
+  by (simp add: nuses_iff expr_defs, auto, simp_all add: assigns_rel_def)
+     (metis scene_equiv_def scene_equiv_sym scene_override_idem)
+  
 subsection \<open> Frame laws \<close>
 
 named_theorems frame
@@ -72,13 +93,23 @@ lemma frame_all [frame]: "\<Sigma>:[P] = P"
 lemma frame_none [frame]: "\<emptyset>:[P] = (P \<and> II)"
   by (pred_auto add: scene_override_commute)
 
-lemma "basis_lens y \<Longrightarrow> \<lbrace>y\<^sup><, y\<^sup>>\<rbrace> \<sharp> P \<Longrightarrow> P nuses \<lbrace>y\<rbrace>\<^sub>F"
+term unrest
+
+translations
+  "\<lbrace>A\<rbrace> \<sharp> P" <= "_unrest \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F P"
+
+
+lemma skip_uses_nothing: "idem_scene A \<Longrightarrow> II nuses A"
+  by (pred_simp)
+
+lemma "basis_lens y \<Longrightarrow> \<lbrace>y\<^sup><, y\<^sup>>\<rbrace> \<sharp> P \<Longrightarrow> P nuses \<lbrace>y\<rbrace>"
+  apply (pred_auto)
   oops
 
 lemma frame_commute:
   assumes "\<lbrace>y\<^sup><, y\<^sup>>\<rbrace> \<sharp> P" 
   shows "$x:[P] ;; $y:[Q] = $y:[Q] ;; $x:[P]"
-
+  oops
 
 lemma frame_commute:
   assumes "($y\<^sup><) \<sharp> P" "($y\<^sup>>) \<sharp> P""($x\<^sup><) \<sharp> Q" "($x\<^sup>>) \<sharp> Q" "x \<bowtie> y" 
@@ -135,6 +166,7 @@ lemma frame_to_antiframe [frame]:
   apply pred_auto
   by (metis scene_indep_compat scene_indep_override scene_override_commute scene_override_id scene_override_union)+
 
+(*
 lemma rel_frext_miracle [frame]: 
   "a:[false]\<^sup>+ = false"
   by (metis false_pred_def frame_miracle trancl_empty)
@@ -147,6 +179,7 @@ lemma rel_frext_seq [frame]:
   "idem_scene a \<Longrightarrow> a:[P ;; Q]\<^sup>+ = (a:[P]\<^sup>+ ;; a:[Q]\<^sup>+)"
   apply (pred_auto)
   oops (* gets nitpicked *)
+*)
 
 (*
 lemma rel_frext_assigns [frame]:
