@@ -4,6 +4,7 @@ theory utp
     utp_healthy
     utp_hoare
     utp_wlp
+    utp_concurrency
 begin 
 
 bundle UTP_Syntax

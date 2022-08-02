@@ -26,8 +26,8 @@ text \<open> The following code sets up pretty-printing for homogeneous relation
   do this via the ``translations'' command as we only want the rule to apply when the input and output
   alphabet types are the same. The code has to deconstruct an expression (function) type, determine 
   that it is relational (product alphabet), and then checks if the types \emph{alpha} and \emph{beta} 
-  are the same. If they are, the type is printed as a \emph{hexpr}. Otherwise, we have no match. 
-  We then set up a regular translation for the \emph{hrel} type that uses this. \<close>
+  are the same. If they are, the type is printed as a @{type hrel}. Otherwise, we have no match. 
+  We then set up a regular translation for the @{type hrel} type that uses this. \<close>
   
 print_translation \<open>
 let
@@ -204,18 +204,18 @@ expr_ctr post
 
 subsection \<open> Predicate Semantics \<close>
 
-lemma pred_skip [pred]: "II = ($\<^bold>v\<^sup>> = $\<^bold>v\<^sup><)\<^sub>e"
+lemma pred_skip: "II = ($\<^bold>v\<^sup>> = $\<^bold>v\<^sup><)\<^sub>e"
   by pred_simp
 
-lemma pred_seq_hom [pred]:
+lemma pred_seq_hom:
   "P ;; Q = (\<exists> v\<^sub>0. [ \<^bold>v\<^sup>> \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> ] \<dagger> P \<and> [ \<^bold>v\<^sup>< \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> ] \<dagger> Q)\<^sub>e"
   by pred_auto
 
-lemma pred_seq [pred]: 
+lemma pred_seq: 
   "P ;; Q = (\<exists> v\<^sub>0. \<lparr> \<^bold>v\<^sup>< \<leadsto> $\<^bold>v\<^sup><, \<^bold>v\<^sup>> \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> \<rparr> \<dagger> P \<and> \<lparr> \<^bold>v\<^sup>< \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright>, \<^bold>v\<^sup>> \<leadsto> $\<^bold>v\<^sup>> \<rparr> \<dagger> Q)\<^sub>e"
   by (pred_auto)
 
-lemma pred_pre [pred]: "pre P = (\<exists> s. P \<lbrakk>\<guillemotleft>s\<guillemotright>/\<^bold>v\<^sup>>\<rbrakk>)\<^sub><"
+lemma pred_pre: "pre P = (\<exists> s. P \<lbrakk>\<guillemotleft>s\<guillemotright>/\<^bold>v\<^sup>>\<rbrakk>)\<^sub><"
   by (expr_simp add: pre_def Domain_iff)
 
 lemma pred_pre_liberate: "pre P = (P \\ out\<alpha>)\<^sub><"
