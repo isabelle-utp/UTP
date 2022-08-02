@@ -412,14 +412,14 @@ lemma assign_r_alt_def:
   by (pred_auto)
 
 lemma assigns_r_func: "Functional \<langle>f\<rangle>\<^sub>a"
-  unfolding Functional_def assigns_rel_def single_valued_def pred_rel_def
+  unfolding Functional_def assigns_r_def single_valued_def pred_rel_def
   by simp
 
 lemma assigns_r_injective: "inj f \<Longrightarrow> Injective \<langle>f\<rangle>\<^sub>a"
   unfolding Injective_def pred_rel_def injective_def 
   apply auto
     apply (metis Functional_def assigns_r_func pred_rel_def)
-    apply (simp add: assigns_rel_def injD)
+    apply (simp add: assigns_r_def injD)
   done
 (*
 lemma assigns_r_swap_uinj:
