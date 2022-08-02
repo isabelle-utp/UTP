@@ -22,6 +22,24 @@ translations
 
 type_synonym 'a hrel = "('a, 'a) urel"
 
+text \<open> The following code sets up pretty-printing for homogeneous relational expressions. We cannot 
+  do this via the ``translations'' command as we only want the rule to apply when the input and output
+  alphabet types are the same. The code has to deconstruct an expression (function) type, determine 
+  that it is relational (product alphabet), and then checks if the types \emph{alpha} and \emph{beta} 
+  are the same. If they are, the type is printed as a \emph{hexpr}. Otherwise, we have no match. 
+  We then set up a regular translation for the \emph{hrel} type that uses this. \<close>
+  
+print_translation \<open>
+let
+fun tr' ctx [ Const (@{type_syntax "prod"},_) $ alpha $ beta
+            , Const (@{type_syntax "bool"},t) ] = 
+  if (alpha = beta) 
+    then Syntax.const @{type_syntax "hrel"} $ alpha
+    else raise Match;
+in [(@{type_syntax "fun"},tr')]
+end
+\<close>
+
 subsection \<open> Relational Alphabets \<close>
   
 text \<open> We set up convenient syntax to refer to the input and output parts of the alphabet, as is
@@ -55,22 +73,13 @@ qed
 
 subsection \<open> Relational Operators \<close>
 
+text \<open> We define a specialised version of the conditional where the condition can refer only to
+  undashed variables, as is usually the case in programs, but not universally in UTP models. 
+  We implement this by lifting the condition predicate into the relational state-space with
+  construction @{term "\<lceil>b\<rceil>\<^sub><"}. \<close>
 
 definition lift_rcond :: "'a pred \<Rightarrow> ('a, 'b) urel" ("\<lceil>_\<rceil>\<^sub>\<leftarrow>") where
 [pred]: "\<lceil>b\<rceil>\<^sub>\<leftarrow> = b\<^sup><"
-
-definition seq :: "('a, 'b) urel \<Rightarrow> ('b, 'c) urel \<Rightarrow> ('a, 'c) urel" (infixl ";;" 55) where
-[pred]: "P ;; Q = (\<lambda> (s, s'). \<exists> s\<^sub>0. P (s, s\<^sub>0) \<and> Q (s\<^sub>0, s'))"
-
-expr_ctr seq (0 1)
-
-definition skip :: "'a hrel" where
-[pred]: "skip = (\<lambda> (s, s'). s' = s)"
-
-adhoc_overloading uskip skip
-
-abbreviation "true\<^sub>h \<equiv> (true :: 's hrel)"
-abbreviation "false\<^sub>h \<equiv> (false :: 's hrel)"
 
 abbreviation cond_rel :: "('a, 'b) urel \<Rightarrow> ('a \<times> 'b) pred \<Rightarrow> ('a, 'b) urel \<Rightarrow> ('a, 'b) urel" where
 "cond_rel P B Q \<equiv> cond P B Q"
@@ -79,20 +88,53 @@ syntax
   "_rcond" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3_ \<^bold>\<lhd> _ \<^bold>\<rhd>/ _)" [52,0,53] 52)
 
 translations
-  "_rcond P b Q" == "CONST cond_rel P (b\<^sup><)\<^sub>e Q"
+  "_rcond P b Q" == "CONST cond_rel P \<lceil>(b)\<^sub>e\<rceil>\<^sub>\<leftarrow> Q"
 
-definition conv_r :: "('a, 'b) urel \<Rightarrow> ('b, 'a) urel" ("_\<^sup>-" [999] 999) where
-[pred]: "conv_r P = (\<lambda> (b,a). P (a,b))"
+text \<open> Sequential composition is heterogeneous, and simply requires that the output alphabet
+  of the first matches then input alphabet of the second. \<close>
 
-definition assigns_rel :: "('s\<^sub>1, 's\<^sub>2) psubst \<Rightarrow> ('s\<^sub>1, 's\<^sub>2) urel" where
-[pred]: "assigns_rel \<sigma> = (\<lambda> (s, s'). s' = \<sigma> s)"
+definition seq :: "('a, 'b) urel \<Rightarrow> ('b, 'c) urel \<Rightarrow> ('a, 'c) urel" (infixl ";;" 55) where
+[pred]: "P ;; Q = (\<lambda> (s, s'). \<exists> s\<^sub>0. P (s, s\<^sub>0) \<and> Q (s\<^sub>0, s'))"
 
-adhoc_overloading uassigns assigns_rel
+expr_ctr seq (0 1)
 
-definition test :: "('s \<Rightarrow> bool) \<Rightarrow> 's hrel" where
-[pred]: "test b = (\<lambda> (s, s'). b s \<and> s' = s)"
+text \<open> We also set up a homogeneous sequential composition operator, and versions of @{term true}
+  and @{term false} that are explicitly typed by a homogeneous alphabet. \<close>
 
-adhoc_overloading utest test
+abbreviation seqh :: "'s hrel \<Rightarrow> 's hrel \<Rightarrow> 's hrel" (infixr ";;\<^sub>h" 61) where
+"seqh P Q \<equiv> (P ;; Q)"
+
+abbreviation truer :: "'s hrel" ("true\<^sub>h") where
+"truer \<equiv> true"
+
+abbreviation falser :: "'s hrel" ("false\<^sub>h") where
+"falser \<equiv> false"
+
+text \<open> We define the relational converse operator as an alphabet extrusion on the bijective
+  lens @{term swap\<^sub>L} that swaps the elements of the product state-space. \<close>
+
+abbreviation conv_r :: "('a, 'b) urel \<Rightarrow> ('b, 'a) urel" ("_\<^sup>-" [999] 999) where
+"conv_r P \<equiv> aext P swap\<^sub>L"
+
+text \<open> Assignment is defined using substitutions, where latter defines what each variable should
+  map to. This approach, which is originally due to Back~\cite{Back1998}, permits more general 
+  assignment expressions. The definition of the operator identifies the after state binding, $b'$, 
+  with the substitution function applied to the before state binding $b$. \<close>
+
+definition assigns_r :: "('s\<^sub>1, 's\<^sub>2) psubst \<Rightarrow> ('s\<^sub>1, 's\<^sub>2) urel" where
+[pred]: "assigns_r \<sigma> = (\<lambda> (s, s'). s' = \<sigma> s)"
+
+adhoc_overloading uassigns assigns_r
+
+text \<open> Relational identity, or skip, leaves all variables unchanged. \<close>
+
+definition skip :: "'a hrel" where
+[pred]: "skip = (\<lambda> (s, s'). s' = s)"
+
+adhoc_overloading uskip skip
+
+text \<open> Non-deterministic assignment, also known as ``choose'', assigns an arbitrarily chosen value 
+  to the given variable \<close>
 
 definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's hrel" where
 [pred]: "ndet_assign x = (\<Sqinter> v. x := \<guillemotleft>v\<guillemotright>)"
@@ -100,11 +142,29 @@ definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's hrel" wher
 syntax "_ndet_assign" :: "svid \<Rightarrow> logic" ("_ := *" [75] 76)
 translations "_ndet_assign x" == "CONST ndet_assign x"
 
+text \<open> We set up iterated sequential composition which iterates an indexed predicate over the
+  elements of a list. \<close>
+
 definition seqr_iter :: "'a list \<Rightarrow> ('a \<Rightarrow> 'b hrel) \<Rightarrow> 'b hrel" where
 [pred]: "seqr_iter xs P = foldr (\<lambda> i Q. P(i) ;; Q) xs II"
 
 syntax "_seqr_iter" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3;; _ : _ \<bullet>/ _)" [0, 0, 10] 10)
 translations ";; x : l \<bullet> P" \<rightleftharpoons> "(CONST seqr_iter) l (\<lambda>x. P)"
+
+text \<open> We also define the alphabetised skip operator that identifies all input and output variables
+  in the given alphabet scene. All other variables are unrestricted. We also set up syntax for it. \<close>
+  
+definition skip_ra :: "'s scene \<Rightarrow> 's hrel" where
+[pred]: "skip_ra a = (\<lambda> (s, s'). s' \<approx>\<^sub>S s on a)"
+
+definition test :: "('s \<Rightarrow> bool) \<Rightarrow> 's hrel" where
+[pred]: "test b = (\<lambda> (s, s'). b s \<and> s' = s)"
+
+adhoc_overloading utest test
+
+
+
+
 
 definition while_top :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" ("while\<^sup>\<top> _ do _ od") where 
 "while_top b P = (\<nu> X \<bullet> ((P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"

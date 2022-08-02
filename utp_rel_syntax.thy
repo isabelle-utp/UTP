@@ -16,7 +16,9 @@ expr_ctr uskip
 expr_ctr utest
 
 syntax "_assign" :: "svid \<Rightarrow> logic \<Rightarrow> logic" (infix ":=" 61)
-translations "_assign x e" == "CONST uassigns [x \<leadsto> e]"
+translations 
+  "_assign x e" == "CONST uassigns (CONST subst_upd (CONST subst_id) x (e)\<^sub>e)"
+  "_assign (_svid_tuple (_of_svid_list (x +\<^sub>L y))) e" <= "_assign (x +\<^sub>L y) e"
 
 syntax "_test" :: "logic \<Rightarrow> logic" ("\<questiondown>_?")
 translations "\<questiondown>P?" == "CONST utest (P)\<^sub>e"
