@@ -159,7 +159,7 @@ lemma Monotonic_disj [mono]:
 
 lemma Monotonic_cond:
   assumes "Monotonic P" "Monotonic Q"
-  shows "Monotonic (\<lambda> X. P(X) \<lhd> b \<rhd> Q(X))"
+  shows "Monotonic (\<lambda> X. P(X) \<triangleleft> b \<triangleright> Q(X))"
   by (insert assms, simp add: mono_def pred le_fun_def)
     
 lemma Conjuctive_Idempotent:
@@ -243,7 +243,7 @@ lemma Continuous_const [closure]: "Continuous (\<lambda> X. P)"
 lemma Continuous_cond [closure]:
   assumes "Continuous F" "Continuous G"
   shows "Continuous (\<lambda> X. F(X) \<triangleleft> b \<triangleright> G(X))"
-  using assms by (pred_auto)
+  by (pred_simp assms: assms, metis)
 
 text \<open> Closure laws derived from continuity \<close>
 

@@ -81,28 +81,32 @@ text \<open> We define a specialised version of the conditional where the condit
 definition lift_rcond :: "'a pred \<Rightarrow> ('a, 'b) urel" ("\<lceil>_\<rceil>\<^sub>\<leftarrow>") where
 [pred]: "\<lceil>b\<rceil>\<^sub>\<leftarrow> = b\<^sup><"
 
-abbreviation cond_rel :: "('a, 'b) urel \<Rightarrow> ('a \<times> 'b) pred \<Rightarrow> ('a, 'b) urel \<Rightarrow> ('a, 'b) urel" where
-"cond_rel P B Q \<equiv> cond P B Q"
+expr_ctr lift_rcond
+
+text \<open> We carefully craft an abbreviation and syntax translation so that the relational conditional
+  is an abbreviation for @{const expr_if}, but still assigns a relational type and pretty prints
+  correctly. \<close>
+
+abbreviation (input) cond_rel :: "('a, 'b) urel \<Rightarrow> ('a \<times> 'b) pred \<Rightarrow> ('a, 'b) urel \<Rightarrow> ('a, 'b) urel" where
+"cond_rel P B Q \<equiv> expr_if P B Q"
 
 syntax
-  "_rcond" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3_ \<^bold>\<lhd> _ \<^bold>\<rhd>/ _)" [52,0,53] 52)
+  "_rcond" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3_ \<lhd> _ \<rhd>/ _)" [52,0,53] 52)
 
 translations
-  "_rcond P b Q" == "CONST cond_rel P \<lceil>(b)\<^sub>e\<rceil>\<^sub>\<leftarrow> Q"
+  "P \<lhd> b \<rhd> Q" => "CONST cond_rel P (\<lceil>b\<rceil>\<^sub>\<leftarrow>)\<^sub>e Q"
+  "P \<lhd> b \<rhd> Q" <= "P \<triangleleft> \<lceil>b\<rceil>\<^sub>\<leftarrow> \<triangleright> Q"
 
 text \<open> Sequential composition is heterogeneous, and simply requires that the output alphabet
   of the first matches then input alphabet of the second. \<close>
 
-definition seq :: "('a, 'b) urel \<Rightarrow> ('b, 'c) urel \<Rightarrow> ('a, 'c) urel" (infixl ";;" 55) where
-[pred]: "P ;; Q = (\<lambda> (s, s'). \<exists> s\<^sub>0. P (s, s\<^sub>0) \<and> Q (s\<^sub>0, s'))"
+definition seq :: "('a, 'b) urel \<Rightarrow> ('b, 'c) urel \<Rightarrow> ('a, 'c) urel" where
+[pred]: "seq P Q = (\<lambda> (s, s'). \<exists> s\<^sub>0. P (s, s\<^sub>0) \<and> Q (s\<^sub>0, s'))"
 
-expr_ctr seq (0 1)
+adhoc_overloading useq seq
 
 text \<open> We also set up a homogeneous sequential composition operator, and versions of @{term true}
   and @{term false} that are explicitly typed by a homogeneous alphabet. \<close>
-
-abbreviation seqh :: "'s hrel \<Rightarrow> 's hrel \<Rightarrow> 's hrel" (infixr ";;\<^sub>h" 61) where
-"seqh P Q \<equiv> (P ;; Q)"
 
 abbreviation truer :: "'s hrel" ("true\<^sub>h") where
 "truer \<equiv> true"
@@ -163,12 +167,12 @@ definition test :: "('s \<Rightarrow> bool) \<Rightarrow> 's hrel" where
 adhoc_overloading utest test
 
 definition while_top :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" ("while\<^sup>\<top> _ do _ od") where 
-"while_top b P = (\<nu> X \<bullet> ((P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
+"while_top b P = (\<nu> X \<bullet> ((P ;; X) \<lhd> b \<rhd> II))"
 
 notation while_top ("while _ do _ od")
 
 definition while_bot :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" ("while\<^sub>\<bottom> _ do _ od") where 
-"while_bot b P = (\<mu> X \<bullet> ((P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
+"while_bot b P = (\<mu> X \<bullet> ((P ;; X) \<lhd> b \<rhd> II))"
 
 text \<open> While loops with invariant decoration -- partial correctness\<close>
 

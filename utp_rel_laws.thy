@@ -9,52 +9,52 @@ begin
 
 section \<open> Conditional Laws \<close>
 
-lemma cond_idem [simp]: "P \<lhd> b \<rhd> P = P"
+lemma cond_idem [simp]: "P \<triangleleft> b \<triangleright> P = P"
   by pred_auto
 
-lemma cond_sym: "P \<lhd> b \<rhd> Q = Q \<lhd> \<not>b \<rhd> P"
+lemma cond_sym: "P \<triangleleft> b \<triangleright> Q = Q \<triangleleft> \<not>b \<triangleright> P"
   by pred_auto
 
-lemma cond_assoc: "(P \<lhd> b \<rhd> Q) \<lhd> c \<rhd> R = P \<lhd> b \<and> c \<rhd> (Q \<lhd> c \<rhd> R)"
+lemma cond_assoc: "(P \<triangleleft> b \<triangleright> Q) \<triangleleft> c \<triangleright> R = P \<triangleleft> b \<and> c \<triangleright> (Q \<triangleleft> c \<triangleright> R)"
   by pred_auto
 
-lemma cond_distr: "P \<lhd> b \<rhd> (Q \<lhd> c \<rhd> R) = (P \<lhd> b \<rhd> Q) \<lhd> c \<rhd> (P \<lhd> b \<rhd> R)"
+lemma cond_distr: "P \<triangleleft> b \<triangleright> (Q \<triangleleft> c \<triangleright> R) = (P \<triangleleft> b \<triangleright> Q) \<triangleleft> c \<triangleright> (P \<triangleleft> b \<triangleright> R)"
   by pred_auto
 
-lemma cond_true [simp]: "P \<lhd> True \<rhd> Q = P"
+lemma cond_true [simp]: "P \<triangleleft> True \<triangleright> Q = P"
   by pred_auto
 
-lemma cond_false [simp]: "P \<lhd> False \<rhd> Q = Q"
+lemma cond_false [simp]: "P \<triangleleft> False \<triangleright> Q = Q"
   by pred_auto
 
-lemma cond_reach [simp]: "P \<lhd> b \<rhd> (Q \<lhd> b \<rhd> R) = P \<lhd> b \<rhd> R"
+lemma cond_reach [simp]: "P \<triangleleft> b \<triangleright> (Q \<triangleleft> b \<triangleright> R) = P \<triangleleft> b \<triangleright> R"
   by pred_auto
 
-lemma cond_disj [simp]: "P \<lhd> b \<rhd> (P \<lhd> c \<rhd> Q) = P \<lhd> b \<or> c \<rhd> Q"
+lemma cond_disj [simp]: "P \<triangleleft> b \<triangleright> (P \<triangleleft> c \<triangleright> Q) = P \<triangleleft> b \<or> c \<triangleright> Q"
   by pred_auto
 
 lemma comp_rcond_left_distr:
-  "(P \<^bold>\<lhd> b \<^bold>\<rhd> Q) ;; R = (P ;; R) \<^bold>\<lhd> b \<^bold>\<rhd> (Q ;; R) "
+  "(P \<lhd> b \<rhd> Q) ;; R = (P ;; R) \<lhd> b \<rhd> (Q ;; R) "
   by (pred_auto)
 
 lemma cond_seq_left_distr:
-  "out\<alpha> \<sharp> b \<Longrightarrow> ((P \<lhd> b \<rhd> Q) ;; R) = ((P ;; R) \<lhd> b \<rhd> (Q ;; R))"
+  "out\<alpha> \<sharp> b \<Longrightarrow> ((P \<triangleleft> b \<triangleright> Q) ;; R) = ((P ;; R) \<triangleleft> b \<triangleright> (Q ;; R))"
   by (pred_auto, blast)
 
 lemma cond_seq_right_distr:
-  "in\<alpha> \<sharp> b \<Longrightarrow> (P ;; (Q \<lhd> b \<rhd> R)) = ((P ;; Q) \<lhd> b \<rhd> (P ;; R))"
+  "in\<alpha> \<sharp> b \<Longrightarrow> (P ;; (Q \<triangleleft> b \<triangleright> R)) = ((P ;; Q) \<triangleleft> b \<triangleright> (P ;; R))"
   by (pred_auto, blast)
 
 text \<open> Alternative expression of conditional using assumptions and choice \<close>
 
-lemma rcond_rassume_expand: "P \<^bold>\<lhd> b \<^bold>\<rhd> Q = (\<questiondown>b? ;; P) \<sqinter> (\<questiondown>(\<not> b)? ;; Q)"
+lemma rcond_rassume_expand: "P \<lhd> b \<rhd> Q = (\<questiondown>b? ;; P) \<sqinter> (\<questiondown>(\<not> b)? ;; Q)"
   by pred_auto
 
-lemma rcond_mono [mono]: "\<lbrakk> P\<^sub>1 \<sqsubseteq> P\<^sub>2; Q\<^sub>1 \<sqsubseteq> Q\<^sub>2 \<rbrakk> \<Longrightarrow> (P\<^sub>1 \<^bold>\<lhd> b \<^bold>\<rhd> Q\<^sub>1) \<sqsubseteq> (P\<^sub>2 \<^bold>\<lhd> b \<^bold>\<rhd> Q\<^sub>2)"
-  by (pred_auto)
+lemma rcond_mono [mono]: "\<lbrakk> (P\<^sub>1 :: 's pred) \<sqsubseteq> P\<^sub>2; Q\<^sub>1 \<sqsubseteq> Q\<^sub>2 \<rbrakk> \<Longrightarrow> (P\<^sub>1 \<triangleleft> b \<triangleright> Q\<^sub>1) \<sqsubseteq> (P\<^sub>2 \<triangleleft> b \<triangleright> Q\<^sub>2)"
+  by pred_auto
 
-lemma rcond_refine: "(P \<sqsubseteq> (Q \<lhd> b \<rhd> R)) = (P \<sqsubseteq> (b \<and> Q)\<^sub>e \<and> (P \<sqsubseteq> ((\<not>b \<and> R)\<^sub>e)))"
-  by (pred_auto)
+lemma rcond_refine: "(P \<sqsubseteq> (Q \<triangleleft> b \<triangleright> R)) = (P \<sqsubseteq> (b \<and> Q)\<^sub>e \<and> (P \<sqsubseteq> ((\<not>b \<and> R)\<^sub>e)))"
+  by pred_auto
 
 section \<open> Precondition and Postcondition Laws \<close>
   
@@ -104,7 +104,7 @@ lemma mono_seqr [mono]:
   "\<lbrakk> mono P; mono Q \<rbrakk> \<Longrightarrow> mono (\<lambda> X. P X ;; Q X)"
   by (pred_auto add: mono_def, blast)
   
-lemma cond_seqr_mono [mono]: "mono (\<lambda>X. (P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+lemma cond_seqr_mono [mono]: "mono (\<lambda>X. (P ;; X) \<lhd> b \<rhd> II)"
   by (pred_auto add: mono_def)
 
 lemma mono_seqr_tail:
@@ -202,9 +202,9 @@ lemma seqr_bool_split:
 
 lemma cond_inter_var_split:
   assumes "vwb_lens x"
-  shows "(P \<lhd> $x\<^sup>> \<rhd> Q) ;; R = (P\<lbrakk>True/x\<^sup>>\<rbrakk> ;; R\<lbrakk>True/x\<^sup><\<rbrakk> \<or> Q\<lbrakk>False/x\<^sup>>\<rbrakk> ;; R\<lbrakk>False/x\<^sup><\<rbrakk>)"
+  shows "(P \<triangleleft> $x\<^sup>> \<triangleright> Q) ;; R = (P\<lbrakk>True/x\<^sup>>\<rbrakk> ;; R\<lbrakk>True/x\<^sup><\<rbrakk> \<or> Q\<lbrakk>False/x\<^sup>>\<rbrakk> ;; R\<lbrakk>False/x\<^sup><\<rbrakk>)"
 proof -
-  have "(P \<lhd> $x\<^sup>> \<rhd> Q) ;; R = (((x\<^sup>>)\<^sub>e \<and> P) ;; R \<or> (\<not> (x\<^sup>>)\<^sub>e \<and> Q) ;; R)"
+  have "(P \<triangleleft> $x\<^sup>> \<triangleright> Q) ;; R = (((x\<^sup>>)\<^sub>e \<and> P) ;; R \<or> (\<not> (x\<^sup>>)\<^sub>e \<and> Q) ;; R)"
     by pred_auto
   also have "... = ((P \<and> (x\<^sup>>)\<^sub>e) ;; R \<or> (Q \<and> \<not>(x\<^sup>>)\<^sub>e) ;; R)"
     by (pred_auto)
@@ -332,7 +332,7 @@ lemma assigns_skip: "\<langle>id\<rangle>\<^sub>a = II"
 lemma assigns_comp: "\<langle>\<sigma>\<rangle>\<^sub>a ;; \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<rho> \<circ>\<^sub>s \<sigma>\<rangle>\<^sub>a"
   by pred_auto
 
-lemma assigns_cond: "\<langle>\<sigma>\<rangle>\<^sub>a \<^bold>\<lhd> b \<^bold>\<rhd> \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<sigma> \<triangleleft> b \<triangleright> \<rho>\<rangle>\<^sub>a"
+lemma assigns_cond: "\<langle>\<sigma>\<rangle>\<^sub>a \<lhd> b \<rhd> \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<sigma> \<triangleleft> b \<triangleright> \<rho>\<rangle>\<^sub>a"
   by pred_auto  
 
 text \<open>Extend the alphabet of a substitution\<close>
@@ -403,11 +403,11 @@ lemma assign_commute:
   using assms by (pred_auto add: lens_indep_comm)
 
 lemma assign_cond:
-  "(x := e ;; (P \<^bold>\<lhd> b \<^bold>\<rhd> Q)) = ((x := e ;; P) \<^bold>\<lhd> b\<lbrakk>e/x\<rbrakk> \<^bold>\<rhd> (x := e ;; Q))"
+  "(x := e ;; (P \<lhd> b \<rhd> Q)) = ((x := e ;; P) \<lhd> b\<lbrakk>e/x\<rbrakk> \<rhd> (x := e ;; Q))"
   by pred_auto
 
 lemma assign_rcond:
-  "(x := e ;; (P \<^bold>\<lhd> b \<^bold>\<rhd> Q)) = ((x := e ;; P) \<^bold>\<lhd> (b\<lbrakk>e/x\<rbrakk>) \<^bold>\<rhd> (x := e ;; Q))"
+  "(x := e ;; (P \<lhd> b \<rhd> Q)) = ((x := e ;; P) \<lhd> (b\<lbrakk>e/x\<rbrakk>) \<rhd> (x := e ;; Q))"
   by (pred_auto)
 
 lemma assign_r_alt_def:
@@ -526,15 +526,15 @@ lemma assert_seq: "{b}\<^sub>\<bottom> ;; {c}\<^sub>\<bottom> = {(b \<and> c)}\<
 subsection \<open> While Loop Laws \<close>
 
 theorem while_unfold:
-  "while b do P od = ((P ;; while b do P od) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  "while b do P od = ((P ;; while b do P od) \<lhd> b \<rhd> II)"
 proof -
-  have m:"mono (\<lambda>X. (P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  have m:"mono (\<lambda>X. (P ;; X) \<lhd> b \<rhd> II)"
     unfolding mono_def by (meson equalityE rcond_mono ref_by_def relcomp_mono)
-  have "(while b do P od) = (\<nu> X \<bullet> (P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  have "(while b do P od) = (\<nu> X \<bullet> (P ;; X) \<lhd> b \<rhd> II)"
     by (simp add: while_top_def)
-  also have "... = ((P ;; (\<nu> X \<bullet> (P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II)) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  also have "... = ((P ;; (\<nu> X \<bullet> (P ;; X) \<lhd> b \<rhd> II)) \<lhd> b \<rhd> II)"
     by (subst lfp_unfold, simp_all add: m)
-  also have "... = ((P ;; while b do P od) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  also have "... = ((P ;; while b do P od) \<lhd> b \<rhd> II)"
     by (simp add: while_top_def)
   finally show ?thesis .
 qed
@@ -550,15 +550,15 @@ theorem while_true: "while (true)\<^sub>e do P od = false"
   done
 
 theorem while_bot_unfold:
-  "while\<^sub>\<bottom> b do P od = ((P ;; while\<^sub>\<bottom> b do P od) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  "while\<^sub>\<bottom> b do P od = ((P ;; while\<^sub>\<bottom> b do P od) \<lhd> b \<rhd> II)"
 proof -
-  have m:"mono (\<lambda>X. (P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  have m:"mono (\<lambda>X. (P ;; X) \<lhd> b \<rhd> II)"
     unfolding mono_def by (meson equalityE rcond_mono ref_by_def relcomp_mono)
-  have "(while\<^sub>\<bottom> b do P od) = (\<mu> X \<bullet> (P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  have "(while\<^sub>\<bottom> b do P od) = (\<mu> X \<bullet> (P ;; X) \<lhd> b \<rhd> II)"
     by (simp add: while_bot_def)
-  also have "... = ((P ;; (\<mu> X \<bullet> (P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II)) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  also have "... = ((P ;; (\<mu> X \<bullet> (P ;; X) \<lhd> b \<rhd> II)) \<lhd> b \<rhd> II)"
     by (subst gfp_unfold, simp_all add: m)
-  also have "... = ((P ;; while\<^sub>\<bottom> b do P od) \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  also have "... = ((P ;; while\<^sub>\<bottom> b do P od) \<lhd> b \<rhd> II)"
     by (simp add: while_bot_def)
   finally show ?thesis .
 qed
@@ -778,20 +778,20 @@ text \<open> While loop can be expressed using Kleene star \<close>
 
 (*
 lemma while_star_form:
-  "while b do P od = (P \<^bold>\<lhd> b \<^bold>\<rhd> II)\<^sup>\<star> ;; \<questiondown>(\<not>b)?"
+  "while b do P od = (P \<lhd> b \<rhd> II)\<^sup>\<star> ;; \<questiondown>(\<not>b)?"
 proof -
-  have 1: "Continuous (\<lambda>X. P ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  have 1: "Continuous (\<lambda>X. P ;; X \<lhd> b \<rhd> II)"
     by (pred_auto)
-  have "while b do P od = (\<Sqinter>i. ((\<lambda>X. P ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II) ^^ i) false)"
+  have "while b do P od = (\<Sqinter>i. ((\<lambda>X. P ;; X \<lhd> b \<rhd> II) ^^ i) false)"
     by (simp add: "1" sup_continuous_Continuous sup_continuous_lfp while_top_def top_false)
-  also have "... = ((\<lambda>X. P ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II) ^^ 0) false \<sqinter> (\<Sqinter>i. ((\<lambda>X. P ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II) ^^ (i+1)) false)"
+  also have "... = ((\<lambda>X. P ;; X \<lhd> b \<rhd> II) ^^ 0) false \<sqinter> (\<Sqinter>i. ((\<lambda>X. P ;; X \<lhd> b \<rhd> II) ^^ (i+1)) false)"
     by (subst Sup_power_expand, simp)
-  also have "... = (\<Sqinter>i. ((\<lambda>X. P ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II) ^^ (i+1)) false)"
+  also have "... = (\<Sqinter>i. ((\<lambda>X. P ;; X \<lhd> b \<rhd> II) ^^ (i+1)) false)"
     by (simp)
-  also have "... = (\<Sqinter>i. (P \<^bold>\<lhd> b \<^bold>\<rhd> II)\<^bold>^i ;; (false \<^bold>\<lhd> b \<^bold>\<rhd> II))"
+  also have "... = (\<Sqinter>i. (P \<lhd> b \<rhd> II)\<^bold>^i ;; (false \<lhd> b \<rhd> II))"
   proof (rule SUP_cong, simp_all)
     fix i
-    show "P ;; ((\<lambda>X. P ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II) ^^ i) false \<^bold>\<lhd> b \<^bold>\<rhd> II = (P \<^bold>\<lhd> b \<^bold>\<rhd> II) \<^bold>^ i ;; (false \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+    show "P ;; ((\<lambda>X. P ;; X \<lhd> b \<rhd> II) ^^ i) false \<lhd> b \<rhd> II = (P \<lhd> b \<rhd> II) \<^bold>^ i ;; (false \<lhd> b \<rhd> II)"
     proof (induct i)
       case 0
       then show ?case by simp
@@ -801,9 +801,9 @@ proof -
         apply (simp only: upred_semiring.power_Suc)
     qed
   qed
-  also have "... = (\<Sqinter>i\<in>{0..} \<bullet> (P \<^bold>\<lhd> b \<^bold>\<rhd> II)\<^bold>^i ;; [(\<not>b)]\<^sup>\<top>)"
+  also have "... = (\<Sqinter>i\<in>{0..} \<bullet> (P \<lhd> b \<rhd> II)\<^bold>^i ;; [(\<not>b)]\<^sup>\<top>)"
     by (pred_auto)
-  also have "... = (P \<^bold>\<lhd> b \<^bold>\<rhd> II)\<^sup>\<star> ;; [(\<not>b)]\<^sup>\<top>"
+  also have "... = (P \<lhd> b \<rhd> II)\<^sup>\<star> ;; [(\<not>b)]\<^sup>\<top>"
     by (metis seq_UINF_distr ustar_def)
   finally show ?thesis .
 qed
@@ -833,7 +833,7 @@ lemma pre_weak_rel:
 (*
 lemma cond_refine_rel: 
   assumes "S \<sqsubseteq> (\<lceil>b\<rceil>\<^sub>< \<and> P)" "S \<sqsubseteq> (\<lceil>\<not>b\<rceil>\<^sub>< \<and> Q)"
-  shows "S \<sqsubseteq> P \<^bold>\<lhd> b \<^bold>\<rhd> Q"
+  shows "S \<sqsubseteq> P \<lhd> b \<rhd> Q"
   by (metis aext_not assms(1) assms(2) cond_def lift_rcond_def utp_pred_laws.le_sup_iff)
 
 lemma seq_refine_pred:

@@ -29,7 +29,7 @@ lemma wlp_true [wp]: "p wlp True = (True)\<^sub>e"
 lemma wlp_conj [wp]: "(P wlp (b \<and> c))\<^sub>e = ((P wlp b)\<^sub>e \<and> (P wlp c)\<^sub>e)"
   by (pred_auto)
 
-theorem wlp_cond [wp]: "((P \<^bold>\<lhd> b \<^bold>\<rhd> Q) wlp r)  =((b \<longrightarrow> P  wlp r) \<and> ((\<not> b) \<longrightarrow> Q wlp r))\<^sub>e"
+theorem wlp_cond [wp]: "((P \<lhd> b \<rhd> Q) wlp r)  =((b \<longrightarrow> P  wlp r) \<and> ((\<not> b) \<longrightarrow> Q wlp r))\<^sub>e"
   by pred_auto
 
 theorem wlp_skip_r [wp]: "II wlp r = r"

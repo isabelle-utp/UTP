@@ -128,17 +128,17 @@ lemma skip_hoare_impl_r [hoare_safe]: "`p \<longrightarrow> q` \<Longrightarrow>
 
 subsection \<open> Conditional Laws \<close>
 
-lemma cond_hoare_r [hoare_safe]: "\<lbrakk> \<^bold>{b \<and> p\<^bold>}S\<^bold>{q\<^bold>} ; \<^bold>{\<not>b \<and> p\<^bold>}T\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}S \<^bold>\<lhd> b \<^bold>\<rhd> T\<^bold>{q\<^bold>}"
+lemma cond_hoare_r [hoare_safe]: "\<lbrakk> \<^bold>{b \<and> p\<^bold>}S\<^bold>{q\<^bold>} ; \<^bold>{\<not>b \<and> p\<^bold>}T\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}S \<lhd> b \<rhd> T\<^bold>{q\<^bold>}"
   by pred_auto
 
 lemma cond_hoare_r_wp: 
   assumes "\<^bold>{p'\<^bold>}S\<^bold>{q\<^bold>}" and "\<^bold>{p''\<^bold>}T\<^bold>{q\<^bold>}"
-  shows "\<^bold>{(b \<and> p') \<sqinter> (\<not>b \<and> p'')\<^bold>} S \<^bold>\<lhd> b \<^bold>\<rhd> T \<^bold>{q\<^bold>}"
+  shows "\<^bold>{(b \<and> p') \<sqinter> (\<not>b \<and> p'')\<^bold>} S \<lhd> b \<rhd> T \<^bold>{q\<^bold>}"
   using assms by pred_auto
 
 lemma cond_hoare_r_sp:
   assumes "\<^bold>{(b \<and> p)\<^bold>}S\<^bold>{q\<^bold>}" and "\<^bold>{\<not>b \<and> p\<^bold>}T\<^bold>{s\<^bold>}"
-  shows "\<^bold>{p\<^bold>}S \<^bold>\<lhd> b \<^bold>\<rhd> T\<^bold>{q \<sqinter> s\<^bold>}"
+  shows "\<^bold>{p\<^bold>}S \<lhd> b \<rhd> T\<^bold>{q \<or> s\<^bold>}"
   using assms by pred_auto
 
 lemma hoare_ndet [hoare_safe]: 
@@ -200,9 +200,9 @@ lemma while_hoare_r [hoare_safe]:
   assumes "\<^bold>{p \<and> b\<^bold>}S\<^bold>{p\<^bold>}"
   shows "\<^bold>{p\<^bold>}while b do S od\<^bold>{\<not>b \<and> p\<^bold>}"
 proof (simp add: while_top_def hoare_r_def assms)
-  have "(p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>e \<sqsubseteq> S ;; (p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>e \<^bold>\<lhd> b \<^bold>\<rhd> II"
+  have "(p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>e \<sqsubseteq> S ;; (p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>e \<lhd> b \<rhd> II"
     using assms by pred_auto
-  then show "(p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>e \<sqsubseteq> (\<nu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  then show "(p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>e \<sqsubseteq> (\<nu> X \<bullet> S ;; X \<lhd> b \<rhd> II)"
     by (simp add: pred_ref_iff_le lfp_lowerbound)
 qed
 
@@ -228,16 +228,16 @@ lemma while_term_hoare_r:
   assumes "\<And> z::nat. \<^bold>{p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<^bold>}S\<^bold>{p \<and> v < \<guillemotleft>z\<guillemotright>\<^bold>}"
   shows "\<^bold>{p\<^bold>}while\<^sub>\<bottom> b do S od\<^bold>{\<not>b \<and> p\<^bold>}"
 proof -
-  have "((p\<^sup><)\<^sub>e \<longrightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>e) \<sqsubseteq> (\<mu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  have "((p\<^sup><)\<^sub>e \<longrightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>e) \<sqsubseteq> (\<mu> X \<bullet> S ;; X \<lhd> b \<rhd> II)"
   proof (rule mu_refine_intro)
-    from assms show "((p\<^sup><)\<^sub>e \<longrightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>e) \<sqsubseteq> S ;; ((p\<^sup><)\<^sub>e \<longrightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>e) \<^bold>\<lhd> b \<^bold>\<rhd> II"
+    from assms show "((p\<^sup><)\<^sub>e \<longrightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>e) \<sqsubseteq> S ;; ((p\<^sup><)\<^sub>e \<longrightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>e) \<lhd> b \<rhd> II"
       by (pred_auto; smt (z3) hoare_meaning)+
     let ?E = "\<lambda> n. ((p \<and> v < \<guillemotleft>n\<guillemotright>)\<^sup><)\<^sub>e"
-    show "((p\<^sup><)\<^sub>e \<and> (\<mu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)) = ((p\<^sup><)\<^sub>e \<and> (\<nu> X \<bullet> S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II))"
+    show "((p\<^sup><)\<^sub>e \<and> (\<mu> X \<bullet> S ;; X \<lhd> b \<rhd> II)) = ((p\<^sup><)\<^sub>e \<and> (\<nu> X \<bullet> S ;; X \<lhd> b \<rhd> II))"
     proof (rule constr_fp_uniq[where E="?E"])
-      show "mono (\<lambda>X. S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+      show "mono (\<lambda>X. S ;; X \<lhd> b \<rhd> II)"
         by (rule cond_seqr_mono)
-      show "constr (\<lambda>X. S ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II) ?E"
+      show "constr (\<lambda>X. S ;; X \<lhd> b \<rhd> II) ?E"
         apply (rule constrI, rule chainI)
           apply (pred_auto, pred_auto, pred_auto)
         by (smt (verit, del_insts) assms hoare_meaning less_Suc_eq order_less_trans)+
@@ -270,14 +270,14 @@ proof (rule pre_weak_rel[of _ "p\<^sup><" ], goal_cases)
   from I0 show ?case by expr_auto
 next
   case 2
-  have "(p\<^sup>< \<longrightarrow> q'\<^sup>>)\<^sub>u \<sqsubseteq> (\<mu> X \<bullet> Q ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+  have "(p\<^sup>< \<longrightarrow> q'\<^sup>>)\<^sub>u \<sqsubseteq> (\<mu> X \<bullet> Q ;; X \<lhd> b \<rhd> II)"
   proof (rule mu_rec_total_utp_rule[where e=e, OF WF])
-    show "mono (\<lambda>X. Q ;; X \<^bold>\<lhd> b \<^bold>\<rhd> II)"
+    show "mono (\<lambda>X. Q ;; X \<lhd> b \<rhd> II)"
       by (simp add: cond_seqr_mono)
     have induct_step': "\<Sqinter> st. ((b \<and> p \<and> e = \<guillemotleft>st\<guillemotright>)\<^sup>< \<longrightarrow> (p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>)\<^sup>>)\<^sub>u \<sqsubseteq> Q"
       using induct_step by pred_auto  
     with PHI
-    show "\<Sqinter>st. (p\<^sup>< \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q'\<^sup>>)\<^sub>u \<sqsubseteq> Q ;; (p\<^sup>< \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q'\<^sup>>)\<^sub>u \<^bold>\<lhd> b \<^bold>\<rhd> II"
+    show "\<Sqinter>st. (p\<^sup>< \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q'\<^sup>>)\<^sub>u \<sqsubseteq> Q ;; (p\<^sup>< \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q'\<^sup>>)\<^sub>u \<lhd> b \<rhd> II"
       apply pred_auto
       by (smt (z3) hoare_meaning induct_step)+
   qed

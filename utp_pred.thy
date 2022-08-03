@@ -35,11 +35,6 @@ definition diff_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" wh
 definition impl_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" where
 [pred]: "impl_pred P Q = (\<lambda>s. P s \<longrightarrow> Q s)"
 
-definition cond :: "('a, 's) expr \<Rightarrow> 's pred \<Rightarrow> ('a, 's) expr \<Rightarrow> ('a, 's) expr"
-  where [pred]: "cond P B Q = (\<lambda> s. if B s then P s else Q s)"
-
-expr_ctr cond
-
 subsection \<open> Syntax \<close>
 
 text \<open> We want to remain as close as possible to the mathematical UTP syntax, but also
@@ -83,12 +78,6 @@ end
 
 unbundle UTP_Logic_Syntax
 
-syntax 
-  "_cond" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3_ \<lhd> _ \<rhd>/ _)" [52,0,53] 52)
-
-translations
-  "_cond P B Q" == "CONST cond P (B)\<^sub>e Q"
-
 subsection \<open> Proof Strategy \<close>
 
 lemma pred_refine_iff: "P \<sqsubseteq> Q \<longleftrightarrow> (\<forall> s. Q s \<longrightarrow> P s)"
@@ -99,6 +88,8 @@ lemma pred_ref_iff_le: "(f :: 's pred) \<sqsubseteq> g \<longleftrightarrow> g \
 
 method pred_simp uses assms add = (insert assms, (simp add: pred expr_simps add)?; expr_simp add: pred_refine_iff add)
 method pred_auto uses assms add = (insert assms, (simp add: pred expr_simps add)?; expr_auto add: pred_refine_iff add)
+
+declare expr_if [pred]
 
 subsection \<open> Algebraic Structures \<close>
 
