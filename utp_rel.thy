@@ -162,10 +162,6 @@ definition test :: "('s \<Rightarrow> bool) \<Rightarrow> 's hrel" where
 
 adhoc_overloading utest test
 
-
-
-
-
 definition while_top :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" ("while\<^sup>\<top> _ do _ od") where 
 "while_top b P = (\<nu> X \<bullet> ((P ;; X) \<^bold>\<lhd> b \<^bold>\<rhd> II))"
 
@@ -192,16 +188,6 @@ definition while_vrt :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightar
                         ("while _ invr _ vrt _ do _ od")
 where "while_vrt b p v P = while_bot b P"
 
-definition pre :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" 
-  where [pred]: "pre P = (\<lambda> s. \<exists> s'. P (s, s'))"
-
-definition post :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>2 \<Rightarrow> bool)" 
-  where [pred]: "post P = (\<lambda> s'. \<exists> s. P (s, s'))"
-
-expr_ctr pre
-
-expr_ctr post
-
 subsection \<open> Predicate Semantics \<close>
 
 lemma pred_skip: "II = ($\<^bold>v\<^sup>> = $\<^bold>v\<^sup><)\<^sub>e"
@@ -214,12 +200,6 @@ lemma pred_seq_hom:
 lemma pred_seq: 
   "P ;; Q = (\<exists> v\<^sub>0. \<lparr> \<^bold>v\<^sup>< \<leadsto> $\<^bold>v\<^sup><, \<^bold>v\<^sup>> \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright> \<rparr> \<dagger> P \<and> \<lparr> \<^bold>v\<^sup>< \<leadsto> \<guillemotleft>v\<^sub>0\<guillemotright>, \<^bold>v\<^sup>> \<leadsto> $\<^bold>v\<^sup>> \<rparr> \<dagger> Q)\<^sub>e"
   by (pred_auto)
-
-lemma pred_pre: "pre P = (\<exists> s. P \<lbrakk>\<guillemotleft>s\<guillemotright>/\<^bold>v\<^sup>>\<rbrakk>)\<^sub><"
-  by (expr_simp add: pre_def Domain_iff)
-
-lemma pred_pre_liberate: "pre P = (P \\ out\<alpha>)\<^sub><"
-  by (expr_auto add: pre_def)
 
 subsection \<open> Substitution Laws \<close>
 
@@ -271,12 +251,6 @@ lemma rel_interp [rel]:
   "\<lbrakk>P ;; Q\<rbrakk>\<^sub>U = \<lbrakk>P\<rbrakk>\<^sub>U \<Zcomp> \<lbrakk>Q\<rbrakk>\<^sub>U" "\<lbrakk>II\<rbrakk>\<^sub>U = Id"
   by (auto simp add: pred_rel_def pred)
 
-lemma rel_pre [rel_transfer]: "\<lbrakk>pre P\<rbrakk>\<^sub>U = Domain \<lbrakk>P\<rbrakk>\<^sub>U"
-  by (auto simp add: pre_def Domain_def pred_rel_def)
-
-lemma rel_post [rel_transfer]: "\<lbrakk>post P\<rbrakk>\<^sub>U = Range \<lbrakk>P\<rbrakk>\<^sub>U"
-  by (auto simp add: post_def Range_def pred_rel_def)
-
 lemma rel_eq_transfer [rel_transfer]: "P = Q \<longleftrightarrow> \<lbrakk>P\<rbrakk>\<^sub>U = \<lbrakk>Q\<rbrakk>\<^sub>U"
   by (auto simp add: pred_rel_def)
 
@@ -295,9 +269,40 @@ method rel_auto uses add = (rel_transfer, expr_auto add: relcomp_unfold add)
 
 subsection \<open> Relational Properties \<close>
 
+text \<open> We describe some properties of relations, including functional and injective relations. We
+  also provide operators for extracting the domain and range of a UTP relation. \<close>
+
 definition [rel_transfer]: "Functional P = functional \<lbrakk>P\<rbrakk>\<^sub>U"
 
+lemma Functional_alt_def [pred]: "Functional R \<longleftrightarrow> II \<sqsubseteq> R\<^sup>- ;; R"
+  by (rel_auto add: pred_rel_def Id_def single_valued_def)
+
 definition [rel_transfer]: "Injective P = injective \<lbrakk>P\<rbrakk>\<^sub>U"
+
+lemma Injective_alt_def [pred]: "Injective R \<longleftrightarrow> (Functional R \<and> II \<sqsubseteq> R ;; R\<^sup>-)"
+  by (rel_auto add: pred_rel_def injective_def Id_def)
+
+definition pre :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" 
+  where [pred]: "pre P = (\<lambda> s. \<exists> s'. P (s, s'))"
+
+definition post :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>2 \<Rightarrow> bool)" 
+  where [pred]: "post P = (\<lambda> s'. \<exists> s. P (s, s'))"
+
+expr_ctr pre
+
+expr_ctr post
+
+lemma pred_pre: "pre P = (\<exists> s. P \<lbrakk>\<guillemotleft>s\<guillemotright>/\<^bold>v\<^sup>>\<rbrakk>)\<^sub><"
+  by (expr_simp add: pre_def Domain_iff)
+
+lemma pred_pre_liberate: "pre P = (P \\ out\<alpha>)\<^sub><"
+  by (expr_auto add: pre_def)
+
+lemma rel_pre [rel_transfer]: "\<lbrakk>pre P\<rbrakk>\<^sub>U = Domain \<lbrakk>P\<rbrakk>\<^sub>U"
+  by (auto simp add: pre_def Domain_def pred_rel_def)
+
+lemma rel_post [rel_transfer]: "\<lbrakk>post P\<rbrakk>\<^sub>U = Range \<lbrakk>P\<rbrakk>\<^sub>U"
+  by (auto simp add: post_def Range_def pred_rel_def)
 
 subsection \<open> Algebraic Laws \<close>
 
@@ -320,9 +325,6 @@ translations
 definition ustar :: "'\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("_\<^sup>\<star>" [999] 999) where
 "P\<^sup>\<star> = (\<Sqinter>i. P\<^bold>^i)"
 
-lemma seqr_middle: "vwb_lens x \<Longrightarrow> P ;; Q = (\<Sqinter> v. P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>)"
-  by (pred_auto, metis vwb_lens.put_eq)
-
 lemma precond_equiv: "true ;; P = P \<longleftrightarrow> (in\<alpha> \<sharp> P)"
   by pred_auto
 
@@ -334,18 +336,6 @@ lemma postcond_equiv: "P ;; true = P \<longleftrightarrow> (out\<alpha> \<sharp>
 
 lemma postcond_simp: "out\<alpha> \<sharp> P \<Longrightarrow> P ;; true = P"
   by (simp add: postcond_equiv)
-
-lemma "($x\<^sup>< = $x\<^sup>>)\<^sub>e ;; ($x\<^sup>< = $x\<^sup>>)\<^sub>e = ($x\<^sup>< = $x\<^sup>>)\<^sub>e"
-  by pred_auto
-
-lemma assigns_skip: "\<langle>id\<rangle>\<^sub>a = II"
-  by pred_auto
-
-lemma assigns_comp: "\<langle>\<sigma>\<rangle>\<^sub>a ;; \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<rho> \<circ>\<^sub>s \<sigma>\<rangle>\<^sub>a"
-  by pred_auto
-
-lemma assigns_cond: "\<langle>\<sigma>\<rangle>\<^sub>a \<^bold>\<lhd> b \<^bold>\<rhd> \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<sigma> \<triangleleft> b \<triangleright> \<rho>\<rangle>\<^sub>a"
-  by pred_auto  
 
 end
 
