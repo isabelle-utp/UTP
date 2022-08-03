@@ -89,7 +89,7 @@ lemma pred_ref_iff_le: "(f :: 's pred) \<sqsubseteq> g \<longleftrightarrow> g \
 method pred_simp uses assms add = (insert assms, (simp add: pred expr_simps add)?; expr_simp add: pred_refine_iff add)
 method pred_auto uses assms add = (insert assms, (simp add: pred expr_simps add)?; expr_auto add: pred_refine_iff add)
 
-declare expr_if [pred]
+declare expr_if_def [pred]
 
 subsection \<open> Algebraic Structures \<close>
 

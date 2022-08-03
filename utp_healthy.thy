@@ -15,7 +15,7 @@ type_synonym 'a health = "'a pred \<Rightarrow> 'a pred"
 text \<open> A predicate $P$ is healthy, under healthiness function $H$, if $P$ is a fixed-point of $H$. \<close>
 
 definition Healthy :: "'\<alpha> pred \<Rightarrow> '\<alpha> health \<Rightarrow> bool" (infix "is" 30)
-  where "P is H \<equiv> (H P = P)"
+  where [pred]: "P is H \<equiv> (H P = P)"
 
 lemma Healthy_def': "P is H \<longleftrightarrow> (H P = P)"
   unfolding Healthy_def by auto
