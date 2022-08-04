@@ -9,39 +9,39 @@ begin
 
 section \<open> Conditional Laws \<close>
 
-lemma cond_idem [simp]: "P \<triangleleft> b \<triangleright> P = P"
+lemma rcond_idem [simp]: "P \<lhd> b \<rhd> P = P"
   by pred_auto
 
-lemma cond_sym: "P \<triangleleft> b \<triangleright> Q = Q \<triangleleft> \<not>b \<triangleright> P"
+lemma rcond_sym: "P \<lhd> b \<rhd> Q = Q \<lhd> \<not>b \<rhd> P"
   by pred_auto
 
-lemma cond_assoc: "(P \<triangleleft> b \<triangleright> Q) \<triangleleft> c \<triangleright> R = P \<triangleleft> b \<and> c \<triangleright> (Q \<triangleleft> c \<triangleright> R)"
+lemma rcond_assoc: "(P \<lhd> b \<rhd> Q) \<lhd> c \<rhd> R = P \<lhd> b \<and> c \<rhd> (Q \<lhd> c \<rhd> R)"
   by pred_auto
 
-lemma cond_distr: "P \<triangleleft> b \<triangleright> (Q \<triangleleft> c \<triangleright> R) = (P \<triangleleft> b \<triangleright> Q) \<triangleleft> c \<triangleright> (P \<triangleleft> b \<triangleright> R)"
+lemma rcond_distr: "P \<lhd> b \<rhd> (Q \<lhd> c \<rhd> R) = (P \<lhd> b \<rhd> Q) \<lhd> c \<rhd> (P \<lhd> b \<rhd> R)"
   by pred_auto
 
-lemma cond_true [simp]: "P \<triangleleft> True \<triangleright> Q = P"
+lemma rcond_true [simp]: "P \<lhd> True \<rhd> Q = P"
   by pred_auto
 
-lemma cond_false [simp]: "P \<triangleleft> False \<triangleright> Q = Q"
+lemma rcond_false [simp]: "P \<lhd> False \<rhd> Q = Q"
   by pred_auto
 
-lemma cond_reach [simp]: "P \<triangleleft> b \<triangleright> (Q \<triangleleft> b \<triangleright> R) = P \<triangleleft> b \<triangleright> R"
+lemma rcond_reach [simp]: "P \<lhd> b \<rhd> (Q \<lhd> b \<rhd> R) = P \<lhd> b \<rhd> R"
   by pred_auto
 
-lemma cond_disj [simp]: "P \<triangleleft> b \<triangleright> (P \<triangleleft> c \<triangleright> Q) = P \<triangleleft> b \<or> c \<triangleright> Q"
+lemma rcond_disj [simp]: "P \<lhd> b \<rhd> (P \<lhd> c \<rhd> Q) = P \<lhd> b \<or> c \<rhd> Q"
   by pred_auto
 
-lemma comp_rcond_left_distr:
+lemma rcomp_rcond_left_distr:
   "(P \<lhd> b \<rhd> Q) ;; R = (P ;; R) \<lhd> b \<rhd> (Q ;; R) "
   by (pred_auto)
 
-lemma cond_seq_left_distr:
+lemma rcond_seq_left_distr:
   "out\<alpha> \<sharp> b \<Longrightarrow> ((P \<triangleleft> b \<triangleright> Q) ;; R) = ((P ;; R) \<triangleleft> b \<triangleright> (Q ;; R))"
   by (pred_auto, blast)
 
-lemma cond_seq_right_distr:
+lemma rcond_seq_right_distr:
   "in\<alpha> \<sharp> b \<Longrightarrow> (P ;; (Q \<triangleleft> b \<triangleright> R)) = ((P ;; Q) \<triangleleft> b \<triangleright> (P ;; R))"
   by (pred_auto, blast)
 

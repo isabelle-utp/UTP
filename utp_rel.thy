@@ -74,28 +74,15 @@ qed
 subsection \<open> Relational Operators \<close>
 
 text \<open> We define a specialised version of the conditional where the condition can refer only to
-  undashed variables, as is usually the case in programs, but not universally in UTP models. 
-  We implement this by lifting the condition predicate into the relational state-space with
-  construction @{term "\<lceil>b\<rceil>\<^sub><"}. \<close>
+  undashed variables, as is usually the case in programs, but not universally in UTP models. \<close>
 
-definition lift_rcond :: "'a pred \<Rightarrow> ('a, 'b) urel" ("\<lceil>_\<rceil>\<^sub>\<leftarrow>") where
-[pred]: "\<lceil>b\<rceil>\<^sub>\<leftarrow> = b\<^sup><"
+definition rcond :: "('a, 'b) urel \<Rightarrow> 'a pred \<Rightarrow> ('a, 'b) urel \<Rightarrow> ('a, 'b) urel" where
+[pred]: "rcond P b Q = expr_if P (b\<^sup><) Q"
 
-expr_ctr lift_rcond
+adhoc_overloading ucond rcond
 
-text \<open> We carefully craft an abbreviation and syntax translation so that the relational conditional
-  is an abbreviation for @{const expr_if}, but still assigns a relational type and pretty prints
-  correctly. \<close>
-
-abbreviation (input) cond_rel :: "('a, 'b) urel \<Rightarrow> ('a \<times> 'b) pred \<Rightarrow> ('a, 'b) urel \<Rightarrow> ('a, 'b) urel" where
-"cond_rel P B Q \<equiv> expr_if P B Q"
-
-syntax
-  "_rcond" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3_ \<lhd> _ \<rhd>/ _)" [52,0,53] 52)
-
-translations
-  "P \<lhd> b \<rhd> Q" => "CONST cond_rel P (\<lceil>b\<rceil>\<^sub>\<leftarrow>)\<^sub>e Q"
-  "P \<lhd> b \<rhd> Q" <= "P \<triangleleft> \<lceil>b\<rceil>\<^sub>\<leftarrow> \<triangleright> Q"
+lemma rcond_alt_def: "P \<lhd> b \<rhd> Q = P \<triangleleft> b\<^sup>< \<triangleright> Q"
+  by pred_simp
 
 text \<open> Sequential composition is heterogeneous, and simply requires that the output alphabet
   of the first matches then input alphabet of the second. \<close>
@@ -219,11 +206,20 @@ lemma subst_seq_right [usubst]:
 
 subsection \<open> Unrestriction Laws \<close>
 
+lemma unrest_in_var [unrest]: "mwb_lens x \<Longrightarrow> in\<alpha> \<sharp> P \<Longrightarrow> $x\<^sup>< \<sharp> P"
+  by expr_auto
+
+lemma unrest_out_var [unrest]: "mwb_lens x \<Longrightarrow> out\<alpha> \<sharp> P \<Longrightarrow> $x\<^sup>> \<sharp> P"
+  by expr_auto
+
 lemma unrest_seq_ivar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>< \<sharp> P \<rbrakk> \<Longrightarrow> $x\<^sup>< \<sharp> P ;; Q"
-  by (pred_auto)
+  by pred_auto
 
 lemma unrest_seq_ovar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>> \<sharp> Q \<rbrakk> \<Longrightarrow> $x\<^sup>> \<sharp> P ;; Q"
   by pred_auto
+
+lemma drop_pre_inv: "\<lbrakk> out\<alpha> \<sharp> p \<rbrakk> \<Longrightarrow> p\<^sub><\<^sup>< = p"
+  by pred_simp
 
 subsection \<open> Relational Transfer Method \<close>
 
