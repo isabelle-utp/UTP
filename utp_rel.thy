@@ -209,11 +209,8 @@ subsection \<open> Substitution Laws \<close>
 
 declare seq_def [expr_defs]
 
-thm usubst_eval
-
-text \<open> subst_unrest needs a lens - I would like to write in\<alpha> and out\<alpha> here but that does not typecheck\<close>
-
-lemma subst_seq_left [usubst]: "out\<alpha> \<sharp>\<^sub>s \<sigma> \<Longrightarrow> \<sigma> \<dagger> (P ;; Q) = (\<sigma> \<dagger> P) ;; Q"
+lemma subst_seq_left [usubst]: 
+  "out\<alpha> \<sharp>\<^sub>s \<sigma> \<Longrightarrow> \<sigma> \<dagger> (P ;; Q) = (\<sigma> \<dagger> P) ;; Q"
   by pred_auto (metis snd_conv)+
 
 lemma subst_seq_right [usubst]:
