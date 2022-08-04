@@ -130,4 +130,39 @@ end
 
 unbundle utp_lattice_syntax
 
+subsection \<open> Substitution Laws \<close>
+
+lemma subst_pred [usubst]:
+  "\<sigma> \<dagger> true = true"
+  "\<sigma> \<dagger> false = false"
+  "\<sigma> \<dagger> (P \<and> Q) = ((\<sigma> \<dagger> P) \<and> (\<sigma> \<dagger> Q))"
+  "\<sigma> \<dagger> (P \<or> Q) = ((\<sigma> \<dagger> P) \<or> (\<sigma> \<dagger> Q))"
+  "\<sigma> \<dagger> (P \<longrightarrow> Q) = ((\<sigma> \<dagger> P) \<longrightarrow> (\<sigma> \<dagger> Q))"
+  "\<sigma> \<dagger> (\<not> P) = (\<not> (\<sigma> \<dagger> P))"
+  by pred_auto+
+
+lemma subst_INF_SUP [usubst]:
+  "\<sigma> \<dagger> (\<Sqinter> i. P(i)) = (\<Sqinter> i. \<sigma> \<dagger> P(i))"
+  "\<sigma> \<dagger> (\<Sqinter> i\<in>I. P(i)) = (\<Sqinter> i\<in>I. \<sigma> \<dagger> P(i))"
+  "\<sigma> \<dagger> (\<Squnion> i. P(i)) = (\<Squnion> i. \<sigma> \<dagger> P(i))"
+  "\<sigma> \<dagger> (\<Squnion> i\<in>I. P(i)) = (\<Squnion> i\<in>I. \<sigma> \<dagger> P(i))"
+  by (pred_auto add: image_image)+
+
+subsection \<open> Unrestriction Laws \<close>
+
+lemma unrest_pred [unrest]:
+  "a \<sharp> true" "a \<sharp> false"
+  "\<lbrakk> a \<sharp> P; a \<sharp> Q \<rbrakk> \<Longrightarrow> a \<sharp> P \<and> Q"
+  "\<lbrakk> a \<sharp> P; a \<sharp> Q \<rbrakk> \<Longrightarrow> a \<sharp> P \<or> Q"
+  "\<lbrakk> a \<sharp> P; a \<sharp> Q \<rbrakk> \<Longrightarrow> a \<sharp> P \<longrightarrow> Q"
+  "\<lbrakk> a \<sharp> P; a \<sharp> Q \<rbrakk> \<Longrightarrow> a \<sharp> \<not> P"
+  by (pred_auto+)
+
+lemma unrest_INF_SUP [unrest]:
+  "\<lbrakk> \<And> i. a \<sharp> P(i) \<rbrakk> \<Longrightarrow> a \<sharp> (\<Sqinter> i. P(i))"
+  "\<lbrakk> \<And> i. i \<in> I \<Longrightarrow> a \<sharp> P(i) \<rbrakk> \<Longrightarrow> a \<sharp> (\<Sqinter> i\<in>I. P(i))"
+  "\<lbrakk> \<And> i. a \<sharp> P(i) \<rbrakk> \<Longrightarrow> a \<sharp> (\<Squnion> i. P(i))"
+  "\<lbrakk> \<And> i. i \<in> I \<Longrightarrow> a \<sharp> P(i) \<rbrakk> \<Longrightarrow> a \<sharp> (\<Squnion> i\<in>I. P(i))"
+  by (pred_auto add: image_image)+
+
 end
