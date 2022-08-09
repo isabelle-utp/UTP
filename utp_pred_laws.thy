@@ -4,6 +4,9 @@ theory utp_pred_laws
   imports utp_pred
 begin
 
+lemma impl_neg_disj: "((P::'s pred) \<longrightarrow> (Q::'s pred)) = (\<not>P \<or> Q)"
+  by (simp add: impl_pred_def fun_eq_iff conj_pred_def disj_pred_def not_pred_def)
+
 lemma top_false: "\<top> = false"
   using ref_lattice.ccInf_empty by auto
 
