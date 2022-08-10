@@ -155,7 +155,7 @@ lemma unrest_pred [unrest]:
   "\<lbrakk> a \<sharp> P; a \<sharp> Q \<rbrakk> \<Longrightarrow> a \<sharp> P \<and> Q"
   "\<lbrakk> a \<sharp> P; a \<sharp> Q \<rbrakk> \<Longrightarrow> a \<sharp> P \<or> Q"
   "\<lbrakk> a \<sharp> P; a \<sharp> Q \<rbrakk> \<Longrightarrow> a \<sharp> P \<longrightarrow> Q"
-  "\<lbrakk> a \<sharp> P; a \<sharp> Q \<rbrakk> \<Longrightarrow> a \<sharp> \<not> P"
+  "a \<sharp> P \<Longrightarrow> a \<sharp> \<not> P"
   by (pred_auto+)
 
 lemma unrest_INF_SUP [unrest]:
