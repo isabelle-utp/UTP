@@ -6,7 +6,6 @@ begin
 
 named_theorems wp
 
-declare [[show_types]]
 no_notation Equiv_Relations.quotient (infixl "'/'/" 90)
 
 definition wprespec :: "('a, 'c) urel \<Rightarrow> ('b, 'c) urel \<Rightarrow> ('a, 'b) urel" (infixl "'/'/" 70) where
