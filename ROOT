@@ -3,3 +3,5 @@ session "UTP2" = "Shallow-Expressions-Z" +
     Z_Toolkit
   theories 
     utp
+    utp_wprespec
+      

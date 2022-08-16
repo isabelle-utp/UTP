@@ -1,91 +1,73 @@
 section \<open> Weakest Prespecification \<close>
 
 theory utp_wprespec
-  imports "UTP2.utp" "UTP2.utp_wlp"
+  imports "UTP2.utp_rel_laws" "UTP2.utp_wlp"
 begin
 
 named_theorems wp
 
-text \<open>This notation is now used elsewhere for liberation in Shallow-Expression. So we need to 
-give a type restriction explicitly. Or we need to change the notation. \<close>
-definition wprespec :: "('b \<leftrightarrow> 'c) \<Rightarrow> ('a \<leftrightarrow> 'c) \<Rightarrow> ('a \<leftrightarrow> 'b)" (infixr "\\" 70) where
-[rel]: "wprespec K Y = (\<not> ((\<not> Y) ;; K\<^sup>-))"
+no_notation Equiv_Relations.quotient (infixl "'/'/" 90)
 
-lemma wprespec_alt_def: "P \\ Q = (\<not> P ;; (\<not> Q\<^sup>-))\<^sup>-"
-  by (rel_auto)
+definition wprespec :: "('a, 'c) urel \<Rightarrow> ('b, 'c) urel \<Rightarrow> ('a, 'b) urel" (infixl "'/'/" 70) where
+[rel]: "wprespec Y K = (\<not> ((\<not> Y) ;; K\<^sup>-))"
 
-theorem wprespec: "R \<sqsubseteq> P ;; Q \<longleftrightarrow> Q \\ R \<sqsubseteq> P"
-  by (rel_auto)
+lemma wprespec_alt_def: "(P // Q) = (\<not> Q ;; (\<not> P\<^sup>-))\<^sup>-"
+  by (simp add: wprespec_def)
 
-lemma wprespec1: "R \<sqsubseteq> (Q \\ R) ;; Q"
+theorem wprespec: "R \<sqsubseteq> P ;; Q \<longleftrightarrow> R // Q \<sqsubseteq> P"
+  by (pred_auto add: wprespec_def)
+
+lemma wprespec1: "R \<sqsubseteq> (R // Q) ;; Q"
   by (simp add: wprespec)
 
-lemma wprespec2: "Q \\ (P ;; Q) \<sqsubseteq> P"
-  by (meson ref_order.order.eq_iff wprespec)
+lemma wprespec2: "(P ;; Q) // Q \<sqsubseteq> P"
+  using wprespec by blast
 
-lemma wprespec3: "Q \\ R \<sqsubseteq> II \<longleftrightarrow> R \<sqsubseteq> Q"
-  by (metis Id_O_R wprespec)
+lemma wprespec3: "R // Q \<sqsubseteq> II \<longleftrightarrow> R \<sqsubseteq> Q"
+  by (metis seqr_left_unit wprespec)
 
-lemma wprespec4: "Q \\ Q \<sqsubseteq> II"
+lemma wprespec4: "Q // Q \<sqsubseteq> II"
   by (simp add: wprespec3)
 
-lemma wprespec5 [wp]: "II \\ P = P"
-  by (metis R_O_Id ref_order.dual_order.antisym wprespec1 wprespec2)
+lemma wprespec5 [wp]: "P // II = P"
+  by (metis antisym ref_by_pred_is_leq seqr_right_unit wprespec1 wprespec2)
 
-lemma wprespec6 [wp]: "Q \\ (R \<and> S) = ((Q \\ R) \<and> (Q \\ S))"
+lemma wprespec6 [wp]: "(R \<and> S) // Q = ((R // Q) \<and> (S // Q))"
   by (rel_auto)
   
-lemma wprespec6a [wp]: "Q \\ (\<Inter> n\<in>A. R(n)) = (\<Inter> n\<in>A. Q \\ R(n))"
+lemma wprespec6a [wp]: "(\<Squnion> n\<in>A. R(n)) // Q = (\<Squnion> n\<in>A. R(n) // Q)"
   by (rel_auto)
 
-lemma wprespec6a' [wp]: "Q \\ (\<Squnion> n\<in>A. R(n)) = (\<Squnion> n\<in>A. Q \\ R(n))"
-  by (rel_auto)
+lemma wprespec7 [wp]: "R // (P \<or> Q) = ((R // P) \<and> (R // Q))"
+  by (simp add: seqr_or_distr subst_pred(4) wprespec_def)
 
-lemma wprespec7 [wp]: "(P \<or> Q) \\ R = ((P \\ R) \<and> (Q \\ R))"
-  by (rel_auto)
+lemma wprespec7a [wp]: "R // (\<Sqinter> i\<in>A. P(i)) = (\<Squnion> i\<in>A. R // P(i))"
+  by (pred_auto add: wprespec_def)
 
-lemma wprespec7a [wp]: "(\<Sqinter> i\<in>A. P(i)) \\ (R::('a \<leftrightarrow> 'b)) = (\<Squnion> i\<in>A. (P(i) \\ R))"
-  by (rel_auto)
+lemma wprespec8 [wp]: "R // (P ;; Q)= R // Q // P"
+  by (metis (no_types, lifting) pred_ba.order.eq_iff seqr_assoc wprespec wprespec wprespec wprespec1 wprespec1)
 
-lemma wprespec7a' [wp]: "(\<Union> i\<in>A. P(i)) \\ (R::('a \<leftrightarrow> 'b)) = (\<Inter> i\<in>A. (P(i) \\ R))"
-  by (rel_auto)
+theorem wprespec9: "R // Q = \<Sqinter> {Y. R \<sqsubseteq> Y ;; Q}" (is "?lhs = ?rhs")
+  by (metis (no_types, lifting) mem_Collect_eq ref_lattice.Inf_eqI wprespec wprespec1)
 
-lemma wprespec8 [wp]: "(P ;; Q) \\ (R::('a \<leftrightarrow> 'b)) = P \\ Q \\ R"
-  by (rel_auto)
+theorem wprespec10: "(R // Q) (s\<^sub>0, s) = (\<forall> s'. Q (s, s') \<longrightarrow> R (s\<^sub>0, s'))"
+  by (pred_auto add: wprespec_def)
 
-theorem wprespec9: "Q \\ R = \<Sqinter> {Y. R \<sqsubseteq> Y ;; Q}" (is "?lhs = ?rhs")
-proof (rule antisym)
-  show "Q \\ R \<subseteq> \<Union> {Y. R \<sqsubseteq> Y ;; Q}"
-    by (simp add: Union_upper wprespec1)
-  show "\<Union> {Y. R \<sqsubseteq> Y ;; Q} \<subseteq> Q \\ R"
-    by (metis Sup_least mem_Collect_eq ref_by_set_def wprespec)
-qed
+lemma wprespec12: "Q\<^sup>- = ((\<not>II) // (\<not>Q))"
+  by (simp add: wprespec_def)
 
-theorem wprespec10: "\<lbrakk>(Q \\ (R::('a \<leftrightarrow> 'b)))\<rbrakk>\<^sub>P (s\<^sub>0, s) = (\<forall> s'. \<lbrakk>Q\<rbrakk>\<^sub>P (s, s') \<longrightarrow> \<lbrakk>R\<rbrakk>\<^sub>P (s\<^sub>0, s'))"
-  by (rel_auto)
+lemma wprespec13: "(\<not> (R // Q)) = (\<not>II) // ((\<not>Q) // (\<not>R))"
+  by (pred_auto add: wprespec_def)
 
-lemma wprespec12: "Q\<^sup>- = ((\<not>Q) \\ (\<not>II))"
-  by (rel_auto)
+lemma wprespec17 [wp]: "R // \<langle>\<sigma>\<rangle>\<^sub>a = R ;; (II // \<langle>\<sigma>\<rangle>\<^sub>a)"
+  apply (pred_auto add: wprespec_def)
+  by metis
 
-lemma wprespec13: "- (Q \\ R) = (-R \\ -Q) \\ -II"
-  by (rel_auto)
+lemma wprespec17a [wp]: "II // \<langle>\<sigma>\<rangle>\<^sub>a = \<langle>\<sigma>\<rangle>\<^sub>a\<^sup>-"
+  by (pred_auto add: wprespec_def)
 
-lemma wprespec17 [wp]: "\<langle>\<sigma>\<rangle>\<^sub>a \\ R = R ;; (\<langle>\<sigma>\<rangle>\<^sub>a \\ II)"
-  apply (rel_auto)
-  by force
-
-lemma wprespec17a [wp]: "\<langle>\<sigma>\<rangle>\<^sub>a \\ II = \<langle>\<sigma>\<rangle>\<^sub>a\<^sup>-"
-  apply (rel_auto)
-  by force
-
-declare [[show_types]]
-
-term "P wlp b"
-term "((P::('a \<leftrightarrow> 'b)) \\ (b\<^sup>>)\<^sub>u)"
-term "\<lbrakk>((P::('a \<leftrightarrow> 'b)) \\ (b\<^sup>>)\<^sub>u)\<rbrakk>\<^sub>P"
-term "post ((P::('a \<leftrightarrow> 'b)) \\ (b\<^sup>>)\<^sub>u)"
-theorem wlp_as_wprespec: "P wlp b = post ((P::('a \<leftrightarrow> 'b)) \\ (b\<^sup>>)\<^sub>u)"
+theorem wlp_as_wprespec: "P wlp b = post ((b\<^sup>>) // P )"
   apply (simp add: post_def)
-  by (rel_auto)
+  by (pred_auto add: wprespec_def)
 
 end
