@@ -16,12 +16,12 @@ consts
 abbreviation (input) useqh :: "'p \<Rightarrow> 'p \<Rightarrow> 'p" (infixr ";;\<^sub>h" 61) where
 "useqh P Q \<equiv> (P ;; Q)"
 
-expr_ctr ucond (0 2)
-expr_ctr useq (0 1)
-expr_ctr useqh (0 1)
-expr_ctr uassigns
-expr_ctr uskip
-expr_ctr utest
+expr_constructor ucond (0 2)
+expr_constructor useq (0 1)
+expr_constructor useqh (0 1)
+expr_constructor uassigns
+expr_constructor uskip
+expr_constructor utest
 
 syntax 
   "_ucond"   :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3_ \<lhd> _ \<rhd>/ _)" [52,0,53] 52)

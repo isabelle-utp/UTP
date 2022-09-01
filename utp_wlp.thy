@@ -6,10 +6,10 @@ begin
 
 named_theorems wp
 
-definition wlp_pred :: "('s\<^sub>1,'s\<^sub>2)urel \<Rightarrow> ('s\<^sub>2 \<Rightarrow> bool) \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" where
-[pred]: "wlp_pred Q r = pre (\<not> (Q ;; ((\<not> r\<^sup><)\<^sub>e)) :: ('s\<^sub>1,'s\<^sub>2)urel)"
+definition wlp_pred :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>2 \<Rightarrow> bool) \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" where
+[pred]: "wlp_pred Q r = pre (\<not> (Q ;; (\<not> r\<^sup><)\<^sub>e) :: ('s\<^sub>1, 's\<^sub>2) urel)"
 
-expr_ctr wlp_pred
+expr_constructor wlp_pred
 
 syntax
   "_wlp" :: "logic \<Rightarrow> logic \<Rightarrow> logic" (infix "wlp" 60)
