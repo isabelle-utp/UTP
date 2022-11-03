@@ -250,6 +250,40 @@ lemma liberate_seq_unfold:
   apply (pred_auto)
   oops
 
+(* the following laws are like HOL.ex_simps but for lenses *)
+
+named_theorems "pred_ex_simps"
+
+lemma ex_lens_split_conj_unrest [pred_ex_simps]:
+  assumes "$x \<sharp> Q" "mwb_lens x"
+  shows "(\<exists> x \<Zspot> P \<and> Q) = ((\<exists> x \<Zspot> P) \<and> Q)"
+  using assms by pred_auto
+
+lemma ex_lens_split_conj_unrest2 [pred_ex_simps]:
+  assumes "$x \<sharp> P" "mwb_lens x"
+  shows "(\<exists> x \<Zspot> P \<and> Q) = (P \<and> (\<exists> x \<Zspot> Q))"
+  using assms by pred_auto
+
+lemma ex_lens_split_disj_unrest  [pred_ex_simps]:
+  assumes "$x \<sharp> Q" "mwb_lens x"
+  shows "(\<exists> x \<Zspot> P \<or> Q) = ((\<exists> x \<Zspot> P) \<or> Q)"
+  using assms by pred_auto
+
+lemma ex_lens_split_disj_unrest2  [pred_ex_simps]:
+  assumes "$x \<sharp> P" "mwb_lens x"
+  shows "(\<exists> x \<Zspot> P \<or> Q) = (P \<or> (\<exists> x \<Zspot> Q))"
+  using assms by pred_auto
+
+lemma ex_lens_split_impl_unrest  [pred_ex_simps]:
+  assumes "$x \<sharp> Q" "mwb_lens x"
+  shows "(\<exists> x \<Zspot> P \<longrightarrow> Q) = ((\<forall> x \<Zspot> P) \<longrightarrow> Q)"
+  using assms by pred_auto
+
+lemma ex_lens_split_impl_unrest2  [pred_ex_simps]:
+  assumes "$x \<sharp> P" "mwb_lens x"
+  shows "(\<exists> x \<Zspot> P \<longrightarrow> Q) = (P \<longrightarrow> (\<exists> x \<Zspot> Q))"
+  using assms by pred_auto
+
 (*
 lemma shEx_mem_lift_seq_1 [uquant_lift]:
   assumes "out\<alpha> \<sharp> A"
