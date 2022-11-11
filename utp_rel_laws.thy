@@ -371,12 +371,8 @@ lemma assigns_cond: "\<langle>\<sigma>\<rangle>\<^sub>a \<lhd> b \<rhd> \<langle
 
 text \<open>Extend the alphabet of a substitution\<close>
 
-definition subst_aext :: "'a subst \<Rightarrow> ('a \<Longrightarrow> 'b) \<Rightarrow> 'b subst"
-  where [rel]: "subst_aext \<sigma> x = (\<lambda> s. put\<^bsub>x\<^esub> s (\<sigma> (get\<^bsub>x\<^esub> s)))"
-
 lemma assigns_subst: "(subst_aext \<sigma> fst\<^sub>L) \<dagger> \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<rho> \<circ>\<^sub>s \<sigma>\<rangle>\<^sub>a"
-  apply pred_auto
-  by (simp_all add: utp_rel_laws.subst_aext_def)
+  by pred_auto
 
 lemma assigns_r_comp: "(\<langle>\<sigma>\<rangle>\<^sub>a ;; P) = ((\<lambda> s. put\<^bsub>fst\<^sub>L\<^esub> s (\<sigma> (get\<^bsub>fst\<^sub>L\<^esub> s))) \<dagger> P)"
   by (pred_auto)
