@@ -134,14 +134,14 @@ theorem constr_fp_uniq:
 subsection \<open> Noetherian Induction Instantiation\<close>
       
 text \<open> Contribution from Yakoub Nemouchi.The following generalization was used by Tobias Nipkow
-        and Peter Lammich  in \emph{Refine\_Monadic} \<close>
+        and Peter Lammich in \emph{Refine\_Monadic} \<close>
 
 lemma  wf_fixp_uinduct_pure_ueq_gen:     
   assumes fixp_unfold: "fp B = B (fp B)"
   and              WF: "wf R"
   and     induct_step:
-          "\<And>f st. \<lbrakk>\<And>st'. (st',st) \<in> R  \<Longrightarrow> (((p \<and> e\<^sup>< = \<guillemotleft>st'\<guillemotright>) \<longrightarrow> q)\<^sub>e \<sqsubseteq> f)\<rbrakk>
-               \<Longrightarrow> fp B = f \<Longrightarrow>((p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright>) \<longrightarrow> q)\<^sub>e \<sqsubseteq> (B f)"
+          "\<And> st. \<lbrakk>\<And>st'. (st',st) \<in> R  \<Longrightarrow> (((p \<and> e\<^sup>< = \<guillemotleft>st'\<guillemotright>) \<longrightarrow> q)\<^sub>e \<sqsubseteq> fp B)\<rbrakk>
+               \<Longrightarrow> ((p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright>) \<longrightarrow> q)\<^sub>e \<sqsubseteq> (B (fp B))"
         shows "((p \<longrightarrow> q)\<^sub>e \<sqsubseteq> fp B)"  
 proof -  
   { fix st
@@ -158,13 +158,6 @@ proof -
     by (simp add: pred_refine_iff) 
 qed
   
-text \<open> The next lemma shows that using substitution also work. However it is not that generic
-        nor practical for proof automation ... \<close>
-
-lemma refine_usubst_to_ueq:
-  "vwb_lens E \<Longrightarrow> (p \<longrightarrow> q)\<^sub>e\<lbrakk>\<guillemotleft>st'\<guillemotright>/E\<rbrakk> \<sqsubseteq> f\<lbrakk>\<guillemotleft>st'\<guillemotright>/E\<rbrakk> = (((p \<and> $E = \<guillemotleft>st'\<guillemotright>) \<longrightarrow> q)\<^sub>e \<sqsubseteq> f)"
-  oops
-
 text \<open> By instantiation of @{thm wf_fixp_uinduct_pure_ueq_gen} with @{term \<mu>} and lifting of the 
         well-founded relation we have ... \<close>
 
@@ -172,37 +165,35 @@ lemma mu_rec_total_pure_rule:
   assumes WF: "wf R"
   and     M: "mono B"  
   and     induct_step:
-          "\<And> f st.  \<lbrakk>(p \<and> (e\<^sup><,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> f\<rbrakk>
-               \<Longrightarrow> \<mu> B = f \<Longrightarrow> (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> (B f)"
+          "\<And> st.  \<lbrakk>(p \<and> (e\<^sup><,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> \<mu> B\<rbrakk> \<Longrightarrow> (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> (B (\<mu> B))"
         shows "(p \<longrightarrow> q)\<^sub>e \<sqsubseteq> \<mu> B"  
 proof (rule wf_fixp_uinduct_pure_ueq_gen[where fp=\<mu> and p=p and B=B and R=R and e=e])
   show "\<mu> B = B (\<mu> B)"
     by (simp add: M def_gfp_unfold)
   show "wf R"
     by (fact WF)
-  show "\<And>f st. (\<And>st'. (st', st) \<in> R \<Longrightarrow> (p \<and> e\<^sup>< = \<guillemotleft>st'\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> f) \<Longrightarrow> 
-                \<mu> B = f \<Longrightarrow> 
-                (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> B f"
-    apply (rule induct_step) oops
-
+  show "\<And>st. (\<And>st'. (st', st) \<in> R \<Longrightarrow> (p \<and> e\<^sup>< = \<guillemotleft>st'\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> (\<mu> B)) \<Longrightarrow> 
+                (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> B (\<mu> B)"
+    by (rule induct_step, auto simp add: SEXP_def pred_refine_iff)
+qed
+  
 lemma nu_rec_total_pure_rule: 
   assumes WF: "wf R"
   and     M: "mono B"  
   and     induct_step:
-          "\<And> f st.  \<lbrakk>(p \<and> (e\<^sup><,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> f\<rbrakk>
-               \<Longrightarrow> \<nu> B = f \<Longrightarrow> (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> (B f)"
+          "\<And> st.  \<lbrakk>(p \<and> (e\<^sup><,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> \<nu> B\<rbrakk>
+               \<Longrightarrow> (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> (B (\<nu> B))"
         shows "(p \<longrightarrow> q)\<^sub>e \<sqsubseteq> \<nu> B"  
 proof (rule wf_fixp_uinduct_pure_ueq_gen[where fp=\<nu> and p=p and B=B and R=R and e=e])
   show "\<nu> B = B (\<nu> B)"
     by (simp add: M def_lfp_unfold)
   show "wf R"
     by (fact WF)
-  show "\<And>f st. (\<And>st'. (st', st) \<in> R \<Longrightarrow> (p \<and> e\<^sup>< = \<guillemotleft>st'\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> f) \<Longrightarrow> 
-                \<nu> B = f \<Longrightarrow> 
-                (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> B f"
-    oops
+  show "\<And>st. (\<And>st'. (st', st) \<in> R \<Longrightarrow> (p \<and> e\<^sup>< = \<guillemotleft>st'\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> \<nu> B) \<Longrightarrow> 
+                (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> B (\<nu> B)"
+    by (rule induct_step, auto simp add: SEXP_def pred_refine_iff)
+qed
 
-(*
 text \<open>Since @{term "B (p \<and> (E\<^sup><,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> B (\<mu> B)"} and 
       @{term "mono B"}, thus,  @{thm mu_rec_total_pure_rule} can be expressed as follows\<close>
   
@@ -210,23 +201,30 @@ lemma mu_rec_total_utp_rule:
   assumes WF: "wf R"
     and     M: "mono B"  
     and     induct_step:
-    "\<And>st. (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>u \<sqsubseteq> (B ((p \<and> (e\<^sup><,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q))\<^sub>u)"
-  shows "(p \<longrightarrow> q)\<^sub>u \<sqsubseteq> \<mu> B"  
+    "\<And>st. (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> (B ((p \<and> (e\<^sup><,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q))\<^sub>e)"
+  shows "(p \<longrightarrow> q)\<^sub>e \<sqsubseteq> \<mu> B"  
 proof (rule mu_rec_total_pure_rule[where R=R and e=e], simp_all add: assms)
-  show "\<And>f st. (p \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q)\<^sub>u \<sqsubseteq> f \<Longrightarrow> \<mu> B = f \<Longrightarrow> (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>u \<sqsubseteq> B f"
-    using M induct_step monoD order_subst2 by (simp add: ref_by_set_def, blast)
+  fix st
+  assume B: "(p \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> \<mu> B"
+  have R: "B ((p \<and> (e\<^sup><,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q))\<^sub>e \<sqsubseteq> B (\<mu> B)"
+    by (metis (no_types, lifting) B M monoD ref_by_pred_is_leq)
+  show "(p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> B (\<mu> B)"
+    using R induct_step pred_ba.order_trans by blast
 qed
 
 lemma nu_rec_total_utp_rule: 
   assumes WF: "wf R"
     and     M: "mono B"  
     and     induct_step:
-    "\<And>st. (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>u \<sqsubseteq> (B ((p \<and> (e\<^sup><,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q))\<^sub>u)"
-  shows "(p \<longrightarrow> q)\<^sub>u \<sqsubseteq> \<nu> B" 
+    "\<And>st. (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> (B ((p \<and> (e\<^sup><,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q))\<^sub>e)"
+  shows "(p \<longrightarrow> q)\<^sub>e \<sqsubseteq> \<nu> B" 
 proof (rule nu_rec_total_pure_rule[where R=R and e=e], simp_all add: assms)
-  show "\<And>f st. (p \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q)\<^sub>u \<sqsubseteq> f \<Longrightarrow> \<nu> B = f \<Longrightarrow> (p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>u \<sqsubseteq> B f"
-    using M induct_step monoD order_subst2 by (simp add: ref_by_set_def, blast)
+  fix st
+  assume B: "(p \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> \<nu> B"
+  have R: "B ((p \<and> (e\<^sup><,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q))\<^sub>e \<sqsubseteq> B (\<nu> B)"
+    by (metis (no_types, lifting) B M monoD ref_by_pred_is_leq)
+  show "(p \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q)\<^sub>e \<sqsubseteq> B (\<nu> B)"
+    using R induct_step pred_ba.order_trans by blast
 qed
-*)
 
 end

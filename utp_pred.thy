@@ -38,9 +38,9 @@ definition impl_pred :: "'s pred \<Rightarrow> 's pred \<Rightarrow> 's pred" wh
 subsection \<open> Syntax \<close>
 
 text \<open> We want to remain as close as possible to the mathematical UTP syntax, but also
-       want to be conservative with HOL. For this reason we chose not to steal syntax
+       want to be conservative with HOL. For this reason we choose not to steal syntax
        from HOL, but where possible use polymorphism to allow selection of the appropriate
-       operator (UTP vs. HOL). Thus we will first remove the standard syntax for conjunction,
+       operator (UTP vs. HOL). Thus we first remove the standard syntax for conjunction,
        disjunction, and negation, and replace these with overloaded definitions. We
        similarly use polymorphic constants for the other predicate calculus operators. \<close>
 
@@ -107,7 +107,7 @@ lemma ref_by_pred_is_leq: "((\<sqsubseteq>) :: 'a pred \<Rightarrow> 'a pred \<R
 
 subsection \<open> Lattice syntax \<close>
 
-text \<open> In accordance with \cite{hoare1998}, we turn the lattice operators upside down \<close>
+text \<open> In accordance with \cite{hoare1998}, we turn the lattice operators upside down. \<close>
 
 bundle utp_lattice_syntax
 begin
