@@ -5,6 +5,7 @@ theory utp_pred
     "HOL-Library.Order_Continuity"
     "Z_Toolkit.Z_Toolkit" 
     "Shallow-Expressions.Shallow_Expressions"
+    "HOL-Algebra.Complete_Lattice"
 begin
                     
 unbundle Expression_Syntax Z_Syntax
@@ -62,7 +63,14 @@ text \<open> The following bundle sets up the syntax for our overloaded operator
 bundle UTP_Logic_Syntax
 begin
 
-no_notation 
+no_notation
+  Order.le (infixl "\<sqsubseteq>\<index>" 50) and
+  Lattice.sup ("\<Squnion>\<index>_" [90] 90) and
+  Lattice.inf ("\<Sqinter>\<index>_" [90] 90) and
+  Lattice.join (infixl "\<squnion>\<index>" 65) and
+  Lattice.meet (infixl "\<sqinter>\<index>" 70) and
+(*  Order.bottom ("\<bottom>\<index>") and
+  Order.top ("\<top>\<index>") and *)
   conj (infixr "\<and>" 35) and 
   disj (infixr "\<or>" 30) and 
   Not ("\<not> _" [40] 40) and 
@@ -99,7 +107,7 @@ interpretation pred_ba: boolean_algebra diff_pred not_pred conj_pred "(\<sqsupse
 
 lemmas ref_antisym = pred_ba.order.antisym
 
-interpretation ref_lattice: complete_lattice Sup Inf sup "(\<sqsubseteq>)" "(\<sqsubset>)" inf true_pred false_pred
+interpretation ref_lattice: Complete_Lattices.complete_lattice Sup Inf sup "(\<sqsubseteq>)" "(\<sqsubset>)" inf true_pred false_pred
   by (unfold_locales, pred_auto)+
 
 lemma ref_by_pred_is_leq: "((\<sqsubseteq>) :: 'a pred \<Rightarrow> 'a pred \<Rightarrow> bool) = (\<ge>)"
@@ -113,8 +121,8 @@ bundle utp_lattice_syntax
 begin
 
 notation
-  bot ("\<top>") and
-  top ("\<bottom>") and
+  Orderings.bot ("\<top>") and
+  Orderings.top ("\<bottom>") and
   inf  (infixl "\<squnion>" 70) and
   sup  (infixl "\<sqinter>" 65) and
   Inf  ("\<Squnion> _" [900] 900) and

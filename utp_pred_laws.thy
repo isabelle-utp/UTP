@@ -2,7 +2,10 @@ section \<open> Predicate Laws \<close>
 
 theory utp_pred_laws
   imports utp_pred
-begin
+begin            
+
+unbundle utp_lattice_syntax
+
 
 lemma impl_neg_disj: "((P::'s pred) \<longrightarrow> (Q::'s pred)) = (\<not>P \<or> Q)"
   by (simp add: impl_pred_def fun_eq_iff conj_pred_def disj_pred_def not_pred_def)
