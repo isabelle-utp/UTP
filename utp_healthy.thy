@@ -251,12 +251,6 @@ lemma Sup_Continuous_closed [closure]:
   "\<lbrakk> Continuous H; \<And> i. i \<in> A \<Longrightarrow> P(i) is H; A \<noteq> {} \<rbrakk> \<Longrightarrow> (\<Sqinter> i\<in>A. P(i)) is H"
   by (drule ContinuousD[of H "P ` A"], auto) (metis (no_types, lifting) Healthy_def' SUP_cong image_image)
 
-(*
-lemma UINF_mem_Continuous_closed [closure]:
-  "\<lbrakk> Continuous H; \<And> i. i \<in> A \<Longrightarrow> P(i) is H; A \<noteq> {} \<rbrakk> \<Longrightarrow> (\<Union> i\<in>A. P(i)) is H"
-  by (simp add: Sup_Continuous_closed UINF_as_Sup_collect)
-*)
-
 lemma Sup_mem_Continuous_closed_pair [closure]:
   assumes "Continuous H" "\<And> i j. (i, j) \<in> A \<Longrightarrow> P i j is H" "A \<noteq> {}"
   shows "(\<Sqinter> (i,j)\<in>A. P i j) is H"

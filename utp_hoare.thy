@@ -13,13 +13,12 @@ syntax
 
 translations "_hoare_r P S Q" == "CONST hoare_r (P)\<^sub>e S (Q)\<^sub>e"
 
-
 named_theorems hoare and hoare_safe
 
 lemma hoare_meaning: "H{p}Q{r} = (\<forall> s s'. p s \<and> Q (s, s') \<longrightarrow> r s')"
   by (pred_auto)
 
-lemma hoare_alt_def: "\<^bold>{b\<^bold>}P\<^bold>{c\<^bold>} = (P ;; \<questiondown>c? \<sqsubseteq> \<questiondown>b? ;; P)"
+lemma hoare_alt_def [rel]: "\<^bold>{b\<^bold>}P\<^bold>{c\<^bold>} = (P ;; \<questiondown>c? \<sqsubseteq> \<questiondown>b? ;; P)"
   by (pred_auto)
 
 lemma hoare_assume: "\<^bold>{P\<^bold>}S\<^bold>{Q\<^bold>} \<Longrightarrow> \<questiondown>P? ;; S = \<questiondown>P? ;; S ;; \<questiondown>Q?"
@@ -165,36 +164,33 @@ lemma nu_hoare_r_partial:
   unfolding hoare_r_def pred_ref_iff_le
   by (rule lfp_lowerbound, pred_auto)
 
-(*
 lemma mu_hoare_r:
   assumes WF: "wf R"
   assumes M:"mono F"  
   assumes induct_step:
-    "\<Sqinter> st P. \<^bold>{p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p \<and> e = \<guillemotleft>st\<guillemotright>\<^bold>}F P\<^bold>{q\<^bold>}"   
+    "\<And> st P. \<^bold>{p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p \<and> e = \<guillemotleft>st\<guillemotright>\<^bold>}F P\<^bold>{q\<^bold>}"   
   shows "\<^bold>{p\<^bold>}\<mu> F \<^bold>{q\<^bold>}"
   unfolding hoare_r_def
 proof (rule mu_rec_total_utp_rule[OF WF M , of _ e ], goal_cases)
   case (1 st)
   then show ?case 
-    using induct_step[unfolded hoare_r_def, of st "(p\<^sup>< \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q\<^sup>>)\<^sub>u"]
+    using induct_step[unfolded hoare_r_def, of st "(p\<^sup>< \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q\<^sup>>)\<^sub>e"]
       by (simp add: usubst)
 qed
-    \<Sqinter>
+
 lemma mu_hoare_r':
   assumes WF: "wf R"
   assumes M:"mono F"  
   assumes induct_step:
-    "\<Sqinter> st P. \<^bold>{p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>\<^bold>} P \<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p \<and> e = \<guillemotleft>st\<guillemotright>\<^bold>} F P \<^bold>{q\<^bold>}" 
+    "\<And> st P. \<^bold>{p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>\<^bold>} P \<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p \<and> e = \<guillemotleft>st\<guillemotright>\<^bold>} F P \<^bold>{q\<^bold>}" 
   assumes I0: "`p' \<longrightarrow> p`"  
   shows "\<^bold>{p'\<^bold>} \<mu> F \<^bold>{q\<^bold>}"
   using I0 M WF assms(3) mu_hoare_r pre_str_hoare_r by blast
-*)
+
 subsection \<open> Iteration Rules \<close>
 
-(*
 lemma iter_hoare_r [hoare_safe]: "\<^bold>{P\<^bold>}S\<^bold>{P\<^bold>} \<Longrightarrow> \<^bold>{P\<^bold>}S\<^sup>\<star>\<^bold>{P\<^bold>}"
-   using rtrancl_induct by (pred_auto, fastforce)
-*)
+  by (rel_auto add: Collect_mono_iff, metis rtrancl_induct)
 
 lemma while_hoare_r [hoare_safe]:
   assumes "\<^bold>{p \<and> b\<^bold>}S\<^bold>{p\<^bold>}"
@@ -205,6 +201,23 @@ proof (simp add: while_top_def hoare_r_def assms)
   then show "(p\<^sup>< \<longrightarrow> (\<not> b \<and> p)\<^sup>>)\<^sub>e \<sqsubseteq> (\<nu> X \<bullet> S ;; X \<lhd> b \<rhd> II)"
     by (simp add: pred_ref_iff_le lfp_lowerbound)
 qed
+
+text \<open> While loops with invariant decoration \<close>
+
+definition while_inv :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" where
+"while_inv b p P = while_top b P"
+
+definition while_inv_bot :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" where
+"while_inv_bot b p P = while_bot b P"
+
+syntax
+  "_while_inv_top" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("while\<^sup>\<top> _ invr _ do _ od")
+  "_while_inv_top" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("while _ invr _ do _ od")
+  "_while_inv_bot" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("while\<^sub>\<bottom> _ invr _ do _ od")
+
+translations
+  "_while_inv_top b I P" == "CONST while_inv (b)\<^sub>e (I)\<^sub>e P"
+  "_while_inv_bot b I P" == "CONST while_inv_bot (b)\<^sub>e (I)\<^sub>e P"
 
 lemma while_invr_hoare_r [hoare_safe]:
   assumes "\<^bold>{p \<and> b\<^bold>}S\<^bold>{p\<^bold>}" "`pre' \<longrightarrow> p`" "`(\<not>b \<and> p) \<longrightarrow> post'`"
@@ -217,9 +230,9 @@ lemma while_r_minimal_partial:
   shows "\<^bold>{p\<^bold>}while b do C od\<^bold>{\<not>b \<and> invar\<^bold>}"
   using induct_step pre_str_hoare_r seq_step while_hoare_r by blast
 
-(*lemma approx_chain: 
-  "(\<Sqinter>n::nat. \<lceil>p \<and> v <\<^sub>u \<guillemotleft>n\<guillemotright>\<rceil>\<^sub><) = \<lceil>p\<rceil>\<^sub><"
-  by (pred_auto)*)
+lemma approx_chain: 
+  "(\<Sqinter>n::nat. ((p \<and> v < \<guillemotleft>n\<guillemotright>)\<^sup><)\<^sub>e) = (p\<^sup><)\<^sub>e"
+  by (pred_auto)
 
 text \<open> Total correctness law for Hoare logic, based on constructive chains. This is limited to
   variants that have naturals numbers as their range. \<close>
@@ -231,21 +244,37 @@ proof -
   have "((p\<^sup><)\<^sub>e \<longrightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>e) \<sqsubseteq> (\<mu> X \<bullet> S ;; X \<lhd> b \<rhd> II)"
   proof (rule mu_refine_intro)
     from assms show "((p\<^sup><)\<^sub>e \<longrightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>e) \<sqsubseteq> S ;; ((p\<^sup><)\<^sub>e \<longrightarrow> ((\<not> b \<and> p)\<^sup>>)\<^sub>e) \<lhd> b \<rhd> II"
-      by (pred_auto; smt (z3) hoare_meaning)+
+      by pred_auto
     let ?E = "\<lambda> n. ((p \<and> v < \<guillemotleft>n\<guillemotright>)\<^sup><)\<^sub>e"
     show "((p\<^sup><)\<^sub>e \<and> (\<mu> X \<bullet> S ;; X \<lhd> b \<rhd> II)) = ((p\<^sup><)\<^sub>e \<and> (\<nu> X \<bullet> S ;; X \<lhd> b \<rhd> II))"
     proof (rule constr_fp_uniq[where E="?E"])
       show "mono (\<lambda>X. S ;; X \<lhd> b \<rhd> II)"
         by (rule cond_seqr_mono)
-      show "constr (\<lambda>X. S ;; X \<lhd> b \<rhd> II) ?E"
-        apply (rule constrI, rule chainI)
-          apply (pred_auto, pred_auto, pred_auto)
-        by (smt (verit, del_insts) assms hoare_meaning less_Suc_eq order_less_trans)+
-    qed pred_auto (* Couldn't pattern match last goal *)
+      from assms show "constr (\<lambda>X. S ;; X \<lhd> b \<rhd> II) ?E"
+        apply (auto simp add: hoare_meaning intro!: constrI chainI)
+          apply (pred_auto)
+         apply (pred_auto)
+        apply (pred_simp)
+        apply (metis less_SucE order_less_trans)
+        done
+      show "(\<Sqinter>n::nat. ?E n) = (p\<^sup><)\<^sub>e"
+        by pred_auto
+    qed
   qed
   thus ?thesis
     by (simp add: SEXP_def while_bot_def hoare_r_def impl_pred_def)
 qed
+
+text \<open> While loops with invariant and variant decoration -- total correctness \<close>
+
+definition while_vrt :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> (nat, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel"
+  where "while_vrt b p v P = while_bot b P"
+
+syntax
+  "_while_vrt" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("while _ invr _ vrt _ do _ od")
+
+translations
+  "_while_vrt b I V P" == "CONST while_vrt (b)\<^sub>e (I)\<^sub>e (V)\<^sub>e P"
 
 lemma while_vrt_hoare_r [hoare_safe]:
   assumes "\<And> z::nat. \<^bold>{p \<and> b \<and> v = \<guillemotleft>z\<guillemotright>\<^bold>}S\<^bold>{p \<and> v < \<guillemotleft>z\<guillemotright>\<^bold>}" "`p' \<longrightarrow> p`" "`(\<not>b \<and> p) \<longrightarrow> q'`"
@@ -257,7 +286,6 @@ lemma while_vrt_hoare_r [hoare_safe]:
   
 text \<open> General total correctness law based on well-founded induction \<close>
 
-(*
 lemma while_wf_hoare_r:
   assumes WF: "wf R"
   assumes I0: "`p' \<longrightarrow> p`"
@@ -270,20 +298,19 @@ proof (rule pre_weak_rel[of _ "p\<^sup><" ], goal_cases)
   from I0 show ?case by expr_auto
 next
   case 2
-  have "(p\<^sup>< \<longrightarrow> q'\<^sup>>)\<^sub>u \<sqsubseteq> (\<mu> X \<bullet> Q ;; X \<lhd> b \<rhd> II)"
+  have "(p\<^sup>< \<longrightarrow> q'\<^sup>>)\<^sub>e \<sqsubseteq> (\<mu> X \<bullet> Q ;; X \<lhd> b \<rhd> II)"
   proof (rule mu_rec_total_utp_rule[where e=e, OF WF])
     show "mono (\<lambda>X. Q ;; X \<lhd> b \<rhd> II)"
       by (simp add: cond_seqr_mono)
-    have induct_step': "\<Sqinter> st. ((b \<and> p \<and> e = \<guillemotleft>st\<guillemotright>)\<^sup>< \<longrightarrow> (p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>)\<^sup>>)\<^sub>u \<sqsubseteq> Q"
+    have induct_step': "\<Sqinter> st. ((b \<and> p \<and> e = \<guillemotleft>st\<guillemotright>)\<^sup>< \<longrightarrow> (p \<and> (e,\<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright>)\<^sup>>)\<^sub>e \<sqsubseteq> Q"
       using induct_step by pred_auto  
     with PHI
-    show "\<Sqinter>st. (p\<^sup>< \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q'\<^sup>>)\<^sub>u \<sqsubseteq> Q ;; (p\<^sup>< \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q'\<^sup>>)\<^sub>u \<lhd> b \<rhd> II"
-      apply pred_auto
-      by (smt (z3) hoare_meaning induct_step)+
+    show "\<And> st. (p\<^sup>< \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q'\<^sup>>)\<^sub>e \<sqsubseteq> Q ;; (p\<^sup>< \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q'\<^sup>>)\<^sub>e \<lhd> b \<rhd> II"
+      by (pred_auto, (metis (mono_tags, lifting) assms(3) hoare_meaning)+)
   qed
   then show ?case by simp
 qed
-*)
+
 
 subsection \<open> Frame Rules \<close>
 

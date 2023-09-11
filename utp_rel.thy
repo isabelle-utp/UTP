@@ -153,31 +153,20 @@ definition test :: "('s \<Rightarrow> bool) \<Rightarrow> 's hrel" where
 
 adhoc_overloading utest test
 
-definition while_top :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" ("while\<^sup>\<top> _ do _ od") where 
+definition while_top :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" where 
 "while_top b P = (\<nu> X \<bullet> ((P ;; X) \<lhd> b \<rhd> II))"
 
-notation while_top ("while _ do _ od")
-
-definition while_bot :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" ("while\<^sub>\<bottom> _ do _ od") where 
+definition while_bot :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" where 
 "while_bot b P = (\<mu> X \<bullet> ((P ;; X) \<lhd> b \<rhd> II))"
 
-text \<open> While loops with invariant decoration -- partial correctness\<close>
+syntax 
+  "_while_top" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("while\<^sup>\<top> _ do _ od")
+  "_while_top" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("while _ do _ od")
+  "_while_bot" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("while\<^sub>\<bottom> _ do _ od")
 
-definition while_inv :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" ("while\<^sup>\<top> _ invr _ do _ od") where
-"while_inv b p P = while_top b P"
-
-notation while_inv ("while _ invr _ do _ od")
-
-text \<open> While loops with invariant decoration -- total correctness\<close>
-
-definition while_inv_bot :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" ("while\<^sub>\<bottom> _ invr _ do _ od") where
-"while_inv_bot b p P = while_bot b P"
-
-text \<open> While loops with invariant and variant decoration -- total correctness \<close>
-
-definition while_vrt :: "(bool, 's) expr \<Rightarrow> (bool, 's) expr \<Rightarrow> (nat, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel"
-                        ("while _ invr _ vrt _ do _ od")
-where "while_vrt b p v P = while_bot b P"
+translations
+  "_while_top b P" == "CONST while_top (b)\<^sub>e P"
+  "_while_bot b P" == "CONST while_bot (b)\<^sub>e P"
 
 subsection \<open> Predicate Semantics \<close>
 
@@ -231,10 +220,15 @@ translations "(p)\<^sub>U" == "CONST pred_rel (p)\<^sub>e"
 
 named_theorems rel and rel_transfer
 
-lemma rel_pred_interp [rel]: 
+lemma rel_prop_interp [rel]: 
   "\<lbrakk>true\<rbrakk>\<^sub>U = UNIV" "\<lbrakk>false\<rbrakk>\<^sub>U = {}" 
   "\<lbrakk>P \<and> Q\<rbrakk>\<^sub>U = (\<lbrakk>P\<rbrakk>\<^sub>U \<inter> \<lbrakk>Q\<rbrakk>\<^sub>U)" "\<lbrakk>P \<or> Q\<rbrakk>\<^sub>U = (\<lbrakk>P\<rbrakk>\<^sub>U \<union> \<lbrakk>Q\<rbrakk>\<^sub>U)" "\<lbrakk>\<not> P\<rbrakk>\<^sub>U = - \<lbrakk>P\<rbrakk>\<^sub>U"
   by (auto simp add: pred_rel_def pred)
+
+lemma rel_quant_interp [rel]:
+  "\<lbrakk>\<exists> x \<Zspot> P\<rbrakk>\<^sub>U = {s. \<exists> v. put\<^bsub>x\<^esub> s v \<in> \<lbrakk>P\<rbrakk>\<^sub>U}"
+  "\<lbrakk>\<forall> x \<Zspot> P\<rbrakk>\<^sub>U = {s. \<forall> v. put\<^bsub>x\<^esub> s v \<in> \<lbrakk>P\<rbrakk>\<^sub>U}"
+  by (auto simp add: pred_rel_def expr_defs)
 
 lemma rel_lattice_interp [rel]:
   "\<lbrakk>P \<sqinter> Q\<rbrakk>\<^sub>U = \<lbrakk>P\<rbrakk>\<^sub>U \<union> \<lbrakk>Q\<rbrakk>\<^sub>U" "\<lbrakk>P \<squnion> Q\<rbrakk>\<^sub>U = \<lbrakk>P\<rbrakk>\<^sub>U \<inter> \<lbrakk>Q\<rbrakk>\<^sub>U" "\<lbrakk>\<top>\<rbrakk>\<^sub>U = {}" "\<lbrakk>\<bottom>\<rbrakk>\<^sub>U = UNIV"
@@ -247,6 +241,9 @@ lemma rel_complete_lattice_interp [rel]:
 lemma rel_interp [rel]:
   "\<lbrakk>P ;; Q\<rbrakk>\<^sub>U = \<lbrakk>P\<rbrakk>\<^sub>U \<Zcomp> \<lbrakk>Q\<rbrakk>\<^sub>U" "\<lbrakk>II\<rbrakk>\<^sub>U = Id"
   by (auto simp add: pred_rel_def pred)
+
+lemma test_interp_rel [rel]: "\<lbrakk>test P\<rbrakk>\<^sub>U = {(s, s'). P s \<and> s' = s}"
+  by (simp add: test_def pred_rel_def)
 
 lemma rel_eq_transfer [rel_transfer]: "P = Q \<longleftrightarrow> \<lbrakk>P\<rbrakk>\<^sub>U = \<lbrakk>Q\<rbrakk>\<^sub>U"
   by (auto simp add: pred_rel_def)
@@ -285,9 +282,9 @@ definition pre :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>1 \<Rig
 definition post :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>2 \<Rightarrow> bool)" 
   where [pred]: "post P = (\<lambda> s'. \<exists> s. P (s, s'))"
 
-expr_ctr pre
+expr_constructor pre
 
-expr_ctr post
+expr_constructor post
 
 lemma pred_pre: "pre P = (\<exists> s. P \<lbrakk>\<guillemotleft>s\<guillemotright>/\<^bold>v\<^sup>>\<rbrakk>)\<^sub><"
   by (expr_simp add: pre_def Domain_iff)
@@ -316,8 +313,8 @@ abbreviation upower :: "'\<alpha> hrel \<Rightarrow> nat \<Rightarrow> '\<alpha>
 "upower P n \<equiv> upred_semiring.power P n"
 
 translations
-  "P \<^bold>^ i" <= "CONST power.power II op ;; P i"
-  "P \<^bold>^ i" <= "(CONST power.power II op ;; P) i"
+  "P \<^bold>^ i" <= "CONST power.power II (;;) P i"
+  "P \<^bold>^ i" <= "(CONST power.power II (;;) P) i"
 
 definition ustar :: "'\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("_\<^sup>\<star>" [999] 999) where
 "P\<^sup>\<star> = (\<Sqinter>i. P\<^bold>^i)"

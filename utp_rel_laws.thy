@@ -71,10 +71,10 @@ theorem precond_left_zero:
   shows "(true ;; p) = true"
   by (pred_auto assms: assms)
 
-(*theorem feasibile_iff_true_right_zero:
-  "P ;; true = true \<longleftrightarrow> (\<exists> out\<alpha> \<bullet> P)\<^sub>e"
-  oops*)
-    
+theorem feasible_iff_true_right_zero:
+  "P ;; true = true \<longleftrightarrow> `\<exists> \<^bold>v\<^sup>> \<Zspot> P`"
+  by pred_auto
+   
 subsection \<open> Sequential Composition Laws \<close>
     
 lemma seqr_assoc: "(P ;; Q) ;; R = P ;; (Q ;; R)"
@@ -250,9 +250,9 @@ lemma liberate_seq_unfold:
   apply (pred_auto)
   oops
 
-(* the following laws are like HOL.ex_simps but for lenses *)
+(* The following laws are like HOL.ex_simps but for lenses *)
 
-named_theorems "pred_ex_simps"
+named_theorems pred_ex_simps
 
 lemma ex_lens_split_conj_unrest [pred_ex_simps]:
   assumes "$x \<sharp> Q" "mwb_lens x"
@@ -283,21 +283,6 @@ lemma ex_lens_split_impl_unrest2  [pred_ex_simps]:
   assumes "$x \<sharp> P" "mwb_lens x"
   shows "(\<exists> x \<Zspot> P \<longrightarrow> Q) = (P \<longrightarrow> (\<exists> x \<Zspot> Q))"
   using assms by pred_auto
-
-(*
-lemma shEx_mem_lift_seq_1 [uquant_lift]:
-  assumes "out\<alpha> \<sharp> A"
-  shows "((\<^bold>\<exists> x \<in> A \<bullet> P x) ;; Q) = (\<^bold>\<exists> x \<in> A \<bullet> (P x ;; Q))"
-  using assms by rel_blast
-
-lemma shEx_lift_seq_2 [uquant_lift]:
-  "(P ;; (\<^bold>\<exists> x \<bullet> Q x)) = (\<^bold>\<exists> x \<bullet> (P ;; Q x))"
-  by pred_auto
-
-lemma shEx_mem_lift_seq_2 [uquant_lift]:
-  assumes "in\<alpha> \<sharp> A"
-  shows "(P ;; (\<^bold>\<exists> x \<in> A \<bullet> Q x)) = (\<^bold>\<exists> x \<in> A \<bullet> (P ;; Q x))"
-  using assms by rel_blast*)
 
 subsection \<open> Iterated Sequential Composition Laws \<close>
   
@@ -334,29 +319,16 @@ lemma skip_var:
   shows "(($x\<^sup><)\<^sub>e \<and> II) = (II \<and> ($x\<^sup>>)\<^sub>e)"
   by (pred_auto)
 
-(*
-text \<open>Liberate currently doesn't work on relations - it expects a lens of type 'a instead of 'a \<times> 'a\<close>
+lemma rel_expr_interp [rel]: "\<lbrakk>(p)\<^sub>e\<rbrakk>\<^sub>U = Collect p"
+  by (simp add: pred_rel_def expr_defs)
+
 lemma skip_r_unfold:
-  "vwb_lens x \<Longrightarrow> II = (($x\<^sup>> = $x\<^sup><)\<^sub>e \<and> II \\ $x)"
-  by (rel_simp, metis mwb_lens.put_put vwb_lens_mwb vwb_lens_wb wb_lens.get_put)
-*)
+  "vwb_lens x \<Longrightarrow> II = (($x\<^sup>> = $x\<^sup><)\<^sub>e \<and> (\<exists> x\<^sup>< \<Zspot> \<exists> x\<^sup>> \<Zspot> II))"
+  by (rel_auto, blast, metis vwb_lens.put_eq)  
 
 lemma skip_r_alpha_eq:
   "II = (\<^bold>v\<^sup>< = \<^bold>v\<^sup>>)\<^sub>e"
   by (pred_auto)
-
-(*
-lemma skip_ra_unfold:
-  "II\<^bsub>x;y\<^esub> = ($x\<acute> =\<^sub>u $x \<and> II\<^bsub>y\<^esub>)"
-  by (pred_auto)
-
-lemma skip_res_as_ra:
-  "\<lbrakk> vwb_lens y; x +\<^sub>L y \<approx>\<^sub>L 1\<^sub>L; x \<bowtie> y \<rbrakk> \<Longrightarrow> II\<restriction>\<^sub>\<alpha>x = II\<^bsub>y\<^esub>"
-  apply (pred_auto)
-   apply (metis (no_types, lifting) lens_indep_def)
-  apply (metis vwb_lens.put_eq)
-  done
-*)
 
 subsection \<open> Assignment Laws \<close>
 
@@ -394,11 +366,10 @@ lemma assign_vacuous_skip:
 text \<open> The following law shows the case for the above law when $x$ is only mainly-well behaved. We
   require that the state is one of those in which $x$ is well defined using and assumption. \<close>
 
-(*
 lemma assign_vacuous_assume:
   assumes "mwb_lens x"
-  shows "[&\<^bold>v \<in> \<guillemotleft>\<S>\<^bsub>x\<^esub>\<guillemotright>]\<^sup>\<top> ;; (x := &x) = [&\<^bold>v \<in> \<guillemotleft>\<S>\<^bsub>x\<^esub>\<guillemotright>]\<^sup>\<top>"
-  using assms by pred_auto *)
+  shows "\<questiondown>\<^bold>v \<in> \<guillemotleft>\<S>\<^bsub>x\<^esub>\<guillemotright>? ;; (x := $x) = \<questiondown>\<^bold>v \<in> \<guillemotleft>\<S>\<^bsub>x\<^esub>\<guillemotright>?"
+  using assms by pred_auto
 
 lemma assign_simultaneous:
   assumes "vwb_lens y" "x \<bowtie> y"
@@ -408,13 +379,12 @@ lemma assign_simultaneous:
 lemma assigns_idem: "mwb_lens x \<Longrightarrow> (x,x) := (v,u) = (x := v)"
   by pred_auto
 
-
 lemma assigns_r_conv:
   "bij f \<Longrightarrow> \<langle>f\<rangle>\<^sub>a\<^sup>- = \<langle>inv f\<rangle>\<^sub>a"
   by (pred_auto, simp_all add: bij_is_inj bij_is_surj surj_f_inv_f)
 
 lemma assign_pred_transfer:
-  assumes "$x\<^sup>< \<sharp> b" "out\<alpha> \<sharp> b"
+  assumes "vwb_lens x" "$x\<^sup>< \<sharp> b" "out\<alpha> \<sharp> b"
   shows "(b \<and> x := v) = (x := v \<and> b\<^sup>-)"
   using assms apply pred_auto oops
     
@@ -455,19 +425,13 @@ lemma assigns_r_injective: "inj f \<Longrightarrow> Injective \<langle>f\<rangle
     apply (metis Functional_def assigns_r_func pred_rel_def)
     apply (simp add: assigns_r_def injD)
   done
-(*
-lemma assigns_r_swap_uinj:
-  "\<lbrakk> vwb_lens x; vwb_lens y; x \<bowtie> y \<rbrakk> \<Longrightarrow> (x,y) := (y,x)"
-  by (metis assigns_r_uinj pr_var_def swap_usubst_inj)
 
-lemma assign_unfold:
-  "vwb_lens x \<Longrightarrow> (x := v) = (x\<^sup>> = v\<^sup><)"
-  apply (pred_auto, auto simp add: comp_def)
-  using vwb_lens.put_eq by fastforce*)
+lemma assigns_r_swap_uinj:
+  "\<lbrakk> vwb_lens x; vwb_lens y; x \<bowtie> y \<rbrakk> \<Longrightarrow> Injective ((x,y) := ($y,$x))"
+  using assigns_r_injective swap_subst_inj by blast
 
 subsection \<open> Non-deterministic Assignment Laws \<close>
 
-(*
 lemma ndet_assign_comp:
   "x \<bowtie> y \<Longrightarrow> x := * ;; y := * = (x,y) := *"
   by (pred_auto add: lens_indep.lens_put_comm)
@@ -479,39 +443,14 @@ lemma ndet_assign_assign:
 lemma ndet_assign_refine:
   "x := * \<sqsubseteq> x := e"
   by pred_auto
-*)
 
 subsection \<open> Converse Laws \<close>
 
 lemma convr_invol [simp]: "p\<^sup>-\<^sup>- = p"
   by pred_auto
-(*
-lemma lit_convr [simp]: "(\<guillemotleft>v\<guillemotright>)\<^sup>- = \<guillemotleft>v\<guillemotright>"
-  by pred_auto
-
-lemma uivar_convr [simp]:
-  fixes x :: "('a \<Longrightarrow> '\<alpha>)"
-  shows "($x\<^sup><)\<^sup>- = $x\<^sup>>"
-  by pred_auto
-
-lemma uovar_convr [simp]:
-  fixes x :: "('a \<Longrightarrow> '\<alpha>)"
-  shows "($x\<acute>)\<^sup>- = $x"
-  by pred_auto
-
-lemma uop_convr [simp]: "(uop f u)\<^sup>- = uop f (u\<^sup>-)"
-  by (pred_auto)
-
-lemma bop_convr [simp]: "(bop f u v)\<^sup>- = bop f (u\<^sup>-) (v\<^sup>-)"
-  by (pred_auto)
-
-lemma eq_convr [simp]: "(p = q)\<^sup>- = (p\<^sup>- = q\<^sup>-)"
-  by (pred_auto)
-*)
 
 lemma not_convr [simp]: "(\<not> p)\<^sup>- = (\<not> p\<^sup>-)"
   by (pred_auto)
-
 
 lemma disj_convr [simp]: "(p \<or> q)\<^sup>- = (q\<^sup>- \<or> p\<^sup>-)"
   by (pred_auto)
@@ -522,36 +461,23 @@ lemma conj_convr [simp]: "(p \<and> q)\<^sup>- = (q\<^sup>- \<and> p\<^sup>-)"
 lemma seqr_convr [simp]: "(p ;; q)\<^sup>- = (q\<^sup>- ;; p\<^sup>-)"
   by (pred_auto)
 
-(*
-lemma pre_convr [simp]: "\<lceil>p\<rceil>\<^sub><\<^sup>- = \<lceil>p\<rceil>\<^sub>>"
+
+lemma pre_convr [simp]: "p\<^sup><\<^sup>- = p\<^sup>>"
   by (pred_auto)
 
-lemma post_convr [simp]: "\<lceil>p\<rceil>\<^sub>>\<^sup>- = \<lceil>p\<rceil>\<^sub><"
-  by (pred_auto)*)
+lemma post_convr [simp]: "p\<^sup>>\<^sup>- = p\<^sup><"
+  by (pred_auto)
 
 subsection \<open> Assertion and Assumption Laws \<close>
-
-(*
-declare sublens_def [lens_defs del]
   
-lemma assume_false: "\<questiondown>false? = false"
-  by (pred_auto)
+lemma assume_false: "\<questiondown>False? = false"
+  by pred_auto
   
-lemma assume_true: "\<questiondown>true? = II"
-  by (pred_auto)
+lemma assume_true: "\<questiondown>True? = II"
+  by pred_auto
     
 lemma assume_seq: "\<questiondown>b? ;; \<questiondown>c? = \<questiondown>b \<and> c?"
-  by (pred_auto)
-
-(*
-lemma assert_false: "{false}\<^sub>\<bottom> = true"
-  by (pred_auto)
-
-lemma assert_true: "{true}\<^sub>\<bottom> = II"
-  by (pred_auto)
-    
-lemma assert_seq: "{b}\<^sub>\<bottom> ;; {c}\<^sub>\<bottom> = {(b \<and> c)}\<^sub>\<bottom>"
-  by (pred_auto)*)
+  by pred_auto
 
 subsection \<open> While Loop Laws \<close>
 
@@ -559,7 +485,7 @@ theorem while_unfold:
   "while b do P od = ((P ;; while b do P od) \<lhd> b \<rhd> II)"
 proof -
   have m:"mono (\<lambda>X. (P ;; X) \<lhd> b \<rhd> II)"
-    unfolding mono_def by (meson equalityE rcond_mono ref_by_def relcomp_mono)
+    by (simp add: cond_seqr_mono)
   have "(while b do P od) = (\<nu> X \<bullet> (P ;; X) \<lhd> b \<rhd> II)"
     by (simp add: while_top_def)
   also have "... = ((P ;; (\<nu> X \<bullet> (P ;; X) \<lhd> b \<rhd> II)) \<lhd> b \<rhd> II)"
@@ -569,10 +495,10 @@ proof -
   finally show ?thesis .
 qed
 
-theorem while_false: "while (false)\<^sub>e do P od = II"
+theorem while_false: "while False do P od = II"
   by (subst while_unfold, pred_auto)
 
-theorem while_true: "while (true)\<^sub>e do P od = false"
+theorem while_true: "while True do P od = false"
   apply (simp add: while_top_def alpha)
   apply (rule antisym)
   apply (rule lfp_lowerbound)
@@ -583,7 +509,7 @@ theorem while_bot_unfold:
   "while\<^sub>\<bottom> b do P od = ((P ;; while\<^sub>\<bottom> b do P od) \<lhd> b \<rhd> II)"
 proof -
   have m:"mono (\<lambda>X. (P ;; X) \<lhd> b \<rhd> II)"
-    unfolding mono_def by (meson equalityE rcond_mono ref_by_def relcomp_mono)
+    by (simp add: cond_seqr_mono)
   have "(while\<^sub>\<bottom> b do P od) = (\<mu> X \<bullet> (P ;; X) \<lhd> b \<rhd> II)"
     by (simp add: while_bot_def)
   also have "... = ((P ;; (\<mu> X \<bullet> (P ;; X) \<lhd> b \<rhd> II)) \<lhd> b \<rhd> II)"
@@ -593,60 +519,32 @@ proof -
   finally show ?thesis .
 qed
 
-theorem while_bot_false: "while\<^sub>\<bottom> (false)\<^sub>e do P od = II"
+theorem while_bot_false: "while\<^sub>\<bottom> False do P od = II"
   by (pred_auto add: while_bot_def gfp_const)
 
-theorem while_bot_true: "while\<^sub>\<bottom> (true)\<^sub>e do P od = (\<mu> X \<bullet> P ;; X)"
-  by (pred_auto add: while_bot_def)
+theorem while_bot_true: "while\<^sub>\<bottom> True do P od = (\<mu> X \<bullet> P ;; X)"
+  by (simp add: while_bot_def alpha)
 
 text \<open> An infinite loop with a feasible body corresponds to a program error (non-termination). \<close>
 
-theorem while_infinite: "P ;; true = true \<Longrightarrow> while\<^sub>\<bottom> (true)\<^sub>e do P od = true"
+theorem while_infinite: "P ;; true = true \<Longrightarrow> while\<^sub>\<bottom> True do P od = true"
   apply (rule antisym)
    apply (simp add: true_pred_def)
     apply (pred_auto add: gfp_upperbound while_bot_true)
+  apply (metis feasible_iff_true_right_zero gfp_upperbound order_refl while_bot_true)
   done
 
 subsection \<open> Algebraic Properties \<close>
 
 interpretation upred_semiring: semiring_1 
-  where times = "(;;)" and one = Id and zero = false_pred and plus = "Lattices.sup"
+  where times = "(;;\<^sub>h)" and one = "skip" and zero = "false\<^sub>h" and plus = "Lattices.sup"
   by (unfold_locales; pred_auto+)
 
 declare upred_semiring.power_Suc [simp del]
 
 text \<open> We introduce the power syntax derived from semirings \<close>
 
-text \<open> Set up transfer tactic for powers \<close>
 unbundle utp_lattice_syntax
-
-lemma Sup_power_expand:
-  fixes P :: "nat \<Rightarrow> 'a::complete_lattice"
-  shows "P(0) \<sqinter> (\<Sqinter>i. P(i+1)) = (\<Sqinter>i. P(i))"
-proof -
-  have "UNIV = insert (0::nat) {1..}"
-    by auto
-  moreover have "(\<Sqinter>i. P(i)) = \<Sqinter> (P ` UNIV)"
-    by (blast)
-  moreover have "\<Sqinter> (P ` insert 0 {1..}) = P(0) \<sqinter> \<Sqinter> (P ` {1..})"
-    by (simp)
-  moreover have "\<Sqinter> (P ` {1..}) = (\<Sqinter>i. P(i+1))"
-    sorry
-  ultimately show ?thesis
-    by simp
-qed
-*)
-(*
-lemma Sup_upto_Suc: "(\<Sqinter>i\<in>{0..Suc n}. P \<^bold>^ i) = (\<Sqinter>i\<in>{0..n}. P \<^bold>^ i) \<sqinter> P \<^bold>^ Suc n"
-proof -
-  have "(\<Sqinter>i\<in>{0..Suc n}. P \<^bold>^ i) = (\<Sqinter>i\<in>insert (Suc n) {0..n}. P \<^bold>^ i)"
-    by (simp add: atLeast0_atMost_Suc)
-  also have "... = P \<^bold>^ Suc n \<sqinter> (\<Sqinter>i\<in>{0..n}. P \<^bold>^ i)"
-    by (simp)
-  finally show ?thesis
-    by (simp add: Lattices.sup_commute)
-qed
-*)
 
 subsection \<open> Relational Power \<close>
 
@@ -684,10 +582,6 @@ text \<open> The following two proofs are adapted from the AFP entry
   \href{https://www.isa-afp.org/entries/Kleene_Algebra.shtml}{Kleene Algebra}. 
   See also~\cite{Armstrong2012,Armstrong2015}. \<close>
 
-thm rel_transfer
-
-thm inf_fun_def
-
 lemma upower_inductl: 
   assumes "Q \<sqsubseteq> ((P ;; Q) \<sqinter> R)"
   shows "Q \<sqsubseteq> P \<^bold>^ n ;; R"
@@ -723,17 +617,10 @@ lemma SUP_atLeastAtMost_first:
 lemma upower_seqr_iter: "P \<^bold>^ n = (;; Q : replicate n P \<bullet> Q)"
   by (induct n, simp_all add: power.power.power_Suc)
 
-subsection \<open> Omega \<close>
-
-(*
-definition uomega :: "'\<alpha> rel \<Rightarrow> '\<alpha> rel" ("_\<^sup>\<omega>" [999] 999) where
-"P\<^sup>\<omega> = (\<mu> X \<bullet> P ;; X)"
-
 subsection \<open> Relation Algebra Laws \<close>
 
 theorem seqr_disj_cancel: "((P\<^sup>- ;; (\<not>(P ;; Q))) \<or> (\<not>Q)) = (\<not>Q)"
-  by (pred_auto)
-*)
+  by pred_auto
 
 subsection \<open> Kleene Algebra Laws \<close>
 
@@ -743,13 +630,15 @@ proof
     apply (induct rule: rtrancl.induct)
      apply (simp_all add: pred_rel_def ustar_def)
      apply (metis (full_types) power.power.power_0 prod.simps(2) skip_def)
-    by (metis (mono_tags, lifting) case_prodI upred_semiring.power_Suc2 utp_rel.seq_def)
+    apply (metis (mono_tags, lifting) case_prodI upred_semiring.power_Suc2 utp_rel.seq_def)
+    done
   then show "\<lbrakk>P\<rbrakk>\<^sub>U\<^sup>* \<subseteq> \<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U"
     by auto
 next
   have "((a, b) \<in> \<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U) \<Longrightarrow> (a,b) \<in> \<lbrakk>P\<rbrakk>\<^sub>U\<^sup>*" for a b
     apply (simp add: ustar_def pred_rel_def)
-    by (metis mem_Collect_eq pred_rel_def rtrancl_power upower_interp)
+    apply (metis mem_Collect_eq pred_rel_def rtrancl_power upower_interp)
+    done
   then show "\<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U \<subseteq> \<lbrakk>P\<rbrakk>\<^sub>U\<^sup>*"
     by force
 qed
@@ -806,7 +695,6 @@ lemma ustar_unfoldl: "P\<^sup>\<star> = II \<sqinter> (P ;; P\<^sup>\<star>)"
 
 text \<open> While loop can be expressed using Kleene star \<close>
 
-(*
 lemma while_star_form:
   "while b do P od = (P \<lhd> b \<rhd> II)\<^sup>\<star> ;; \<questiondown>(\<not>b)?"
 proof -
@@ -828,104 +716,92 @@ proof -
     next
       case (Suc i)
       then show ?case
-        apply (simp only: upred_semiring.power_Suc)
+        by (simp add: upred_semiring.power_Suc)
+           (metis (no_types, lifting) SEXP_def rcomp_rcond_left_distr rcond_reach seqr_assoc seqr_left_unit)
     qed
   qed
-  also have "... = (\<Sqinter>i\<in>{0..} \<bullet> (P \<lhd> b \<rhd> II)\<^bold>^i ;; [(\<not>b)]\<^sup>\<top>)"
+  also have "... = (\<Sqinter>i\<in>{0..}. (P \<lhd> b \<rhd> II)\<^bold>^i ;; \<questiondown>\<not>b?)"
     by (pred_auto)
-  also have "... = (P \<lhd> b \<rhd> II)\<^sup>\<star> ;; [(\<not>b)]\<^sup>\<top>"
-    by (metis seq_UINF_distr ustar_def)
+  also have "... = (P \<lhd> b \<rhd> II)\<^sup>\<star> ;; \<questiondown>\<not>b?"
+    by (simp add: seq_SUP_distr ustar_def)
   finally show ?thesis .
 qed
-*)
-  
-subsection \<open> Omega Algebra Laws \<close>
-
-(*
-lemma uomega_induct: "P ;; P\<^sup>\<omega> \<sqsubseteq> P\<^sup>\<omega>"
-  by (metis gfp_unfold monoI ref_by_set_def relcomp_mono subset_refl uomega_def)
 
 subsection \<open> Refinement Laws \<close>
 
-lemma skip_r_refine: "(p \<Rightarrow> p) \<sqsubseteq> II"
+lemma skip_r_refine: "(p \<longrightarrow> p) \<sqsubseteq> II"
   by pred_auto
 
-lemma conj_refine_left: "(Q \<Rightarrow> P) \<sqsubseteq> R \<Longrightarrow> P \<sqsubseteq> (Q \<and> R)"
-  by (pred_auto)
+lemma conj_refine_left: "(Q \<longrightarrow> (P :: 'a pred)) \<sqsubseteq> R \<Longrightarrow> P \<sqsubseteq> (Q \<and> R)"
+  by pred_auto
 
 lemma pre_weak_rel:
   assumes "`p \<longrightarrow> I`"
   and     "(I \<longrightarrow> q)\<^sub>e \<sqsubseteq> P"
   shows "(p \<longrightarrow> q)\<^sub>e \<sqsubseteq> P"
-  using assms by(pred_auto)
-*)
+  using assms by pred_auto
 
-(*
+term ucond
+
+
 lemma cond_refine_rel: 
-  assumes "S \<sqsubseteq> (\<lceil>b\<rceil>\<^sub>< \<and> P)" "S \<sqsubseteq> (\<lceil>\<not>b\<rceil>\<^sub>< \<and> Q)"
+  assumes "S \<sqsubseteq> (b\<^sup>< \<and> P)" "S \<sqsubseteq> ((\<not>b)\<^sup>< \<and> Q)"
   shows "S \<sqsubseteq> P \<lhd> b \<rhd> Q"
-  by (metis aext_not assms(1) assms(2) cond_def lift_rcond_def utp_pred_laws.le_sup_iff)
+  using assms by (pred_auto)
 
 lemma seq_refine_pred:
-  assumes "(\<lceil>b\<rceil>\<^sub>< \<Rightarrow> \<lceil>s\<rceil>\<^sub>>) \<sqsubseteq> P" and "(\<lceil>s\<rceil>\<^sub>< \<Rightarrow> \<lceil>c\<rceil>\<^sub>>) \<sqsubseteq> Q"
-  shows "(\<lceil>b\<rceil>\<^sub>< \<Rightarrow> \<lceil>c\<rceil>\<^sub>>) \<sqsubseteq> (P ;; Q)"
+  assumes "(b\<^sup>< \<longrightarrow> s\<^sup>>) \<sqsubseteq> P" and "(s\<^sup>< \<longrightarrow> c\<^sup>>) \<sqsubseteq> Q"
+  shows "(b\<^sup>< \<longrightarrow> c\<^sup>>) \<sqsubseteq> (P ;; Q)"
   using assms by pred_auto
     
 lemma seq_refine_unrest:
   assumes "out\<alpha> \<sharp> b" "in\<alpha> \<sharp> c"
-  assumes "(b \<Rightarrow> \<lceil>s\<rceil>\<^sub>>) \<sqsubseteq> P" and "(\<lceil>s\<rceil>\<^sub>< \<Rightarrow> c) \<sqsubseteq> Q"
-  shows "(b \<Rightarrow> c) \<sqsubseteq> (P ;; Q)"
-  using assms by rel_blast 
+  assumes "(b \<longrightarrow> s\<^sup>>) \<sqsubseteq> P" and "(s\<^sup>< \<longrightarrow> c) \<sqsubseteq> Q"
+  shows "(b \<longrightarrow> c) \<sqsubseteq> (P ;; Q)"
+  using assms by (pred_simp, blast)
     
-subsection \<open> Preain and Postge Laws \<close>
+subsection \<open> Pre and Post Laws \<close>
 
 named_theorems prepost
 
-lemma Pre_conv_Post [prepost]:
-  "Pre(P\<^sup>-) = Post(P)"
+lemma pre_conv_post [prepost]:
+  "pre(P\<^sup>-) = post(P)"
   by (pred_auto)
 
-lemma Post_conv_Pre [prepost]:
-  "Post(P\<^sup>-) = Pre(P)"
+lemma post_conv_pre [prepost]:
+  "post(P\<^sup>-) = pre(P)"
   by (pred_auto)  
 
-lemma Pre_skip [prepost]:
-  "Pre(II) = true"
+lemma pre_skip [prepost]:
+  "pre(II) = true"
   by (pred_auto)
 
-lemma Pre_assigns [prepost]:
-  "Pre(\<langle>\<sigma>\<rangle>\<^sub>a) = true"
+lemma pre_assigns [prepost]:
+  "pre(\<langle>\<sigma>\<rangle>\<^sub>a) = true"
   by (pred_auto)
    
-lemma Pre_miracle [prepost]:
-  "Pre(false) = false"
+lemma pre_miracle [prepost]:
+  "pre(false) = false"
   by (pred_auto)
 
-lemma Pre_assume [prepost]:
-  "Pre([b]\<^sup>\<top>) = b"
+lemma pre_assume [prepost]:
+  "pre(\<questiondown>b?) = b"
   by (pred_auto)
     
-lemma Pre_)seq:
-  "Pre(P ;; Q) = Pre(P ;; [Pre(Q)]\<^sup>\<top>)"
+lemma pre_seq:
+  "pre(P ;; Q) = pre(P ;; \<questiondown>pre(Q)?)"
   by (pred_auto)
     
-lemma Pre_disj [prepost]:
-  "Pre(P \<or> Q) = (Pre(P) \<or> Pre(Q))"
+lemma pre_disj [prepost]:
+  "pre(P \<or> Q) = (pre(P) \<or> pre(Q))"
+  by pred_auto
+
+lemma pre_inf [prepost]:
+  "pre(P \<sqinter> Q) = (pre(P) \<or> pre(Q))"
   by (pred_auto)
-
-lemma Pre_inf [prepost]:
-  "Pre(P \<sqinter> Q) = (Pre(P) \<or> Pre(Q))"
-  by (pred_auto)
-
-text \<open> If P uses on the variables in @{term a} and @{term Q} does not refer to the variables of
-  @{term "$a\<acute>"} then we can distribute. \<close>
-
-lemma Pre_conj_indep [prepost]: "\<lbrakk> {$a,$a\<acute>} \<natural> P; $a\<acute> \<sharp> Q; vwb_lens a \<rbrakk> \<Longrightarrow> Pre(P \<and> Q) = (Pre(P) \<and> Pre(Q))"
-  by (pred_auto, metis lens_override_def lens_override_idem)
 
 lemma assume_Pre [prepost]:
-  "[Pre(P)]\<^sup>\<top> ;; P = P"
+  "\<questiondown>pre(P)? ;; P = P"
   by (pred_auto)
-*)
 
 end
