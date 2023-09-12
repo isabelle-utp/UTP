@@ -5,7 +5,7 @@ theory utp_pred
     "HOL-Library.Order_Continuity"
     "Z_Toolkit.Z_Toolkit" 
     "Shallow-Expressions.Shallow_Expressions"
-    "HOL-Algebra.Complete_Lattice"
+    "HOL-Algebra.Galois_Connection"
 begin
                     
 unbundle Expression_Syntax Z_Syntax

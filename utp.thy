@@ -5,6 +5,7 @@ theory utp
     utp_hoare
     utp_wlp
     utp_concurrency
+    utp_theory
 begin 
 
 bundle UTP_Syntax

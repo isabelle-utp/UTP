@@ -570,39 +570,44 @@ lemma galois_comp: "(H\<^sub>2 \<Leftarrow>\<langle>\<H>\<^sub>3,\<H>\<^sub>4\<r
 
 text \<open> Example Galois connection / retract: Existential quantification \<close>
 
-lemma Idempotent_ex: "mwb_lens x \<Longrightarrow> Idempotent (ex x)"
-  by (simp add: Idempotent_def exists_twice)
+lemma Idempotent_ex: "mwb_lens x \<Longrightarrow> Idempotent (ex_expr x)"
+  by (simp add: Idempotent_def)
 
-lemma Monotonic_ex: "mwb_lens x \<Longrightarrow> Monotonic (ex x)"
-  by (simp add: mono_def ex_mono)
+lemma Monotonic_ex: "mwb_lens x \<Longrightarrow> Monotonic (ex_expr x)"
+  by (auto simp add: mono_def expr_defs)
 
 lemma ex_closed_unrest:
-  "vwb_lens x \<Longrightarrow> \<lbrakk>ex x\<rbrakk>\<^sub>H = {P. x \<sharp> P}"
-  by (simp add: Healthy_def unrest_as_exists)
+  "vwb_lens x \<Longrightarrow> \<lbrakk>ex_expr x\<rbrakk>\<^sub>H = {P. $x \<sharp> P}"
+  by (simp add: Healthy_def ex_is_liberation unrest_liberate_iff)
 
 text \<open> Any theory can be composed with an existential quantification to produce a Galois connection \<close>
 
 theorem ex_retract:
-  assumes "vwb_lens x" "Idempotent H" "ex x \<circ> H = H \<circ> ex x"
-  shows "retract ((ex x \<circ> H) \<Leftarrow>\<langle>ex x, H\<rangle>\<Rightarrow> H)"
+  assumes "vwb_lens x" "Idempotent H" "ex_expr x \<circ> H = H \<circ> ex_expr x"
+  shows "retract ((ex_expr x \<circ> H) \<Leftarrow>\<langle>ex_expr x, H\<rangle>\<Rightarrow> H)"
 proof (unfold_locales, simp_all)
-  show "H \<in> \<lbrakk>ex x \<circ> H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>H\<rbrakk>\<^sub>H"
+  show "H \<in> \<lbrakk>ex_expr x \<circ> H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>H\<rbrakk>\<^sub>H"
     using Healthy_Idempotent assms by blast
-  from assms(1) assms(3)[THEN sym] show "ex x \<in> \<lbrakk>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>ex x \<circ> H\<rbrakk>\<^sub>H"
-    by (simp add: Pi_iff Healthy_def fun_eq_iff exists_twice)
+  from assms(1) assms(3)[THEN sym] show "ex_expr x \<in> \<lbrakk>H\<rbrakk>\<^sub>H \<rightarrow> \<lbrakk>ex_expr x \<circ> H\<rbrakk>\<^sub>H"
+    by (simp add: Pi_iff Healthy_def)
+       (metis comp_eq_dest ex_twice vwb_lens_mwb)
   fix P Q
-  assume "P is (ex x \<circ> H)" "Q is H"
-  thus "(H P \<sqsubseteq> Q) = (P \<sqsubseteq> (\<exists> x \<bullet> Q))"
-    by (metis (no_types, lifting) Healthy_Idempotent Healthy_if assms comp_apply dual_order.trans ex_weakens utp_pred_laws.ex_mono vwb_lens_wb)
+  assume "P is (ex_expr x \<circ> H)" "Q is H"
+  thus "(H P \<sqsubseteq> Q) = (P \<sqsubseteq> (\<exists> x \<Zspot> Q))"
+    apply (pred_auto; expr_simp add: comp_def)
+     apply (metis surj_pair)
+    apply (metis (no_types, opaque_lifting) Healthy_Idempotent Healthy_def Idempotent_ex \<open>P is ex_expr x \<circ> H\<close> assms(1) assms(3) comp_apply vwb_lens.axioms(1) vwb_lens_mwb wb_lens.get_put)
+    done
 next
   fix P
-  assume "P is (ex x \<circ> H)"
-  thus "(\<exists> x \<bullet> H P) \<sqsubseteq> P"
+  assume "P is (ex_expr x \<circ> H)"
+  thus "(\<exists> x \<Zspot> H P) \<sqsubseteq> P"
     by (simp add: Healthy_def)
 qed
 
 corollary ex_retract_id:
   assumes "vwb_lens x"
-  shows "retract (ex x \<Leftarrow>\<langle>ex x, id\<rangle>\<Rightarrow> id)"
+  shows "retract (ex_expr x \<Leftarrow>\<langle>ex_expr x, id\<rangle>\<Rightarrow> id)"
   using assms ex_retract[where H="id"] by (auto)
+
 end
