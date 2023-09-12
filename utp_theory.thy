@@ -110,14 +110,14 @@ text \<open> We next define a hierarchy of locales that characterise different c
 
 locale utp_theory =
   fixes hcond :: "'\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("\<H>")
-  assumes HCond_Idem: "\<H>(\<H>(P)) = \<H>(P)"
+  assumes HCond_Idempotent [closure,intro]: "Idempotent \<H>"
 begin
 
   abbreviation thy_order :: "'\<alpha> hrel gorder" where
   "thy_order \<equiv> utp_order \<H>"
 
-  lemma HCond_Idempotent [closure,intro]: "Idempotent \<H>"
-    by (simp add: Idempotent_def HCond_Idem)
+  lemma HCond_Idem: "\<H>(\<H>(P)) = \<H>(P)"
+    using HCond_Idempotent Idempotent_def by blast
 
   sublocale utp_po: partial_order "utp_order \<H>"
     by (unfold_locales, simp_all add: utp_order_def)
