@@ -84,13 +84,13 @@ lemma is_Healthy_subset_member: "\<lbrakk> A \<subseteq> \<lbrakk>H\<rbrakk>\<^s
 subsection \<open> Properties of Healthiness Conditions \<close>
 
 definition Idempotent :: "'\<alpha> health \<Rightarrow> bool" where
-  "Idempotent(H) \<longleftrightarrow> (\<forall> P. H(H(P)) = H(P))"
+  [pred]: "Idempotent(H) \<longleftrightarrow> (\<forall> P. H(H(P)) = H(P))"
 
 abbreviation Monotonic :: "'\<alpha> health \<Rightarrow> bool" where
   "Monotonic(H) \<equiv> mono H"
 
 definition IMH :: "'\<alpha> health \<Rightarrow> bool" where
-  "IMH(H) \<longleftrightarrow> Idempotent(H) \<and> Monotonic(H)"
+  [pred]: "IMH(H) \<longleftrightarrow> Idempotent(H) \<and> Monotonic(H)"
 
 definition Antitone :: "'\<alpha> health \<Rightarrow> bool" where
   "Antitone(H) \<longleftrightarrow> (\<forall> P Q. Q \<sqsubseteq> P \<longrightarrow> (H(P) \<sqsubseteq> H(Q)))"
