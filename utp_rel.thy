@@ -1,7 +1,7 @@
 subsection \<open> Alphabetised Relations \<close>
 
 theory utp_rel
-  imports utp_pred utp_pred_laws utp_rel_syntax utp_recursion
+  imports utp_pred utp_pred_laws utp_recursion
 begin
 
 subsection \<open> Relational Types \<close>

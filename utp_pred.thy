@@ -6,6 +6,7 @@ theory utp_pred
     "Z_Toolkit.Z_Toolkit" 
     "Shallow-Expressions.Shallow_Expressions"
     "HOL-Algebra.Galois_Connection"
+    "Abstract_Prog_Syntax.Abstract_Prog_Syntax"
 begin
                     
 unbundle Expression_Syntax Z_Syntax
@@ -93,6 +94,9 @@ lemma pred_refine_iff: "P \<sqsubseteq> Q \<longleftrightarrow> (\<forall> s. Q 
 
 lemma pred_ref_iff_le: "(f :: 's pred) \<sqsubseteq> g \<longleftrightarrow> g \<le> f"
   by (simp add: le_fun_def pred_refine_iff)
+
+lemma pred_refine_as_impl: "(P \<sqsubseteq> Q) \<longleftrightarrow> `Q \<longrightarrow> P`"
+  by (simp add: pred_refine_iff taut_def)
 
 method pred_simp uses assms add = (insert assms, (simp add: pred expr_simps add)?; expr_simp add: pred_refine_iff add)
 method pred_auto uses assms add = (insert assms, (simp add: pred expr_simps add)?; expr_auto add: pred_refine_iff add)

@@ -111,7 +111,7 @@ lemma assigns_init_hoare [hoare_safe]:
   "\<lbrakk> vwb_lens x; $x \<sharp> p; $x \<sharp> v; \<^bold>{$x = v \<and> p\<^bold>}S\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}(x := v) ;; S\<^bold>{q\<^bold>}"
   by pred_auto
 
-lemma assigns_init_hoare_general:
+lemma assigns_init_hoare_general [hoare_safe]:
   "\<lbrakk> vwb_lens x; \<And> x\<^sub>0. \<^bold>{$x = v\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk> \<and> p\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk>\<^bold>}S\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}x := v ;; S\<^bold>{q\<^bold>}"
   by (rule seq_hoare_r, rule assign_floyd_hoare_r, simp, pred_auto)
 
@@ -377,5 +377,9 @@ proof -
   thus ?thesis
     by (simp add: Healthy_if assms(4))
 qed *)
+
+subsection \<open> Verification Condition Generation \<close>
+
+method vcg =  (auto intro!: hoare_safe; expr_taut; auto)
 
 end
