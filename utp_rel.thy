@@ -159,9 +159,10 @@ definition while_top :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's 
 definition while_bot :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" where 
 "while_bot b P = (\<mu> X \<bullet> ((P ;; X) \<lhd> b \<rhd> II))"
 
+adhoc_overloading uwhile while_top
+
 syntax 
   "_while_top" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("while\<^sup>\<top> _ do _ od")
-  "_while_top" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("while _ do _ od")
   "_while_bot" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("while\<^sub>\<bottom> _ do _ od")
 
 translations
