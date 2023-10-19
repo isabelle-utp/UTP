@@ -692,6 +692,30 @@ qed
 lemma ustar_unfoldl: "P\<^sup>\<star> = II \<sqinter> (P ;; P\<^sup>\<star>)"
   by (rel_auto, meson converse_rtranclE)
 
+lemma nth_rtrancl_path:
+"\<lbrakk> \<forall> i < length xs. R ((x # xs) ! i) (xs ! i); y = List.last (x # xs) \<rbrakk> \<Longrightarrow> rtrancl_path R x xs y"
+  by (induct xs arbitrary: x y, auto simp add: rtrancl_path.base rtrancl_path.step)
+     (metis Suc_less_eq nth_Cons_0 nth_Cons_Suc rtrancl_path.step zero_less_Suc)
+
+lemma rtrancl_path_nth_iff: 
+  "rtrancl_path R x xs y \<longleftrightarrow> ((\<forall> i < length xs. R ((x # xs) ! i) (xs ! i)) \<and> y = List.last (x # xs))"
+  by (metis neq_Nil_conv nth_rtrancl_path rtrancl_path.cases rtrancl_path_last rtrancl_path_nth)
+
+lemma ustar_pred [pred]: 
+  "(P\<^sup>\<star>) (x, y) = (\<lambda> x y. P (x, y))\<^sup>*\<^sup>* x y"
+proof -
+  have "(P\<^sup>\<star>) (x, y) \<longleftrightarrow> (x, y) \<in> \<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U"
+    by (simp add: pred_rel_def)
+  also have "... = ((x, y) \<in> \<lbrakk>P\<rbrakk>\<^sub>U\<^sup>*)"
+    by (simp add: ustar_rep_eq)
+  also have "... = (\<lambda> x y. P (x, y))\<^sup>*\<^sup>* x y"
+    by (simp add: Enum.rtranclp_rtrancl_eq pred_rel_def)
+  finally show ?thesis .
+qed
+
+lemma ustar_chain_pred: 
+  "P\<^sup>\<star> = (\<lambda> (a, b). a = b \<or> (\<exists> xs. xs \<noteq> [] \<and> (\<forall>i. i < length xs \<longrightarrow> P ((a # xs) ! i, xs ! i)) \<and> b = List.last xs))" 
+  by (pred_simp, auto simp add: pred rtranclp_eq_rtrancl_path rtrancl_path_nth_iff)
 
 text \<open> While loop can be expressed using Kleene star \<close>
 

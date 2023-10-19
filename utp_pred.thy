@@ -3,6 +3,7 @@ section \<open> UTP Predicates \<close>
 theory utp_pred
   imports 
     "HOL-Library.Order_Continuity"
+    "HOL-Library.Transitive_Closure_Table"
     "Z_Toolkit.Z_Toolkit" 
     "Shallow-Expressions.Shallow_Expressions"
     "HOL-Algebra.Galois_Connection"
