@@ -246,6 +246,9 @@ lemma rel_interp [rel]:
 lemma test_interp_rel [rel]: "\<lbrakk>test P\<rbrakk>\<^sub>U = {(s, s'). P s \<and> s' = s}"
   by (simp add: test_def pred_rel_def)
 
+lemma rcond_interp_rel [rel]: "\<lbrakk>rcond P b Q\<rbrakk>\<^sub>U = Collect b \<Zdres> \<lbrakk>P\<rbrakk>\<^sub>U \<union> Collect b \<Zndres> \<lbrakk>Q\<rbrakk>\<^sub>U"
+  by (pred_auto add: pred_rel_def rel_domres_def)
+
 lemma rel_eq_transfer [rel_transfer]: "P = Q \<longleftrightarrow> \<lbrakk>P\<rbrakk>\<^sub>U = \<lbrakk>Q\<rbrakk>\<^sub>U"
   by (auto simp add: pred_rel_def)
 

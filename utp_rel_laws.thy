@@ -701,7 +701,7 @@ lemma rtrancl_path_nth_iff:
   "rtrancl_path R x xs y \<longleftrightarrow> ((\<forall> i < length xs. R ((x # xs) ! i) (xs ! i)) \<and> y = List.last (x # xs))"
   by (metis neq_Nil_conv nth_rtrancl_path rtrancl_path.cases rtrancl_path_last rtrancl_path_nth)
 
-lemma ustar_pred [pred]: 
+lemma ustar_pred: 
   "(P\<^sup>\<star>) (x, y) = (\<lambda> x y. P (x, y))\<^sup>*\<^sup>* x y"
 proof -
   have "(P\<^sup>\<star>) (x, y) \<longleftrightarrow> (x, y) \<in> \<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U"
@@ -715,7 +715,11 @@ qed
 
 lemma ustar_chain_pred: 
   "P\<^sup>\<star> = (\<lambda> (a, b). a = b \<or> (\<exists> xs. xs \<noteq> [] \<and> (\<forall>i. i < length xs \<longrightarrow> P ((a # xs) ! i, xs ! i)) \<and> b = List.last xs))" 
-  by (pred_simp, auto simp add: pred rtranclp_eq_rtrancl_path rtrancl_path_nth_iff)
+  by (pred_simp add: ustar_pred, auto simp add: pred rtranclp_eq_rtrancl_path rtrancl_path_nth_iff)
+
+lemma ustar_chain_pred': 
+  "(P\<^sup>\<star>) (a, b) = (a = b \<or> (\<exists> xs. xs \<noteq> [] \<and> (\<forall>i. i < length xs \<longrightarrow> P ((a # xs) ! i, xs ! i)) \<and> b = List.last xs))"
+  by (simp add: ustar_chain_pred)
 
 text \<open> While loop can be expressed using Kleene star \<close>
 
@@ -751,6 +755,20 @@ proof -
   finally show ?thesis .
 qed
 
+lemma while_star_test_form:
+  "while b do P od = (\<questiondown>b? ;; P)\<^sup>\<star> ;; \<questiondown>\<not>b?"
+  apply (pred_auto add: while_star_form ustar_pred)
+  apply (force elim:rtranclp_induct simp add: rtranclp.rtrancl_into_rtrancl)+
+  done
+
+lemma while_chain_form:
+ "while b do P od = 
+    (\<lambda> (s, s'). ((s = s' \<or> 
+                  (\<exists>xs. xs \<noteq> [] \<and> (\<forall>i. i < length xs \<longrightarrow> b ((s # xs) ! i) \<and> P ((s # xs) ! i, xs ! i)) \<and> s' = List.last xs)) \<and>
+                 \<not> b s'))"
+  by (simp add: while_star_test_form, pred_simp add: ustar_chain_pred')
+
+
 subsection \<open> Refinement Laws \<close>
 
 lemma skip_r_refine: "(p \<longrightarrow> p) \<sqsubseteq> II"
@@ -765,7 +783,6 @@ lemma pre_weak_rel:
   shows "(p \<longrightarrow> q)\<^sub>e \<sqsubseteq> P"
   using assms by pred_auto
 
-term ucond
 
 
 lemma cond_refine_rel: 
