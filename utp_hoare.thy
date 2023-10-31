@@ -192,6 +192,9 @@ subsection \<open> Iteration Rules \<close>
 lemma iter_hoare_r [hoare_safe]: "\<^bold>{P\<^bold>}S\<^bold>{P\<^bold>} \<Longrightarrow> \<^bold>{P\<^bold>}S\<^sup>\<star>\<^bold>{P\<^bold>}"
   by (rel_auto add: Collect_mono_iff, metis rtrancl_induct)
 
+lemma iter_hoare_r_iff: "\<^bold>{P\<^bold>}S\<^sup>\<star>\<^bold>{P\<^bold>} \<longleftrightarrow> \<^bold>{P\<^bold>}S\<^bold>{P\<^bold>}"
+  by (rel_auto add: Collect_mono_iff, metis rtrancl_induct) 
+
 lemma star_hoare_r [hoare_safe]: 
   "\<lbrakk> \<^bold>{I\<^bold>}S\<^bold>{I\<^bold>}; `P \<longrightarrow> I`; `I \<longrightarrow> Q` \<rbrakk> \<Longrightarrow> \<^bold>{P\<^bold>}S\<^sup>\<star>\<^bold>{Q\<^bold>}"
   by (rel_auto add: Collect_mono_iff, metis rtrancl_induct)
