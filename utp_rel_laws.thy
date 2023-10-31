@@ -718,8 +718,30 @@ lemma ustar_chain_pred:
   by (pred_simp add: ustar_pred, auto simp add: pred rtranclp_eq_rtrancl_path rtrancl_path_nth_iff)
 
 lemma ustar_chain_pred': 
-  "(P\<^sup>\<star>) (a, b) = (a = b \<or> (\<exists> xs. xs \<noteq> [] \<and> (\<forall>i. i < length xs \<longrightarrow> P ((a # xs) ! i, xs ! i)) \<and> b = List.last xs))"
+  "(P\<^sup>\<star>) (a, b) = (a = b \<or> (\<exists> xs. xs \<noteq> [] \<and> (\<forall>i<length xs. P ((a # xs) ! i, xs ! i)) \<and> b = List.last xs))"
   by (simp add: ustar_chain_pred)
+
+lemma uplus_power_def: "P\<^bold>+ = (\<Sqinter> i. P \<^bold>^ (Suc i))"
+  by (metis (no_types, lifting) SUP_cong power.power.power_Suc seq_SUP_distl uplus_def ustar_def)
+
+lemma uplus_alt_def: "P\<^bold>+ = P\<^sup>\<star> ;; P"
+  by (auto simp add: uplus_power_def ustar_def seq_Sup_distr upred_semiring.power_Suc2)
+
+lemma ustar_sim:
+  assumes "z ;; x = y ;; z"
+  shows "z ;; x\<^sup>\<star> = y\<^sup>\<star> ;; z"
+proof -
+  have 1: "z ;; x\<^sup>\<star> \<sqsubseteq> z"
+    using seqr_mono ustar_sub_unfoldl by fastforce
+  have 2: " z ;; x\<^sup>\<star> \<sqsubseteq> y ;; z ;; x\<^sup>\<star>"
+    by (metis (no_types, lifting) assms pred_ba.order_refl ref_lattice.le_inf_iff seqr_assoc seqr_mono ustar_sub_unfoldl)
+  have 3: "y\<^sup>\<star> ;; z \<sqsubseteq> z"
+    using seqr_mono ustar_sub_unfoldl by fastforce
+  have 4: "y\<^sup>\<star> ;; z \<sqsubseteq> (y\<^sup>\<star> ;; z) ;; x"
+    by (metis assms pred_ba.order_refl ref_lattice.le_inf_iff seqr_assoc seqr_mono uplus_alt_def uplus_def ustar_unfoldl)  
+  show ?thesis
+    by (simp add: "1" "2" "3" "4" pred_ba.order.eq_iff ustar_inductl ustar_inductr)
+qed
 
 text \<open> While loop can be expressed using Kleene star \<close>
 
@@ -764,7 +786,7 @@ lemma while_star_test_form:
 lemma while_chain_form:
  "while b do P od = 
     (\<lambda> (s, s'). ((s = s' \<or> 
-                  (\<exists>xs. xs \<noteq> [] \<and> (\<forall>i. i < length xs \<longrightarrow> b ((s # xs) ! i) \<and> P ((s # xs) ! i, xs ! i)) \<and> s' = List.last xs)) \<and>
+                  (\<exists>xs. xs \<noteq> [] \<and> (\<forall> i<length xs. b ((s # xs) ! i) \<and> P ((s # xs) ! i, xs ! i)) \<and> s' = List.last xs)) \<and>
                  \<not> b s'))"
   by (simp add: while_star_test_form, pred_simp add: ustar_chain_pred')
 
@@ -782,8 +804,6 @@ lemma pre_weak_rel:
   and     "(I \<longrightarrow> q)\<^sub>e \<sqsubseteq> P"
   shows "(p \<longrightarrow> q)\<^sub>e \<sqsubseteq> P"
   using assms by pred_auto
-
-
 
 lemma cond_refine_rel: 
   assumes "S \<sqsubseteq> (b\<^sup>< \<and> P)" "S \<sqsubseteq> ((\<not>b)\<^sup>< \<and> Q)"

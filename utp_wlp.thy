@@ -60,6 +60,9 @@ lemma wlp_USUP_pre [wp]:
 lemma wlp_test [wp]: "(\<questiondown>b? wlp c)\<^sub>e = (b \<longrightarrow> c)\<^sub>e"
   by (pred_auto)
 
+lemma wlp_star [wp]: "P\<^sup>\<star> wlp b = (\<forall>i. P \<^bold>^ i wlp b)\<^sub>e"
+  by (simp add: ustar_def wp)
+
 (*
 lemma wlp_rel_aext_unrest [wp]: "(\<lbrakk> vwb_lens a; a \<sharp> b \<rbrakk> \<longrightarrow> a:[P]\<^sup>+ wlp b)\<^sub>e = ((P wlp false) \<up>\<^sub>p a \<or> b)\<^sub>e"
   by (rel_simp, metis mwb_lens_def vwb_lens_def weak_lens.put_get)

@@ -323,6 +323,9 @@ translations
 definition ustar :: "'\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("_\<^sup>\<star>" [999] 999) where
 "P\<^sup>\<star> = (\<Sqinter>i. P\<^bold>^i)"
 
+definition uplus :: "'\<alpha> hrel \<Rightarrow> '\<alpha> hrel" ("_\<^bold>+" [999] 999) where
+"P\<^bold>+ = P ;; P\<^sup>\<star>"
+
 lemma precond_equiv: "true ;; P = P \<longleftrightarrow> (in\<alpha> \<sharp> P)"
   by pred_auto
 
