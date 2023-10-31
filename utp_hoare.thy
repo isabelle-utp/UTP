@@ -192,6 +192,10 @@ subsection \<open> Iteration Rules \<close>
 lemma iter_hoare_r [hoare_safe]: "\<^bold>{P\<^bold>}S\<^bold>{P\<^bold>} \<Longrightarrow> \<^bold>{P\<^bold>}S\<^sup>\<star>\<^bold>{P\<^bold>}"
   by (rel_auto add: Collect_mono_iff, metis rtrancl_induct)
 
+lemma star_hoare_r [hoare_safe]: 
+  "\<lbrakk> \<^bold>{I\<^bold>}S\<^bold>{I\<^bold>}; `P \<longrightarrow> I`; `I \<longrightarrow> Q` \<rbrakk> \<Longrightarrow> \<^bold>{P\<^bold>}S\<^sup>\<star>\<^bold>{Q\<^bold>}"
+  by (rel_auto add: Collect_mono_iff, metis rtrancl_induct)
+
 lemma while_hoare_r [hoare_safe]:
   assumes "\<^bold>{p \<and> b\<^bold>}S\<^bold>{p\<^bold>}"
   shows "\<^bold>{p\<^bold>}while b do S od\<^bold>{\<not>b \<and> p\<^bold>}"

@@ -435,13 +435,11 @@ begin
       by (simp add: healthy_inf_cont seq_Sup_distr setcompr_eq_image assms)
   qed
 
-  (*
   lemma uplus_healthy [closure]:
     assumes "P is \<H>"  
-    shows "P\<^sup>+ is \<H>"
+    shows "P\<^bold>+ is \<H>"
     by (simp add: uplus_power_def closure assms)
-  *)
-
+  
 end
 
 text \<open> There also exist UTP theories with units. Not all theories have both a left and a right unit 
@@ -522,6 +520,128 @@ proof -
   then show ?thesis
     by (metis (no_types) Top_Left_Zero Unit_Left assms(1) meet_top top_healthy upred_semiring.distrib_right)
 qed
+
+end
+
+subsection \<open> Kleene UTP theories \<close>
+
+locale utp_theory_kleene = utp_theory_cont_unital_zerol
+begin                                             
+
+lemma Star_def: "P\<^bold>\<star> = P\<^sup>\<star> ;; \<I>\<I>"
+  by (simp add: utp_star_def)
+  
+lemma Star_alt_def:
+  assumes "P is \<H>"
+  shows "P\<^bold>\<star> = \<I>\<I> \<sqinter> P\<^bold>+"
+proof -
+  from assms have "P\<^bold>+ = P\<^sup>\<star> ;; P ;; \<I>\<I>"
+    by (simp add: Unit_Right uplus_alt_def)
+  then show ?thesis
+    by (metis seqr_assoc uplus_alt_def uplus_def upred_semiring.distrib_right upred_semiring.mult.left_neutral ustar_unfoldl utp_star_def)
+qed
+
+lemma Star_Healthy [closure]:
+  assumes "P is \<H>"
+  shows "P\<^bold>\<star> is \<H>"
+  by (simp add: assms closure Star_alt_def)
+
+lemma Star_unfoldl:
+  "P\<^bold>\<star> \<sqsubseteq> \<I>\<I> \<sqinter> (P ;; P\<^bold>\<star>)"
+  by (metis (no_types, lifting) ref_lattice.inf.absorb_iff2 seqr_assoc sup.idem upred_semiring.distrib_right upred_semiring.mult.left_neutral ustar_unfoldl utp_star_def)
+
+lemma Star_inductl:
+  assumes "R is \<H>" "Q \<sqsubseteq> (P ;; Q) \<sqinter> R"
+  shows "Q \<sqsubseteq> P\<^bold>\<star>;;R"
+proof -
+  from assms(2) have "Q \<sqsubseteq> R" "Q \<sqsubseteq> P ;; Q"
+    by auto
+  thus ?thesis
+    by (simp add: Unit_Left assms(1) seqr_assoc ustar_inductl utp_star_def)
+qed
+
+lemma Star_invol:
+  assumes "P is \<H>"
+  shows "P\<^bold>\<star>\<^bold>\<star> = P\<^bold>\<star>"
+proof -
+  have "P\<^bold>\<star>\<^bold>\<star> \<sqsubseteq> P\<^bold>\<star>"
+    by (metis Star_Healthy Star_alt_def Star_unfoldl Unit_Right assms ref_lattice.le_infE upred_semiring.distrib_left)
+  moreover have "P\<^bold>\<star> \<sqsubseteq> P\<^bold>\<star>\<^bold>\<star>"
+    by (metis Star_Healthy Star_inductl Star_unfoldl assms ref_lattice.inf.absorb_iff2 ref_lattice.le_infE ustar_inductl utp_star_def)
+  ultimately show ?thesis
+    using pred_ba.dual_order.eq_iff by blast
+qed
+
+lemma Star_test: 
+  assumes "P is \<H>" "utp_test P"
+  shows "P\<^bold>\<star> = \<I>\<I>"
+  by (metis Star_alt_def assms ref_lattice.inf.absorb1 uplus_alt_def ustar_inductl utp_test_def utp_theory_right_unital.Unit_Right utp_theory_right_unital_axioms)
+
+lemma Star_lemma_1:
+  "P is \<H> \<Longrightarrow> \<I>\<I> ;; P\<^sup>\<star> ;; \<I>\<I> = P\<^sup>\<star> ;; \<I>\<I>"
+  by (metis utp_star_def Star_Healthy Unit_Left)
+
+
+lemma Star_lemma_2:
+  assumes "P is \<H>" "Q is \<H>"
+  shows "(P\<^sup>\<star> ;; Q\<^sup>\<star> ;; \<I>\<I>)\<^sup>\<star> ;; \<I>\<I> = (P\<^sup>\<star> ;; Q\<^sup>\<star>)\<^sup>\<star> ;; \<I>\<I>"
+  by (metis (no_types, lifting) Star_lemma_1 Unit_self assms seqr_assoc ustar_sim)
+
+lemma Star_denest:
+  assumes "P is \<H>" "Q is \<H>"
+  shows "(P \<sqinter> Q)\<^bold>\<star> = (P\<^bold>\<star> ;; Q\<^bold>\<star>)\<^bold>\<star>"
+  by (metis (no_types, lifting) seqr_assoc utp_star_def Star_lemma_1 Star_lemma_2 assms ustar_denest)  
+
+lemma Star_denest_disj: 
+  assumes "P is \<H>" "Q is \<H>"
+  shows "(P \<or> Q)\<^bold>\<star> = (P\<^bold>\<star> ;; Q\<^bold>\<star>)\<^bold>\<star>"
+  by (simp add: Star_denest assms disj_pred_def)
+
+
+lemma Star_unfoldl_eq: 
+  assumes "P is \<H>"
+  shows "\<I>\<I> \<sqinter> (P ;; P\<^bold>\<star>) = P\<^bold>\<star>"
+  by (metis (no_types, lifting) seqr_assoc upred_semiring.distrib_right upred_semiring.mult.left_neutral ustar_unfoldl utp_star_def)
+
+
+lemma uplus_Star_def:
+  assumes "P is \<H>"
+  shows "P\<^bold>+ = (P ;; P\<^bold>\<star>)"
+  by (metis Star_alt_def Unit_Right assms seqr_right_unit uplus_def upred_semiring.distrib_left ustar_unfoldl)
+
+lemma Star_trade_skip:
+  "P is \<H> \<Longrightarrow> \<I>\<I> ;; P\<^sup>\<star> = P\<^sup>\<star> ;; \<I>\<I>"
+  by (simp add: Unit_Left Unit_Right ustar_sim)
+
+lemma Star_slide:
+  assumes "P is \<H>"
+  shows "(P ;; P\<^bold>\<star>) = (P\<^bold>\<star> ;; P)" (is "?lhs = ?rhs")
+proof -
+  have "?lhs = P ;; P\<^sup>\<star> ;; \<I>\<I>"
+    by (simp add: utp_star_def)
+  also have "... = P ;; \<I>\<I> ;; P\<^sup>\<star>"
+    by (simp add: Star_trade_skip assms)
+  also have "... = P ;; P\<^sup>\<star>"
+    by (metis Unit_Right assms seqr_assoc)
+  also have "... = P\<^sup>\<star> ;; P"
+    by (simp add: ustar_sim)
+  also have "... = ?rhs"
+    by (simp add: Unit_Left assms seqr_assoc utp_star_def)
+  finally show ?thesis .
+qed
+
+lemma Star_unfoldr_eq:
+  assumes "P is \<H>"
+  shows "\<I>\<I> \<sqinter> (P\<^bold>\<star> ;; P) = P\<^bold>\<star>"
+  using Star_slide Star_unfoldl_eq assms by auto
+
+lemma Star_inductr:
+  assumes "P is \<H>" "R is \<H>" "Q \<sqsubseteq> P \<sqinter> (Q ;; R)"
+  shows "Q \<sqsubseteq> P;;R\<^bold>\<star>"
+  by (metis Star_trade_skip Unit_Right assms ref_lattice.le_inf_iff seqr_assoc ustar_inductr utp_star_def)
+
+lemma Star_Top: "\<^bold>\<top>\<^bold>\<star> = \<I>\<I>"
+  by (simp add: Star_test top_healthy utest_Top)
 
 end
 

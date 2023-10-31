@@ -743,6 +743,16 @@ proof -
     by (simp add: "1" "2" "3" "4" pred_ba.order.eq_iff ustar_inductl ustar_inductr)
 qed
 
+lemma ustar_denest: "(x \<sqinter> y)\<^sup>\<star> = (x\<^sup>\<star> ;; y\<^sup>\<star>)\<^sup>\<star>"
+proof -
+  have 1:"(x \<sqinter> y)\<^sup>\<star> \<sqsubseteq> (x\<^sup>\<star> ;; y\<^sup>\<star>)\<^sup>\<star>"
+    by (metis ref_lattice.le_inf_iff seqr_left_unit seqr_right_unit upred_semiring.distrib_right ustar_inductl ustar_inductr ustar_sub_unfoldl)
+  have 2:"(x\<^sup>\<star> ;; y\<^sup>\<star>)\<^sup>\<star> \<sqsubseteq> x \<sqinter> y ;; (x\<^sup>\<star> ;; y\<^sup>\<star>)\<^sup>\<star>"
+    by (metis ref_lattice.inf.absorb2  ref_lattice.le_infE ref_lattice.le_infI upred_semiring.distrib_left upred_semiring.distrib_right upred_semiring.mult.left_neutral upred_semiring.mult.right_neutral ustar_inductr ustar_sim ustar_sub_unfoldl)
+  show ?thesis
+    by (metis "1" "2" pred_ba.antisym_conv ref_lattice.inf.boundedE upred_semiring.mult.right_neutral ustar_inductl ustar_sub_unfoldl)
+qed
+
 text \<open> While loop can be expressed using Kleene star \<close>
 
 lemma while_star_form:
