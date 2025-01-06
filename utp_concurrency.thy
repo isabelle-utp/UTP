@@ -1,7 +1,7 @@
 section \<open> Concurrent Programming \<close>
 
 theory utp_concurrency
-  imports utp_rel_laws
+  imports utp_rel_laws utp_rel_prog
 begin
 
 text \<open> In this theory we describe the UTP scheme for concurrency, \emph{parallel-by-merge},
@@ -213,13 +213,14 @@ lemma unrest_in_par_by_merge [unrest]:
   "\<lbrakk> vwb_lens x; $x\<^sup>< \<sharp> P; $<:x\<^sup>< \<sharp> M; $x\<^sup>< \<sharp> Q \<rbrakk> \<Longrightarrow> $x\<^sup>< \<sharp> P \<parallel>\<^bsub>M\<^esub> Q"
   by (pred_auto, blast, metis)
 
-(*
 lemma unrest_out_par_by_merge [unrest]:
-  "\<lbrakk> $x\<^sup>> \<sharp> M \<rbrakk> \<Longrightarrow> $x\<^sup>> \<sharp> P \<parallel>\<^bsub>M\<^esub> Q"
+  "\<lbrakk> mwb_lens x; $x\<^sup>> \<sharp> M \<rbrakk> \<Longrightarrow> $x\<^sup>> \<sharp> P \<parallel>\<^bsub>M\<^esub> Q"
+  by (simp add: par_by_merge_alt_def unrest)
 
-lemma unrest_merge_vars [unrest]: "$1:x\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>0" "$<:x\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>0" "$0:x\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>1" "$<:x\<acute> \<sharp> \<lceil>P\<rceil>\<^sub>1" 
-  by (pred_auto)+
-
+(*
+lemma unrest_merge_vars [unrest]: "$1:x\<^sup>> \<sharp> \<lceil>P\<rceil>\<^sub>0" "$<:x\<^sup>> \<sharp> \<lceil>P\<rceil>\<^sub>0" "$0:x\<^sup>> \<sharp> \<lceil>P\<rceil>\<^sub>1" "$<:x\<^sup>> \<sharp> \<lceil>P\<rceil>\<^sub>1"
+  oops 
+  
 subsection \<open> Substitution laws \<close>
 
 text \<open> Substitution is a little tricky because when we push the expression through the composition

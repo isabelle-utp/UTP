@@ -4,42 +4,8 @@ theory utp_wlp
   imports utp_rel_laws utp_hoare
 begin
 
-named_theorems wp
-
-definition wlp_pred :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>2 \<Rightarrow> bool) \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" where
-[pred]: "wlp_pred Q r = pre (\<not> (Q ;; (\<not> r\<^sup><)\<^sub>e) :: ('s\<^sub>1, 's\<^sub>2) urel)"
-
-expr_constructor wlp_pred
-
-syntax
-  "_wlp" :: "logic \<Rightarrow> logic \<Rightarrow> logic" (infix "wlp" 60)
-
-translations
-  "_wlp Q r" == "CONST wlp_pred Q (r)\<^sub>e"
-
-lemma wlp_seq [wp]: "(P ;; Q) wlp b = P wlp (Q wlp b)"
-  by (pred_auto)
-
 lemma wlp_assigns [wp]: "\<langle>\<sigma>\<rangle>\<^sub>a wlp b = (\<sigma> \<dagger> b)\<^sub>e"
   by pred_auto
-
-lemma wlp_true [wp]: "p wlp True = (True)\<^sub>e"
-  by pred_auto
-
-lemma wlp_conj [wp]: "(P wlp (b \<and> c))\<^sub>e = ((P wlp b)\<^sub>e \<and> (P wlp c)\<^sub>e)"
-  by (pred_auto)
-
-theorem wlp_cond [wp]: "((P \<lhd> b \<rhd> Q) wlp r)  =((b \<longrightarrow> P  wlp r) \<and> ((\<not> b) \<longrightarrow> Q wlp r))\<^sub>e"
-  by pred_auto
-
-theorem wlp_skip_r [wp]: "II wlp r = r"
-  by pred_auto
-
-theorem wlp_abort [wp]:
-  assumes"r \<noteq> (True)\<^sub>e"
-  shows      
-  "true wlp r =( False)\<^sub>e"
-  using assms by pred_auto
 
 lemma wlp_nd_assign [wp]: "(x := * ) wlp b = (\<forall> v. [x\<leadsto>v] \<dagger> b)\<^sub>e"
   by pred_auto
@@ -76,13 +42,7 @@ lemma wlp_gcmd [wp]:
   by (simp add: rgcmd_def wp)
 *)
 
-
-theorem wlp_hoare_link:
-  "\<^bold>{p\<^bold>}Q\<^bold>{r\<^bold>} \<longleftrightarrow> `p \<longrightarrow> Q wlp r`"
-  by pred_auto
-
-
-text \<open> We can use the above theorem as a means to discharge Hoare triples with the following tactic \<close>
+text \<open> We can use the above theorems as a means to discharge Hoare triples with the following proof method \<close>
 
 method hoare_wlp_auto uses defs = (simp add: wlp_hoare_link wp unrest usubst defs; pred_auto)
 

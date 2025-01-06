@@ -2,6 +2,7 @@ theory utp
   imports 
     utp_rel_laws 
     utp_healthy
+    utp_assertional
     utp_hoare
     utp_wlp
     utp_concurrency

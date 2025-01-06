@@ -92,6 +92,13 @@ definition seq :: "('a, 'b) urel \<Rightarrow> ('b, 'c) urel \<Rightarrow> ('a, 
 
 adhoc_overloading useq seq
 
+text \<open> Relational identity, or skip, leaves all variables unchanged. \<close>
+
+definition skip :: "'a hrel" where
+[pred]: "skip = (\<lambda> (s, s'). s' = s)"
+
+adhoc_overloading uskip skip
+
 text \<open> We also set up a homogeneous sequential composition operator, and versions of @{term true}
   and @{term false} that are explicitly typed by a homogeneous alphabet. \<close>
 
@@ -106,32 +113,6 @@ text \<open> We define the relational converse operator as an alphabet extrusion
 
 abbreviation conv_r :: "('a, 'b) urel \<Rightarrow> ('b, 'a) urel" ("_\<^sup>-" [999] 999) where
 "conv_r P \<equiv> aext P swap\<^sub>L"
-
-text \<open> Assignment is defined using substitutions, where latter defines what each variable should
-  map to. This approach, which is originally due to Back~\cite{Back1998}, permits more general 
-  assignment expressions. The definition of the operator identifies the after state binding, $b'$, 
-  with the substitution function applied to the before state binding $b$. \<close>
-
-definition assigns_r :: "('s\<^sub>1, 's\<^sub>2) psubst \<Rightarrow> ('s\<^sub>1, 's\<^sub>2) urel" where
-[pred]: "assigns_r \<sigma> = (\<lambda> (s, s'). s' = \<sigma> s)"
-
-adhoc_overloading uassigns assigns_r
-
-text \<open> Relational identity, or skip, leaves all variables unchanged. \<close>
-
-definition skip :: "'a hrel" where
-[pred]: "skip = (\<lambda> (s, s'). s' = s)"
-
-adhoc_overloading uskip skip
-
-text \<open> Non-deterministic assignment, also known as ``choose'', assigns an arbitrarily chosen value 
-  to the given variable \<close>
-
-definition ndet_assign :: "('a \<Longrightarrow> 's) \<Rightarrow> 's hrel" where
-[pred]: "ndet_assign x = (\<Sqinter> v. x := \<guillemotleft>v\<guillemotright>)"
-
-syntax "_ndet_assign" :: "svid \<Rightarrow> logic" ("_ := *" [75] 76)
-translations "_ndet_assign x" == "CONST ndet_assign x"
 
 text \<open> We set up iterated sequential composition which iterates an indexed predicate over the
   elements of a list. \<close>
@@ -152,22 +133,6 @@ definition test :: "('s \<Rightarrow> bool) \<Rightarrow> 's hrel" where
 [pred]: "test b = (\<lambda> (s, s'). b s \<and> s' = s)"
 
 adhoc_overloading utest test
-
-definition while_top :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" where 
-"while_top b P = (\<nu> X \<bullet> ((P ;; X) \<lhd> b \<rhd> II))"
-
-definition while_bot :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" where 
-"while_bot b P = (\<mu> X \<bullet> ((P ;; X) \<lhd> b \<rhd> II))"
-
-adhoc_overloading uwhile while_top
-
-syntax 
-  "_while_top" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("while\<^sup>\<top> _ do _ od")
-  "_while_bot" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("while\<^sub>\<bottom> _ do _ od")
-
-translations
-  "_while_top b P" == "CONST while_top (b)\<^sub>e P"
-  "_while_bot b P" == "CONST while_bot (b)\<^sub>e P"
 
 subsection \<open> Predicate Semantics \<close>
 

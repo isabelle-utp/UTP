@@ -1,74 +1,8 @@
+subsection \<open> Hoare Logic \<close>
+
 theory utp_hoare
-imports utp_rel_laws
-begin
-
-text \<open>Hoare triples\<close>
-
-definition hoare_r :: "('s \<Rightarrow> bool) \<Rightarrow> 's hrel \<Rightarrow> ('s \<Rightarrow> bool) \<Rightarrow> bool" where
-[pred]: "hoare_r p Q r = ((p\<^sup>< \<longrightarrow> r\<^sup>>)\<^sub>e \<sqsubseteq> Q)"
-
-syntax 
-  "_hoare_r" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("\<^bold>{_\<^bold>}/ _/ \<^bold>{_\<^bold>}")
-  "_hoare_r" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("H{_}/ _/ {_}")
-
-translations "_hoare_r P S Q" == "CONST hoare_r (P)\<^sub>e S (Q)\<^sub>e"
-
-named_theorems hoare and hoare_safe
-
-lemma hoare_meaning: "H{p}Q{r} = (\<forall> s s'. p s \<and> Q (s, s') \<longrightarrow> r s')"
-  by (pred_auto)
-
-lemma hoare_alt_def [rel]: "\<^bold>{b\<^bold>}P\<^bold>{c\<^bold>} = (P ;; \<questiondown>c? \<sqsubseteq> \<questiondown>b? ;; P)"
-  by (pred_auto)
-
-lemma hoare_assume: "\<^bold>{P\<^bold>}S\<^bold>{Q\<^bold>} \<Longrightarrow> \<questiondown>P? ;; S = \<questiondown>P? ;; S ;; \<questiondown>Q?"
-  by (pred_auto)
-
-lemma hoare_pre_assume_1: "\<^bold>{b \<and> c\<^bold>}P\<^bold>{d\<^bold>} = \<^bold>{c\<^bold>}\<questiondown>b? ;; P\<^bold>{d\<^bold>}"
-  by (pred_auto)
-
-lemma hoare_pre_assume_2: "\<^bold>{b \<and> c\<^bold>}P\<^bold>{d\<^bold>} = \<^bold>{b\<^bold>}\<questiondown>c? ;; P\<^bold>{d\<^bold>}"
-  by pred_auto
-                               
-lemma hoare_test [hoare_safe]: "`p \<and> b \<longrightarrow> q` \<Longrightarrow> \<^bold>{p\<^bold>}\<questiondown>b?\<^bold>{q\<^bold>}"
-  by pred_auto
-
-lemma hoare_gcmd [hoare_safe]: "\<^bold>{p \<and> b\<^bold>}P\<^bold>{q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}\<questiondown>b? ;; P\<^bold>{q\<^bold>}"
-  by pred_auto
-
-lemma hoare_r_conj [hoare_safe]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^bold>{r\<^bold>}; \<^bold>{p\<^bold>}Q\<^bold>{s\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^bold>{r \<and> s\<^bold>}"
-  by pred_auto
-
-lemma hoare_r_weaken_pre [hoare]:
-  "\<^bold>{p\<^bold>}Q\<^bold>{r\<^bold>} \<Longrightarrow> \<^bold>{p \<and> q\<^bold>}Q\<^bold>{r\<^bold>}"
-  "\<^bold>{q\<^bold>}Q\<^bold>{r\<^bold>} \<Longrightarrow> \<^bold>{p \<and> q\<^bold>}Q\<^bold>{r\<^bold>}"
-  by pred_auto+
-
-lemma pre_str_hoare_r:
-  assumes "`p\<^sub>1 \<longrightarrow> p\<^sub>2`" and "\<^bold>{p\<^sub>2\<^bold>}C\<^bold>{q\<^bold>}"
-  shows "\<^bold>{p\<^sub>1\<^bold>}C\<^bold>{q\<^bold>}"
-  using assms by pred_auto
-    
-lemma post_weak_hoare_r:
-  assumes "\<^bold>{p\<^bold>}C\<^bold>{q\<^sub>2\<^bold>}" and "`q\<^sub>2 \<longrightarrow> q\<^sub>1`"
-  shows "\<^bold>{p\<^bold>}C\<^bold>{q\<^sub>1\<^bold>}" 
-  using assms by pred_auto
-
-lemma hoare_r_conseq: "\<lbrakk> \<^bold>{p\<^sub>2\<^bold>}S\<^bold>{q\<^sub>2\<^bold>}; `p\<^sub>1 \<longrightarrow> p\<^sub>2`; `q\<^sub>2 \<longrightarrow> q\<^sub>1` \<rbrakk> \<Longrightarrow> \<^bold>{p\<^sub>1\<^bold>}S\<^bold>{q\<^sub>1\<^bold>}"
-  by pred_auto
-
-lemma hoare_r_cut:
-  assumes "\<^bold>{b\<^bold>}P\<^bold>{b\<^bold>}" "\<^bold>{b \<and> c\<^bold>}P\<^bold>{c\<^bold>}"
-  shows "\<^bold>{b \<and> c\<^bold>}P\<^bold>{b \<and> c\<^bold>}"
-  using assms by pred_auto
-
-lemma hoare_r_cut_simple: 
-  assumes "\<^bold>{b\<^bold>}P\<^bold>{b\<^bold>}" "\<^bold>{c\<^bold>}P\<^bold>{c\<^bold>}"
-  shows "\<^bold>{b \<and> c\<^bold>}P\<^bold>{b \<and> c\<^bold>}"
-  using assms by pred_auto
-
-lemma hoare_oracle: "\<^bold>{p\<^bold>}false\<^bold>{q\<^bold>}"
-  by (simp add: hoare_r_def)
+imports utp_assertional utp_rel_prog
+begin              
 
 subsection \<open> Sequence Laws \<close>
 
@@ -76,7 +10,7 @@ lemma seq_hoare_r: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{s\<^bold>} ; 
   by (pred_auto)
  
 lemma seq_hoare_invariant [hoare_safe]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{p\<^bold>} ; \<^bold>{p\<^bold>}Q\<^sub>2\<^bold>{p\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{p\<^bold>}"
-  by (pred_auto)
+  using seq_hoare_r by blast
 
 lemma seq_hoare_stronger_pre_1 [hoare_safe]: 
   "\<lbrakk> \<^bold>{p \<and> q\<^bold>}Q\<^sub>1\<^bold>{p \<and> q\<^bold>} ; \<^bold>{p \<and> q\<^bold>}Q\<^sub>2\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p \<and> q\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{q\<^bold>}"
@@ -109,7 +43,7 @@ lemma assign_floyd_hoare_r:
 
 lemma assigns_init_hoare [hoare_safe]:
   "\<lbrakk> vwb_lens x; $x \<sharp> p; $x \<sharp> v; \<^bold>{$x = v \<and> p\<^bold>}S\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}(x := v) ;; S\<^bold>{q\<^bold>}"
-  by pred_auto
+  by pred_auto (metis mwb_lens_weak vwb_lens_mwb weak_lens.put_get)
 
 lemma assigns_init_hoare_general [hoare_safe]:
   "\<lbrakk> vwb_lens x; \<And> x\<^sub>0. \<^bold>{$x = v\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk> \<and> p\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk>\<^bold>}S\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}x := v ;; S\<^bold>{q\<^bold>}"
@@ -269,7 +203,7 @@ proof -
     qed
   qed
   thus ?thesis
-    by (simp add: SEXP_def while_bot_def hoare_r_def impl_pred_def)
+    by (simp add: while_bot_def hoare_r_def impl_pred_def, simp add: SEXP_def)
 qed
 
 text \<open> While loops with invariant and variant decoration -- total correctness \<close>
@@ -313,77 +247,10 @@ next
       using induct_step by pred_auto  
     with PHI
     show "\<And> st. (p\<^sup>< \<and> e\<^sup>< = \<guillemotleft>st\<guillemotright> \<longrightarrow> q'\<^sup>>)\<^sub>e \<sqsubseteq> Q ;; (p\<^sup>< \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q'\<^sup>>)\<^sub>e \<lhd> b \<rhd> II"
-      by (pred_auto, (metis (mono_tags, lifting) assms(3) hoare_meaning)+)
+      by (pred_auto, (metis (mono_tags, lifting) SEXP_apply hoare_rel_r_def induct_step)+)
   qed
   then show ?case by simp
 qed
-
-
-subsection \<open> Frame Rules \<close>
-
-text \<open> Frame rule: If starting $S$ in a state satisfying $p establishes q$ in the final state, then
-  we can insert an invariant predicate $r$ when $S$ is framed by $a$, provided that $r$ does not
-  refer to variables in the frame, and $q$ does not refer to variables outside the frame. \<close>
-
-(* TODO - Fix all these metis proofs *)
-
-(*
-lemma frame_hoare_r:
-  assumes "idem_scene a" "a \<sharp> r" "-a \<sharp> q" "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>}"
-  shows "\<^bold>{p \<and> r\<^bold>}a:[P]\<^bold>{q \<and> r\<^bold>}"
-  using assms
-  apply (pred_auto)
-   apply (metis (mono_tags, lifting) Product_Type.Collect_case_prodD frame_def fst_conv hoare_meaning snd_conv)
-  by (metis (mono_tags, lifting) Product_Type.Collect_case_prodD frame_def fst_eqD scene_equiv_def scene_override_commute snd_eqD)
-
-lemma frame_strong_hoare_r [hoare_safe]: 
-  assumes "idem_scene a" "a \<sharp> r" "-a \<sharp> q" "\<^bold>{p \<and> r\<^bold>}S\<^bold>{q\<^bold>}"
-  shows "\<^bold>{p \<and> r\<^bold>}a:[S]\<^bold>{q \<and> r\<^bold>}"
-  using assms apply (pred_auto)
-   apply (metis (mono_tags, lifting) SEXP_def hoare_meaning rel_frame set_pred_def)
-  by (metis SEXP_def rel_frame scene_equiv_def scene_override_commute set_pred_def)
-
-lemma frame_hoare_r' [hoare_safe]: 
-  assumes "idem_scene a" "a \<sharp> r" "-a \<sharp> q" "\<^bold>{r \<and> p\<^bold>}S\<^bold>{q\<^bold>}"
-  shows "\<^bold>{r \<and> p\<^bold>}a:[S]\<^bold>{r \<and> q\<^bold>}"
-  using assms apply (pred_auto)
-   apply (metis SEXP_def rel_frame scene_equiv_def scene_override_commute set_pred_def)
-  by (metis (mono_tags, lifting) Product_Type.Collect_case_prodD frame_def fst_conv hoare_meaning snd_conv)
-
-lemma antiframe_hoare_r:
-  assumes "idem_scene a" "-a \<sharp> r" "a \<sharp> q" "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>}"  
-  shows "\<^bold>{p \<and> r\<^bold>} (-a):[P] \<^bold>{q \<and> r\<^bold>}"
-  using assms apply (pred_auto)
-   apply (metis (mono_tags, lifting) Product_Type.Collect_case_prodD frame_def fst_conv hoare_meaning snd_conv)
-  by (metis (full_types) SEXP_def rel_frame scene_equiv_def scene_override_commute set_pred_def)
-    
-lemma antiframe_strong_hoare_r:
-  assumes "idem_scene a" "-a \<sharp> r" "a \<sharp> q" "\<^bold>{p \<and> r\<^bold>}P\<^bold>{q\<^bold>}"  
-  shows "\<^bold>{p \<and> r\<^bold>} (-a):[P] \<^bold>{q \<and> r\<^bold>}"
-  using assms  apply (pred_auto)
-   apply (metis (mono_tags, lifting) Product_Type.Collect_case_prodD frame_def fst_conv hoare_meaning snd_conv)
-  by (metis (full_types) SEXP_def rel_frame scene_equiv_def scene_override_commute set_pred_def)
-
-
-lemma nmods_invariant:
-  assumes "S nmods a" "-a \<sharp> p"
-  shows "\<^bold>{p\<^bold>}S\<^bold>{p\<^bold>}"
-  using assms apply pred_auto
-  by (metis Healthy_def SEXP_def rel_frame scene_equiv_def scene_override_commute set_pred_def)
-*)
-
-(*
-lemma hoare_r_ghost:
-  assumes "vwb_lens x" "x \<sharp> p" "x \<sharp> q" "S nuses x" "\<^bold>{p\<^bold>}x := e;; S\<^bold>{q\<^bold>}"
-  shows "\<^bold>{p\<^bold>}S\<^bold>{q\<^bold>}" 
-proof -
-  have "\<^bold>{p\<^bold>}x := e;; rrestr x S\<^bold>{q\<^bold>}"
-    by (simp add: Healthy_if assms(4) assms(5))
-  with assms(1-3) have "\<^bold>{p\<^bold>}rrestr x S\<^bold>{q\<^bold>}"
-    by (rel_simp,metis mwb_lens.put_put vwb_lens_mwb)
-  thus ?thesis
-    by (simp add: Healthy_if assms(4))
-qed *)
 
 subsection \<open> Verification Condition Generation \<close>
 

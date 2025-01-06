@@ -71,8 +71,8 @@ no_notation
   Lattice.inf ("\<Sqinter>\<index>_" [90] 90) and
   Lattice.join (infixl "\<squnion>\<index>" 65) and
   Lattice.meet (infixl "\<sqinter>\<index>" 70) and
-(*  Order.bottom ("\<bottom>\<index>") and
-  Order.top ("\<top>\<index>") and *)
+  Order.bottom ("\<bottom>\<index>") and
+  Order.top ("\<top>\<index>") and
   conj (infixr "\<and>" 35) and 
   disj (infixr "\<or>" 30) and 
   Not ("\<not> _" [40] 40) and 
