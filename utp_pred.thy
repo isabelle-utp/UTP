@@ -71,8 +71,8 @@ no_notation
   Lattice.inf ("\<Sqinter>\<index>_" [90] 90) and
   Lattice.join (infixl "\<squnion>\<index>" 65) and
   Lattice.meet (infixl "\<sqinter>\<index>" 70) and
-  Order.bottom ("\<bottom>\<index>") and
-  Order.top ("\<top>\<index>") and
+(*  Order.bottom ("\<bottom>\<index>") and
+  Order.top ("\<top>\<index>") and *)
   conj (infixr "\<and>" 35) and 
   disj (infixr "\<or>" 30) and 
   Not ("\<not> _" [40] 40) and 
@@ -98,6 +98,12 @@ lemma pred_ref_iff_le: "(f :: 's pred) \<sqsubseteq> g \<longleftrightarrow> g \
 
 lemma pred_refine_as_impl: "(P \<sqsubseteq> Q) \<longleftrightarrow> `Q \<longrightarrow> P`"
   by (simp add: pred_refine_iff taut_def)
+
+lemma pred_ref_monoD: 
+  fixes P Q :: "'a pred" and F :: "'a pred \<Rightarrow> 'b pred"
+  assumes "mono F" "P \<sqsubseteq> Q" 
+  shows "F P \<sqsubseteq> F Q"
+  using assms by (simp add: pred_ref_iff_le monoD)
 
 method pred_simp uses assms add = (insert assms, (simp add: pred expr_simps add)?; expr_simp add: pred_refine_iff add)
 method pred_auto uses assms add = (insert assms, (simp add: pred expr_simps add)?; expr_auto add: pred_refine_iff add)

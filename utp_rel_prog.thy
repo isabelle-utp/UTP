@@ -57,12 +57,12 @@ lemma assigns_comp: "\<langle>\<sigma>\<rangle>\<^sub>a ;; \<langle>\<rho>\<rang
 lemma assigns_cond: "\<langle>\<sigma>\<rangle>\<^sub>a \<lhd> b \<rhd> \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<sigma> \<triangleleft> b \<triangleright> \<rho>\<rangle>\<^sub>a"
   by pred_auto  
 
-text \<open>Extend the alphabet of a substitution\<close>
+text \<open> Extend the alphabet of a substitution \<close>
 
 lemma assigns_subst: "(subst_aext \<sigma> fst\<^sub>L) \<dagger> \<langle>\<rho>\<rangle>\<^sub>a = \<langle>\<rho> \<circ>\<^sub>s \<sigma>\<rangle>\<^sub>a"
   by pred_auto
 
-lemma assigns_r_comp: "(\<langle>\<sigma>\<rangle>\<^sub>a ;; P) = ((\<lambda> s. put\<^bsub>fst\<^sub>L\<^esub> s (\<sigma> (get\<^bsub>fst\<^sub>L\<^esub> s))) \<dagger> P)"
+lemma assigns_r_comp: "(\<langle>\<sigma>\<rangle>\<^sub>a ;; P) = (\<sigma> \<up>\<^sub>s \<^bold>v\<^sup>< \<dagger> P)"
   by (pred_auto)
 
 lemma assigns_r_feasible:
