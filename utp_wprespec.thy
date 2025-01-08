@@ -1,10 +1,8 @@
 section \<open> Weakest Prespecification \<close>
 
 theory utp_wprespec
-  imports "UTP2.utp_rel_laws" "UTP2.utp_wlp"
+  imports "utp_wlp"
 begin
-
-named_theorems wp
 
 no_notation Equiv_Relations.quotient (infixl "'/'/" 90)
 
@@ -39,7 +37,7 @@ lemma wprespec6a [wp]: "(\<Squnion> n\<in>A. R(n)) // Q = (\<Squnion> n\<in>A. R
   by (rel_auto)
 
 lemma wprespec7 [wp]: "R // (P \<or> Q) = ((R // P) \<and> (R // Q))"
-  by (simp add: seqr_or_distr subst_pred(4) wprespec_def)
+  by (simp add: seqr_or_distr usubst wprespec_def)
 
 lemma wprespec7a [wp]: "R // (\<Sqinter> i\<in>A. P(i)) = (\<Squnion> i\<in>A. R // P(i))"
   by (pred_auto add: wprespec_def)

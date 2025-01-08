@@ -6,7 +6,6 @@ begin
 
 unbundle utp_lattice_syntax
 
-
 lemma impl_neg_disj: "((P::'s pred) \<longrightarrow> (Q::'s pred)) = (\<not>P \<or> Q)"
   by (simp add: impl_pred_def fun_eq_iff conj_pred_def disj_pred_def not_pred_def)
 
@@ -19,5 +18,15 @@ lemma bot_true: "\<bottom> = true"
 lemma pred_impl_laws [simp]:
   "(true \<longrightarrow> P) = P" "(P \<longrightarrow> true) = true" "(false \<longrightarrow> P) = true" "(P \<longrightarrow> false) = (\<not> P)" "(P \<longrightarrow> P) = true"
   by pred_simp+
+
+lemma not_SUP:
+  fixes P :: "'i \<Rightarrow> '\<alpha> pred"
+  shows "(\<not> (\<Sqinter> x\<in>A. P x)) = (\<Squnion> x\<in>A. \<not> P x)"
+  by pred_simp
+
+lemma not_INF:
+  fixes P :: "'i \<Rightarrow> '\<alpha> pred"
+  shows "(\<not> (\<Squnion> x\<in>A. P x)) = (\<Sqinter> x\<in>A. \<not> P x)"
+  by pred_simp
 
 end

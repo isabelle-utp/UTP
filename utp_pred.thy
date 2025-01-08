@@ -154,11 +154,23 @@ subsection \<open> Substitution Laws \<close>
 lemma subst_pred [usubst]:
   "\<sigma> \<dagger> true = true"
   "\<sigma> \<dagger> false = false"
+  "\<sigma> \<dagger> (\<not> P) = (\<not> (\<sigma> \<dagger> P))"
   "\<sigma> \<dagger> (P \<and> Q) = ((\<sigma> \<dagger> P) \<and> (\<sigma> \<dagger> Q))"
   "\<sigma> \<dagger> (P \<or> Q) = ((\<sigma> \<dagger> P) \<or> (\<sigma> \<dagger> Q))"
   "\<sigma> \<dagger> (P \<longrightarrow> Q) = ((\<sigma> \<dagger> P) \<longrightarrow> (\<sigma> \<dagger> Q))"
-  "\<sigma> \<dagger> (\<not> P) = (\<not> (\<sigma> \<dagger> P))"
   by pred_auto+
+
+lemma subst_pred_unwrapped [usubst]:
+  fixes P Q :: "'s \<Rightarrow> bool"
+  shows 
+    "\<sigma> \<dagger> (\<lambda> s. True) = (True)\<^sub>e"
+    "\<sigma> \<dagger> (\<lambda> s. False) = (False)\<^sub>e"
+    "\<sigma> \<dagger> (\<lambda> s. \<not> P s) = (\<not> \<sigma> \<dagger> P)\<^sup>e"
+    "\<sigma> \<dagger> (\<lambda> s. P s \<and> Q s) = (\<sigma> \<dagger> P \<and> \<sigma> \<dagger> Q)\<^sup>e"
+    "\<sigma> \<dagger> (\<lambda> s. P s \<or> Q s) = (\<sigma> \<dagger> P \<or> \<sigma> \<dagger> Q)\<^sup>e"
+    "\<sigma> \<dagger> (\<lambda> s. P s \<longrightarrow> Q s) = (\<sigma> \<dagger> P \<longrightarrow> \<sigma> \<dagger> Q)\<^sup>e"
+    "\<sigma> \<dagger> (\<lambda> s. P s \<longleftrightarrow> Q s) = (\<sigma> \<dagger> P \<longleftrightarrow> \<sigma> \<dagger> Q)\<^sup>e"
+  by expr_simp+
 
 lemma subst_INF_SUP [usubst]:
   "\<sigma> \<dagger> (\<Sqinter> i. P(i)) = (\<Sqinter> i. \<sigma> \<dagger> P(i))"
@@ -169,7 +181,9 @@ lemma subst_INF_SUP [usubst]:
 
 subsection \<open> Unrestriction Laws \<close>
 
-lemma unrest_pred [unrest]:
+named_theorems unrest_intro
+
+lemma unrest_pred [unrest, unrest_intro]:
   "a \<sharp> true" "a \<sharp> false"
   "\<lbrakk> a \<sharp> P; a \<sharp> Q \<rbrakk> \<Longrightarrow> a \<sharp> P \<and> Q"
   "\<lbrakk> a \<sharp> P; a \<sharp> Q \<rbrakk> \<Longrightarrow> a \<sharp> P \<or> Q"
@@ -177,7 +191,7 @@ lemma unrest_pred [unrest]:
   "a \<sharp> P \<Longrightarrow> a \<sharp> \<not> P"
   by (pred_auto+)
 
-lemma unrest_INF_SUP [unrest]:
+lemma unrest_INF_SUP [unrest, unrest_intro]:
   "\<lbrakk> \<And> i. a \<sharp> P(i) \<rbrakk> \<Longrightarrow> a \<sharp> (\<Sqinter> i. P(i))"
   "\<lbrakk> \<And> i. i \<in> I \<Longrightarrow> a \<sharp> P(i) \<rbrakk> \<Longrightarrow> a \<sharp> (\<Sqinter> i\<in>I. P(i))"
   "\<lbrakk> \<And> i. a \<sharp> P(i) \<rbrakk> \<Longrightarrow> a \<sharp> (\<Squnion> i. P(i))"

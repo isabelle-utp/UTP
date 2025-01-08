@@ -217,16 +217,14 @@ lemma unrest_out_par_by_merge [unrest]:
   "\<lbrakk> mwb_lens x; $x\<^sup>> \<sharp> M \<rbrakk> \<Longrightarrow> $x\<^sup>> \<sharp> P \<parallel>\<^bsub>M\<^esub> Q"
   by (simp add: par_by_merge_alt_def unrest)
 
-(*
 lemma unrest_merge_vars [unrest]: "$1:x\<^sup>> \<sharp> \<lceil>P\<rceil>\<^sub>0" "$<:x\<^sup>> \<sharp> \<lceil>P\<rceil>\<^sub>0" "$0:x\<^sup>> \<sharp> \<lceil>P\<rceil>\<^sub>1" "$<:x\<^sup>> \<sharp> \<lceil>P\<rceil>\<^sub>1"
-  oops 
+  by (pred_simp, simp add: lens_override_def lens_scene.rep_eq scene_override.rep_eq)+ 
   
 subsection \<open> Substitution laws \<close>
 
 text \<open> Substitution is a little tricky because when we push the expression through the composition
   operator the alphabet of the expression must also change. Consequently for now we only support
-  literal substitution, though this could be generalised with suitable alphabet coercsions. We
-  need quite a number of variants to support this which are below. \<close>
+  literal substitution, thoughthis could be generalised with suitable alphabet coercsions. \<close>
 
 lemma U0_seq_subst: "(P ;; U0)\<lbrakk>\<guillemotleft>v\<guillemotright>/0:x\<^sup>>\<rbrakk> = (P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk> ;; U0)"
   by (pred_auto)
@@ -237,35 +235,9 @@ lemma U1_seq_subst: "(P ;; U1)\<lbrakk>\<guillemotleft>v\<guillemotright>/1:x\<^
 lemma lit_pbm_subst [usubst]:
   fixes x :: "(_ \<Longrightarrow> '\<alpha>)"
   shows
-    "\<And> P Q M \<sigma>. \<sigma>($x \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>) \<dagger> (P \<parallel>\<^bsub>M\<^esub> Q) = \<sigma> \<dagger> ((P\<lbrakk>\<guillemotleft>v\<guillemotright>/$x\<rbrakk>) \<parallel>\<^bsub>M\<lbrakk>\<guillemotleft>v\<guillemotright>/$<:x\<rbrakk>\<^esub> (Q\<lbrakk>\<guillemotleft>v\<guillemotright>/$x\<rbrakk>))"
-    "\<And> P Q M \<sigma>. \<sigma>($x\<acute> \<mapsto>\<^sub>s \<guillemotleft>v\<guillemotright>) \<dagger> (P \<parallel>\<^bsub>M\<^esub> Q) = \<sigma> \<dagger> (P \<parallel>\<^bsub>M\<lbrakk>\<guillemotleft>v\<guillemotright>/$x\<acute>\<rbrakk>\<^esub> Q)"
+    "\<And> P Q M \<sigma>. \<sigma>(x\<^sup>< \<leadsto> \<guillemotleft>v\<guillemotright>) \<dagger> (P \<parallel>\<^bsub>M\<^esub> Q) = \<sigma> \<dagger> ((P\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>) \<parallel>\<^bsub>M\<lbrakk>\<guillemotleft>v\<guillemotright>/<:x\<^sup><\<rbrakk>\<^esub> (Q\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup><\<rbrakk>))"
+    "\<And> P Q M \<sigma>. \<sigma>(x\<^sup>> \<leadsto> \<guillemotleft>v\<guillemotright>) \<dagger> (P \<parallel>\<^bsub>M\<^esub> Q) = \<sigma> \<dagger> (P \<parallel>\<^bsub>M\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<^sup>>\<rbrakk>\<^esub> Q)"
   by (pred_auto)+
-
-lemma bool_pbm_subst [usubst]:
-  fixes x :: "(_ \<Longrightarrow> '\<alpha>)"
-  shows
-    "\<And> P Q M \<sigma>. \<sigma>($x \<mapsto>\<^sub>s false) \<dagger> (P \<parallel>\<^bsub>M\<^esub> Q) = \<sigma> \<dagger> ((P\<lbrakk>false/$x\<rbrakk>) \<parallel>\<^bsub>M\<lbrakk>false/$<:x\<rbrakk>\<^esub> (Q\<lbrakk>false/$x\<rbrakk>))"
-    "\<And> P Q M \<sigma>. \<sigma>($x \<mapsto>\<^sub>s true) \<dagger> (P \<parallel>\<^bsub>M\<^esub> Q) = \<sigma> \<dagger> ((P\<lbrakk>true/$x\<rbrakk>) \<parallel>\<^bsub>M\<lbrakk>true/$<:x\<rbrakk>\<^esub> (Q\<lbrakk>true/$x\<rbrakk>))"
-    "\<And> P Q M \<sigma>. \<sigma>($x\<acute> \<mapsto>\<^sub>s false) \<dagger> (P \<parallel>\<^bsub>M\<^esub> Q) = \<sigma> \<dagger> (P \<parallel>\<^bsub>M\<lbrakk>false/$x\<acute>\<rbrakk>\<^esub> Q)"
-    "\<And> P Q M \<sigma>. \<sigma>($x\<acute> \<mapsto>\<^sub>s true) \<dagger> (P \<parallel>\<^bsub>M\<^esub> Q) = \<sigma> \<dagger> (P \<parallel>\<^bsub>M\<lbrakk>true/$x\<acute>\<rbrakk>\<^esub> Q)"
-  by (pred_auto)+
-
-lemma zero_one_pbm_subst [usubst]:
-  fixes x :: "(_ \<Longrightarrow> '\<alpha>)"
-  shows
-    "\<And> P Q M \<sigma>. \<sigma>($x \<mapsto>\<^sub>s 0) \<dagger> (P \<parallel>\<^bsub>M\<^esub> Q) = \<sigma> \<dagger> ((P\<lbrakk>0/$x\<rbrakk>) \<parallel>\<^bsub>M\<lbrakk>0/$<:x\<rbrakk>\<^esub> (Q\<lbrakk>0/$x\<rbrakk>))"
-    "\<And> P Q M \<sigma>. \<sigma>($x \<mapsto>\<^sub>s 1) \<dagger> (P \<parallel>\<^bsub>M\<^esub> Q) = \<sigma> \<dagger> ((P\<lbrakk>1/$x\<rbrakk>) \<parallel>\<^bsub>M\<lbrakk>1/$<:x\<rbrakk>\<^esub> (Q\<lbrakk>1/$x\<rbrakk>))"
-    "\<And> P Q M \<sigma>. \<sigma>($x\<acute> \<mapsto>\<^sub>s 0) \<dagger> (P \<parallel>\<^bsub>M\<^esub> Q) = \<sigma> \<dagger> (P \<parallel>\<^bsub>M\<lbrakk>0/$x\<acute>\<rbrakk>\<^esub> Q)"
-    "\<And> P Q M \<sigma>. \<sigma>($x\<acute> \<mapsto>\<^sub>s 1) \<dagger> (P \<parallel>\<^bsub>M\<^esub> Q) = \<sigma> \<dagger> (P \<parallel>\<^bsub>M\<lbrakk>1/$x\<acute>\<rbrakk>\<^esub> Q)"
-  by (pred_auto)+
-
-lemma numeral_pbm_subst [usubst]:
-  fixes x :: "(_ \<Longrightarrow> '\<alpha>)"
-  shows
-    "\<And> P Q M \<sigma>. \<sigma>($x \<mapsto>\<^sub>s numeral n) \<dagger> (P \<parallel>\<^bsub>M\<^esub> Q) = \<sigma> \<dagger> ((P\<lbrakk>numeral n/$x\<rbrakk>) \<parallel>\<^bsub>M\<lbrakk>numeral n/$<:x\<rbrakk>\<^esub> (Q\<lbrakk>numeral n/$x\<rbrakk>))"
-    "\<And> P Q M \<sigma>. \<sigma>($x\<acute> \<mapsto>\<^sub>s numeral n) \<dagger> (P \<parallel>\<^bsub>M\<^esub> Q) = \<sigma> \<dagger> (P \<parallel>\<^bsub>M\<lbrakk>numeral n/$x\<acute>\<rbrakk>\<^esub> Q)"
-  by (pred_auto)+
-*)
 
 subsection \<open> Parallel-by-merge laws \<close>
 

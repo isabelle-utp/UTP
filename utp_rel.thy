@@ -167,10 +167,10 @@ lemma unrest_in_var [unrest]: "mwb_lens x \<Longrightarrow> in\<alpha> \<sharp> 
 lemma unrest_out_var [unrest]: "mwb_lens x \<Longrightarrow> out\<alpha> \<sharp> P \<Longrightarrow> $x\<^sup>> \<sharp> P"
   by expr_auto
 
-lemma unrest_seq_ivar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>< \<sharp> P \<rbrakk> \<Longrightarrow> $x\<^sup>< \<sharp> P ;; Q"
+lemma unrest_seq_ivar [unrest, unrest_intro]: "\<lbrakk> mwb_lens x; $x\<^sup>< \<sharp> P \<rbrakk> \<Longrightarrow> $x\<^sup>< \<sharp> P ;; Q"
   by pred_auto
 
-lemma unrest_seq_ovar [unrest]: "\<lbrakk> mwb_lens x; $x\<^sup>> \<sharp> Q \<rbrakk> \<Longrightarrow> $x\<^sup>> \<sharp> P ;; Q"
+lemma unrest_seq_ovar [unrest, unrest_intro]: "\<lbrakk> mwb_lens x; $x\<^sup>> \<sharp> Q \<rbrakk> \<Longrightarrow> $x\<^sup>> \<sharp> P ;; Q"
   by pred_auto
 
 lemma drop_pre_inv: "\<lbrakk> out\<alpha> \<sharp> p \<rbrakk> \<Longrightarrow> p\<^sub><\<^sup>< = p"
