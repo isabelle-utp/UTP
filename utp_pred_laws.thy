@@ -29,4 +29,8 @@ lemma not_INF:
   shows "(\<not> (\<Squnion> x\<in>A. P x)) = (\<Sqinter> x\<in>A. \<not> P x)"
   by pred_simp
 
+lemma ex_pred_simps [simp]:
+  "(\<exists> x \<Zspot> true) = true" "(\<exists> x \<Zspot> false) = false"
+  by (pred_auto+)
+
 end

@@ -99,6 +99,12 @@ lemma pred_ref_iff_le: "(f :: 's pred) \<sqsubseteq> g \<longleftrightarrow> g \
 lemma pred_refine_as_impl: "(P \<sqsubseteq> Q) \<longleftrightarrow> `Q \<longrightarrow> P`"
   by (simp add: pred_refine_iff taut_def)
 
+lemma pred_ref_monoI:
+  fixes F :: "'\<alpha> pred \<Rightarrow> '\<beta> pred"
+  assumes "(\<And>P Q. P \<sqsubseteq> Q \<Longrightarrow> F P \<sqsubseteq> F Q)"
+  shows "mono F"
+  using assms by (simp add: monoI pred_ref_iff_le)
+
 lemma pred_ref_monoD: 
   fixes P Q :: "'a pred" and F :: "'a pred \<Rightarrow> 'b pred"
   assumes "mono F" "P \<sqsubseteq> Q" 
@@ -109,6 +115,9 @@ method pred_simp uses assms add = (insert assms, (simp add: pred expr_simps add)
 method pred_auto uses assms add = (insert assms, (simp add: pred expr_simps add)?; expr_auto add: pred_refine_iff add)
 
 declare expr_if_def [pred]
+
+lemma expr_if_cond_def: "P \<triangleleft> B \<triangleright> Q = ((B \<and> P)\<^sub>e \<or> (\<not> B \<and> Q)\<^sub>e)"
+  by pred_auto
 
 subsection \<open> Algebraic Structures \<close>
 
