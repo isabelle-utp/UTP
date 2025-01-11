@@ -180,11 +180,11 @@ definition AssocMerge :: "'\<alpha> merge \<Rightarrow> bool" where
     
 subsection \<open> Parallel Operators \<close>
 
-text \<open> We implement the following useful abbreviation for separating of two parallel processes and
+text \<open> We implement the following useful operator for separating of two parallel processes and
   copying of the before variables, all to act as input to the merge predicate. \<close>
 
-abbreviation par_sep (infixr "\<parallel>\<^sub>s" 85) where
-"P \<parallel>\<^sub>s Q \<equiv> (P ;; U0) \<and> (Q ;; U1) \<and> ($<\<^sup>> = $\<^bold>v\<^sup><)\<^sub>e"
+definition par_sep :: "('a, 'b) urel \<Rightarrow> ('a, 'c) urel \<Rightarrow> ('a, ('a, 'b, 'c) mrg) urel" (infixr "\<parallel>\<^sub>s" 85) where
+[pred, rel]: "P \<parallel>\<^sub>s Q \<equiv> (P ;; U0) \<and> (Q ;; U1) \<and> ($<\<^sup>> = $\<^bold>v\<^sup><)\<^sub>e"
 
 text \<open> The following implementation of parallel by merge is less general than the book version, in
   that it does not properly partition the alphabet into two disjoint segments. We could actually
@@ -197,7 +197,7 @@ definition
 where [pred, rel]: "P \<parallel>\<^bsub>M\<^esub> Q = (P \<parallel>\<^sub>s Q ;; M)"
 
 lemma par_by_merge_alt_def: "P \<parallel>\<^bsub>M\<^esub> Q = (\<lceil>P\<rceil>\<^sub>0 \<and> \<lceil>Q\<rceil>\<^sub>1 \<and> ($<\<^sup>> = $\<^bold>v\<^sup><)\<^sub>e) ;; M"
-  by (simp add: par_by_merge_def U0_as_alpha U1_as_alpha)
+  by (simp add: par_by_merge_def par_sep_def U0_as_alpha U1_as_alpha)
 
 (*
 lemma shEx_pbm_left: "((\<exists> x. P x)\<^sub>e \<parallel>\<^bsub>M\<^esub> Q) = (\<^bold>\<exists> x \<bullet> (P x \<parallel>\<^bsub>M\<^esub> Q))"
