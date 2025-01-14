@@ -109,7 +109,7 @@ proof (rule mu_rec_total_utp_rule[OF WF M , of _ e ], goal_cases)
   case (1 st)
   then show ?case 
     using induct_step[unfolded hoare_r_def, of st "(p\<^sup>< \<and> (e\<^sup><, \<guillemotleft>st\<guillemotright>) \<in> \<guillemotleft>R\<guillemotright> \<longrightarrow> q\<^sup>>)\<^sub>e"]
-      by (simp add: usubst, simp add: subst_app_def)
+      by subst_eval
 qed
 
 lemma mu_hoare_r':
