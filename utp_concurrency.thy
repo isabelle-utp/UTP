@@ -156,6 +156,18 @@ lemma U1\<alpha>_comp_in_var [usubst]: "(x\<^sup><)\<^sub>v ;\<^sub>L U1\<alpha>
 lemma U1\<alpha>_comp_out_var [usubst]: "(x\<^sup>>)\<^sub>v ;\<^sub>L U1\<alpha> = (1:x\<^sup>>)\<^sub>v"
   by (simp add: U1\<alpha>_def prod_as_plus lens_indep_right_ext ns_alpha_def lens_comp_assoc[THEN sym] snd_lens_plus)
 
+lemma U0_comp [simp]: "(U0\<alpha>:(x\<^sup>>))\<^sub>v = (0:x\<^sup>>)\<^sub>v"
+  by (auto simp add: U0\<alpha>_def lens_defs)
+
+lemma U1_comp [simp]: "(U1\<alpha>:(x\<^sup>>))\<^sub>v = (1:x\<^sup>>)\<^sub>v"
+  by (auto simp add: U1\<alpha>_def lens_defs)
+
+lemma varl_sub_merge_left [simp]: "vwb_lens x \<Longrightarrow> (0:x\<^sup>>)\<^sub>v \<subseteq>\<^sub>L U0\<alpha>"
+  by (metis U0\<alpha>_comp_out_var comp_vwb_lens lens_comp_lb ns_alpha_def snd_vwb_lens)
+
+lemma varr_sub_merge_right [simp]: "vwb_lens x \<Longrightarrow> (1:x\<^sup>>)\<^sub>v \<subseteq>\<^sub>L U1\<alpha>"
+  by (metis U1\<alpha>_comp_out_var comp_vwb_lens ns_alpha_def snd_vwb_lens sublens_def)
+
 subsection \<open> Associative Merges \<close>
   
 text \<open> Associativity of a merge means that if we construct a three way merge from a two way merge

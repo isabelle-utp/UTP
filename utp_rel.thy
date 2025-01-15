@@ -159,6 +159,12 @@ lemma subst_seq_right [usubst]:
   "in\<alpha> \<sharp>\<^sub>s \<sigma> \<Longrightarrow> \<sigma> \<dagger> (P ;; Q) = P ;; (\<sigma> \<dagger> Q)"
   by pred_auto (metis fst_conv)+
 
+lemma subst_upd_lit_seql [usubst]: "\<sigma>(x\<^sup>< \<leadsto> \<guillemotleft>v\<guillemotright>) \<dagger> (P ;; Q) = \<sigma> \<dagger> (([x\<^sup>< \<leadsto> \<guillemotleft>v\<guillemotright>] \<dagger> P) ;; Q)"
+  by pred_auto
+
+lemma subst_upd_lit_seqr [usubst]: "\<sigma>(x\<^sup>> \<leadsto> \<guillemotleft>v\<guillemotright>) \<dagger> (P ;; Q) = \<sigma> \<dagger> (P ;; [x\<^sup>> \<leadsto> \<guillemotleft>v\<guillemotright>] \<dagger> Q)"
+  by pred_auto
+
 subsection \<open> Unrestriction Laws \<close>
 
 lemma unrest_in_var [unrest]: "mwb_lens x \<Longrightarrow> in\<alpha> \<sharp> P \<Longrightarrow> $x\<^sup>< \<sharp> P"
