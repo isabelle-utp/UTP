@@ -177,6 +177,11 @@ lemma seqr_right_one_point_false:
   shows "(P ;; ((\<not>$x\<^sup><)\<^sub>e \<and> Q)) = (P\<lbrakk>False/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>False/x\<^sup><\<rbrakk>)"
   using assms by (pred_auto, metis (full_types) vwb_lens_wb wb_lens.get_put)
 
+lemma seqr_right_one_point_false':
+  assumes "vwb_lens x"
+  shows "(P ;; (\<not>($x\<^sup><)\<^sub>e \<and> Q)) = (P\<lbrakk>False/x\<^sup>>\<rbrakk> ;; Q\<lbrakk>False/x\<^sup><\<rbrakk>)"
+  using assms by (pred_auto, metis (full_types) vwb_lens_wb wb_lens.get_put)
+
 lemma seqr_insert_ident_left:
   assumes "vwb_lens x" "$x\<^sup>> \<sharp> P" "$x\<^sup>< \<sharp> Q"
   shows "((($x\<^sup>> = $x\<^sup><)\<^sub>e \<and> P) ;; Q) = (P ;; Q)"
