@@ -110,7 +110,7 @@ definition Disjunctuous :: "'\<alpha> health \<Rightarrow> bool" where
 definition Continuous :: "'\<alpha> health \<Rightarrow> bool" where
   [pred]: "Continuous H = (\<forall> A. A \<noteq> {} \<longrightarrow> H (\<Sqinter> A) = \<Sqinter> (H ` A))"
 
-lemma Healthy_Idempotent:
+lemma Healthy_Idempotent [closure]:
   "Idempotent H \<Longrightarrow> H(P) is H"
   by (simp add: Healthy_def Idempotent_def)
 
