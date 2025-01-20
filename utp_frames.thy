@@ -1,7 +1,7 @@
 section \<open> Frames \<close>
 
 theory utp_frames
-  imports utp_rel_laws
+  imports utp_rel_prog
 begin
 
 subsection \<open> Operators \<close>
@@ -56,8 +56,7 @@ translations
   "P nuses \<lbrace>A\<rbrace>" <= "_not_uses P \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F"
 
 lemma nmods_iff [pred]: "P nmods A \<longleftrightarrow> (\<forall> s s'. P (s, s') \<longrightarrow> s \<approx>\<^sub>S s' on A)"
-  by (pred_auto add: Healthy_def)
-
+  by (pred_auto)
 
 lemma nuses_iff [pred]: 
   assumes "idem_scene A"
@@ -71,8 +70,9 @@ lemma nuses_iff [pred]:
   done
 
 lemma nuses_converse_commute: "\<lbrakk> idem_scene A; P nuses A; Q nuses (- A) \<rbrakk> \<Longrightarrow> P ;; Q = Q ;; P"
+  apply (simp add: nuses_iff)
   apply (pred_auto)
-  apply (smt (verit) scene_override_commute scene_override_idem scene_override_overshadow_left)
+  apply (metis scene_override.rep_eq scene_override_commute scene_override_idem subscene_eliminate subscene_refl)
   apply (metis scene_equiv_def scene_equiv_sym scene_override_commute)
   done
 
@@ -80,7 +80,7 @@ lemma subst_indep_commute: "\<lbrakk> idem_scene A; A \<sharp>\<^sub>s \<sigma>;
   by (expr_auto, metis scene_override_commute scene_override_idem)
 
 lemma nuses_assigns: "\<lbrakk> idem_scene A; A \<sharp>\<^sub>s \<sigma> \<rbrakk> \<Longrightarrow> \<langle>\<sigma>\<rangle>\<^sub>a nuses A"
-  by (simp add: nuses_iff expr_defs, auto, simp_all add: assigns_rel_def)
+  by (simp add: nuses_iff expr_defs, auto, simp_all add: assigns_r_def)
      (metis scene_equiv_def scene_equiv_sym scene_override_idem)
   
 subsection \<open> Frame laws \<close>
@@ -93,19 +93,14 @@ lemma frame_all [frame]: "\<Sigma>:[P] = P"
 lemma frame_none [frame]: "\<emptyset>:[P] = (P \<and> II)"
   by (pred_auto add: scene_override_commute)
 
-term unrest
-
 translations
   "\<lbrace>A\<rbrace> \<sharp> P" <= "_unrest \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F P"
 
-
 lemma skip_uses_nothing: "idem_scene A \<Longrightarrow> II nuses A"
   by (pred_simp)
+     (metis scene_override_idem scene_override_overshadow_left)
 
-lemma "basis_lens y \<Longrightarrow> \<lbrace>y\<^sup><, y\<^sup>>\<rbrace> \<sharp> P \<Longrightarrow> P nuses \<lbrace>y\<rbrace>"
-  apply (pred_auto)
-  oops
-
+(*
 lemma frame_commute:
   assumes "\<lbrace>y\<^sup><, y\<^sup>>\<rbrace> \<sharp> P" 
   shows "$x:[P] ;; $y:[Q] = $y:[Q] ;; $x:[P]"
@@ -115,19 +110,8 @@ lemma frame_commute:
   assumes "($y\<^sup><) \<sharp> P" "($y\<^sup>>) \<sharp> P""($x\<^sup><) \<sharp> Q" "($x\<^sup>>) \<sharp> Q" "x \<bowtie> y" 
   shows "$x:[P] ;; $y:[Q] = $y:[Q] ;; $x:[P]"
   oops
-  (*apply (insert assms)
-  apply (pred_auto)
-   apply (rename_tac s s' s\<^sub>0)
-   apply (subgoal_tac "(s \<oplus>\<^sub>L s' on y) \<oplus>\<^sub>L s\<^sub>0 on x = s\<^sub>0 \<oplus>\<^sub>L s' on y")
-    apply (metis lens_indep_get lens_indep_sym lens_override_def)
-   apply (simp add: lens_indep.lens_put_comm lens_override_def)
-  apply (rename_tac s s' s\<^sub>0)
-  apply (subgoal_tac "put\<^bsub>y\<^esub> (put\<^bsub>x\<^esub> s (get\<^bsub>x\<^esub> (put\<^bsub>x\<^esub> s\<^sub>0 (get\<^bsub>x\<^esub> s')))) (get\<^bsub>y\<^esub> (put\<^bsub>y\<^esub> s (get\<^bsub>y\<^esub> s\<^sub>0))) 
-                      = put\<^bsub>x\<^esub> s\<^sub>0 (get\<^bsub>x\<^esub> s')")
-   apply (metis lens_indep_get lens_indep_sym)
-  apply (metis lens_indep.lens_put_comm)
-  done*)
- 
+*)
+
 lemma frame_miracle [simp]:
   "x:[false] = false"
   by (pred_auto)
@@ -149,6 +133,8 @@ lemma frame_conj_true [frame]:
   "vwb_lens x \<Longrightarrow> x:[$x\<acute> =\<^sub>u \<lceil>v\<rceil>\<^sub><] = x := v"
   by (pred_auto)
   *)  
+
+(*
 lemma frame_seq [frame]:
   assumes "vwb_lens x" "-{x\<^sup>>,x\<^sup><} \<sharp> P" "-{x\<^sup><,x\<^sup>>} \<sharp> Q"
   shows "$x:[P ;; Q] = $x:[P] ;; $x:[Q]"
@@ -160,6 +146,7 @@ lemma frame_assign_commute_unrest:
   shows "x := v ;; $a:[P] = $a:[P] ;; x := v"
   using assms apply (pred_auto)
   oops
+*)
 
 lemma frame_to_antiframe [frame]:
   "\<lbrakk> x \<bowtie>\<^sub>S y; x \<squnion>\<^sub>S y = \<top>\<^sub>S \<rbrakk> \<Longrightarrow> x:[P] = (-y):[P]"
@@ -227,7 +214,9 @@ lemma nameset_skip_ra: "vwb_lens x \<Longrightarrow> (\<^bold>n\<^bold>s x \<bul
 declare sublens_def [lens_defs]
 *)
 subsection \<open> Modification laws \<close>
-lemma "(rrestr x P) nmods x"
-  oops
+
+lemma "idem_scene x \<Longrightarrow> (rrestr x P) nmods x"
+  by (pred_auto)
+     (metis scene_override_idem scene_override_overshadow_right)
 
 end

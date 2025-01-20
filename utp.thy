@@ -3,6 +3,7 @@ section \<open> UTP Meta-theory \<close>
 theory utp
   imports 
     utp_rel_laws 
+    utp_frames
     utp_healthy
     utp_assertional
     utp_hoare
