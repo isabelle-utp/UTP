@@ -458,6 +458,27 @@ subsection \<open> Relation Algebra Laws \<close>
 theorem seqr_disj_cancel: "((P\<^sup>- ;; (\<not>(P ;; Q))) \<or> (\<not>Q)) = (\<not>Q)"
   by pred_auto
 
+theorem rel_RA1: "(P ;; (Q ;; R)) = ((P ;; Q) ;; R)"
+  by (simp add: seqr_assoc)
+
+theorem rel_RA2: "(P ;; II) = P" "(II ;; P) = P"
+  by simp_all
+
+theorem rel_RA3: "P\<^sup>-\<^sup>- = P"
+  by simp
+
+theorem rel_RA4: "(P ;; Q)\<^sup>- = (Q\<^sup>- ;; P\<^sup>-)"
+  by simp
+
+theorem rel_RA5: "(P \<or> Q)\<^sup>- = (P\<^sup>- \<or> Q\<^sup>-)"
+  by (pred_auto)
+
+theorem rel_RA6: "((P \<or> Q) ;; R) = (P;;R \<or> Q;;R)"
+  using seqr_or_distl by blast
+
+theorem rel_RA7: "((P\<^sup>- ;; (\<not>(P ;; Q))) \<or> (\<not>Q)) = (\<not>Q)"
+  by (pred_auto)
+
 subsection \<open> Kleene Algebra Laws \<close>
 
 lemma ustar_rep_eq [rel]: "\<lbrakk>P\<^sup>\<star>\<rbrakk>\<^sub>U = \<lbrakk>P\<rbrakk>\<^sub>U\<^sup>*"
