@@ -134,6 +134,26 @@ definition test :: "('s \<Rightarrow> bool) \<Rightarrow> 's hrel" where
 
 adhoc_overloading utest test
 
+text \<open> Relation alphabet extension applies an extension lens in both the first and second component
+  to each pair in a relational expression. \<close>
+
+abbreviation rel_aext :: "('a, 's\<^sub>1 \<times> 's\<^sub>1) expr \<Rightarrow> ('s\<^sub>1 \<Longrightarrow> 's\<^sub>2) \<Rightarrow> 's\<^sub>2 \<times> 's\<^sub>2 \<Rightarrow> 'a" where
+"rel_aext P a \<equiv> P \<up> a \<times> a"
+
+abbreviation rel_ares :: "('a, 's\<^sub>2 \<times> 's\<^sub>2) expr \<Rightarrow> ('s\<^sub>1 \<Longrightarrow> 's\<^sub>2) \<Rightarrow> 's\<^sub>1 \<times> 's\<^sub>1 \<Rightarrow> 'a" where
+"rel_ares P a \<equiv> P \<down> a \<times> a"
+
+syntax 
+  "_rel_aext" :: "logic \<Rightarrow> svid \<Rightarrow> logic" (infixl "\<up>\<^sub>2" 80)
+  "_rel_ares" :: "logic \<Rightarrow> svid \<Rightarrow> logic" (infixl "\<down>\<^sub>2" 80)
+
+translations 
+  "_rel_aext P a" == "CONST rel_aext P a"
+  "_rel_ares P a" == "CONST rel_ares P a"
+
+lemma rel_ares_aext [alpha]: "mwb_lens a \<Longrightarrow> (P \<up>\<^sub>2 a) \<down>\<^sub>2 a = P"
+  by (simp add: ares_aext prod_mwb_lens)
+
 subsection \<open> Predicate Semantics \<close>
 
 lemma pred_skip: "II = ($\<^bold>v\<^sup>> = $\<^bold>v\<^sup><)\<^sub>e"

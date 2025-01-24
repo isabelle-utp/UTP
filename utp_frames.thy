@@ -17,7 +17,7 @@ text \<open> The frame extension operator take a lens @{term a}, and a relation 
   of @{term P}. \<close>
 
 definition frame_ext :: "('s\<^sub>1 \<Longrightarrow> ('s\<^sub>2 :: scene_space)) \<Rightarrow> 's\<^sub>1 hrel \<Rightarrow> 's\<^sub>2 hrel" where
-  "frame_ext a P = frame \<lbrace>a\<rbrace>\<^sub>F (P \<up> (a \<times> a))"
+  "frame_ext a P = frame \<lbrace>a\<rbrace>\<^sub>F (P \<up>\<^sub>2 a)"
 
 abbreviation modifies :: "'s hrel \<Rightarrow> 's scene \<Rightarrow> bool" where
 "modifies P a \<equiv> P is frame a"
