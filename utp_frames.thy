@@ -213,10 +213,24 @@ lemma nameset_skip_ra: "vwb_lens x \<Longrightarrow> (\<^bold>n\<^bold>s x \<bul
     
 declare sublens_def [lens_defs]
 *)
+
 subsection \<open> Modification laws \<close>
 
 lemma "idem_scene x \<Longrightarrow> (rrestr x P) nmods x"
   by (pred_auto)
      (metis scene_override_idem scene_override_overshadow_right)
+
+subsection \<open> Frames as lenses \<close>
+
+text \<open> For now, frames are most useful when the scene is a wrapped up lens. Therefore, for the proof
+  automation we assume this form in the following lemmas. \<close>
+
+lemma frame_var_alpha [pred]: "vwb_lens x \<Longrightarrow> frame (var_alpha x) P = (\<lambda>(s, s'). s' = s \<oplus>\<^sub>L s' on x \<and> P (s, s'))"
+  by (pred_simp, metis lens_override_def lens_scene_override scene_override_commute vwb_lens.put_eq vwb_lens_mwb)
+
+lemma frame_neg_var_alpha [pred]: "mwb_lens x \<Longrightarrow> frame (- (var_alpha x)) P = (\<lambda>(s, s'). s = s \<oplus>\<^sub>L s' on x \<and> P (s, s'))"
+  by (pred_simp, metis)
+
+declare frame_def [pred del]
 
 end
