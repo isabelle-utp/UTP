@@ -66,7 +66,7 @@ proof -
   have "fst\<^sub>L +\<^sub>L snd\<^sub>L \<approx>\<^sub>L 1\<^sub>L"
     by (simp add: fst_snd_id_lens)
   hence "\<lbrakk>fst\<^sub>L\<rbrakk>\<^sub>\<sim> \<squnion>\<^sub>S \<lbrakk>snd\<^sub>L\<rbrakk>\<^sub>\<sim> = \<top>\<^sub>S"
-    by (simp add: fst_snd_id_lens one_lens_scene scene_space_lemmas(1))
+    by (simp add: fst_snd_id_lens one_lens_scene lens_plus_scene[THEN sym])
   thus ?thesis
     by (simp add: in\<alpha>_def out\<alpha>_def var_alpha_def)
 qed
@@ -79,7 +79,7 @@ text \<open> We define a specialised version of the conditional where the condit
 definition rcond :: "('a, 'b) urel \<Rightarrow> 'a pred \<Rightarrow> ('a, 'b) urel \<Rightarrow> ('a, 'b) urel" where
 [pred]: "rcond P b Q = expr_if P (b\<^sup><) Q"
 
-adhoc_overloading ucond rcond
+adhoc_overloading ucond == rcond
 
 lemma rcond_alt_def: "P \<lhd> b \<rhd> Q = P \<triangleleft> b\<^sup>< \<triangleright> Q"
   by pred_simp
@@ -90,14 +90,14 @@ text \<open> Sequential composition is heterogeneous, and simply requires that t
 definition seq :: "('a, 'b) urel \<Rightarrow> ('b, 'c) urel \<Rightarrow> ('a, 'c) urel" where
 [pred]: "seq P Q = (\<lambda> (s, s'). \<exists> s\<^sub>0. P (s, s\<^sub>0) \<and> Q (s\<^sub>0, s'))"
 
-adhoc_overloading useq seq
+adhoc_overloading useq == seq
 
 text \<open> Relational identity, or skip, leaves all variables unchanged. \<close>
 
 definition skip :: "'a hrel" where
 [pred]: "skip = (\<lambda> (s, s'). s' = s)"
 
-adhoc_overloading uskip skip
+adhoc_overloading uskip == skip
 
 text \<open> We also set up a homogeneous sequential composition operator, and versions of @{term true}
   and @{term false} that are explicitly typed by a homogeneous alphabet. \<close>
@@ -132,7 +132,7 @@ definition skip_ra :: "'s scene \<Rightarrow> 's hrel" where
 definition test :: "('s \<Rightarrow> bool) \<Rightarrow> 's hrel" where
 [pred]: "test b = (\<lambda> (s, s'). b s \<and> s' = s)"
 
-adhoc_overloading utest test
+adhoc_overloading utest == test
 
 text \<open> Relation alphabet extension applies an extension lens in both the first and second component
   to each pair in a relational expression. \<close>

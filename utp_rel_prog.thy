@@ -10,7 +10,7 @@ text \<open> Assignment is defined using substitutions, where latter defines wha
 definition assigns_r :: "('s\<^sub>1, 's\<^sub>2) psubst \<Rightarrow> ('s\<^sub>1, 's\<^sub>2) urel" where
 [pred]: "assigns_r \<sigma> = (\<lambda> (s, s'). s' = \<sigma> s)"
 
-adhoc_overloading uassigns assigns_r
+adhoc_overloading uassigns == assigns_r
 
 text \<open> Non-deterministic assignment, also known as ``choose'', assigns an arbitrarily chosen value 
   to the given variable \<close>
@@ -27,7 +27,7 @@ definition while_top :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's 
 definition while_bot :: "(bool, 's) expr \<Rightarrow> 's hrel \<Rightarrow> 's hrel" where 
 "while_bot b P = (\<mu> X \<bullet> ((P ;; X) \<lhd> b \<rhd> II))"
 
-adhoc_overloading uwhile while_top
+adhoc_overloading uwhile == while_top
 
 syntax 
   "_while_top" :: "logic \<Rightarrow> logic \<Rightarrow> logic" ("while\<^sup>\<top> _ do _ od")

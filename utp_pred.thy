@@ -9,8 +9,11 @@ theory utp_pred
     "HOL-Algebra.Galois_Connection"
     "Abstract_Prog_Syntax.Abstract_Prog_Syntax"
 begin
-                    
-unbundle Expression_Syntax Z_Syntax
+
+unbundle no lattice_syntax
+
+unbundle Expression_Syntax
+unbundle Z_Syntax
 
 subsection \<open> Core Definitions \<close>
 
@@ -54,10 +57,10 @@ consts
   uimplies :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"
 
 adhoc_overloading 
-  uconj conj and uconj conj_pred and
-  udisj disj and udisj disj_pred and
-  unot Not and unot not_pred and
-  uimplies implies and uimplies impl_pred
+  uconj == conj and uconj == conj_pred and
+  udisj == disj and udisj == disj_pred and
+  unot == Not and unot == not_pred and
+  uimplies == implies and uimplies == impl_pred
 
 text \<open> The following bundle sets up the syntax for our overloaded operators, following the same
   syntax provide in HOL. \<close>
@@ -67,15 +70,15 @@ begin
 
 no_notation
   Order.le (infixl "\<sqsubseteq>\<index>" 50) and
-  Lattice.sup ("\<Squnion>\<index>_" [90] 90) and
-  Lattice.inf ("\<Sqinter>\<index>_" [90] 90) and
+  Lattice.sup (\<open>(\<open>open_block notation=\<open>prefix \<Squnion>\<close>\<close>\<Squnion>\<index>_)\<close> [90] 90) and
+  Lattice.inf (\<open>(\<open>open_block notation=\<open>prefix \<Sqinter>\<close>\<close>\<Sqinter>\<index>_)\<close> [90] 90) and
   Lattice.join (infixl "\<squnion>\<index>" 65) and
   Lattice.meet (infixl "\<sqinter>\<index>" 70) and
 (*  Order.bottom ("\<bottom>\<index>") and
   Order.top ("\<top>\<index>") and *)
   conj (infixr "\<and>" 35) and 
   disj (infixr "\<or>" 30) and 
-  Not ("\<not> _" [40] 40) and 
+  Not (\<open>(\<open>open_block notation=\<open>prefix \<not>\<close>\<close>\<not> _)\<close> [40] 40) and 
   implies (infixr "\<longrightarrow>" 25)
 
 notation 

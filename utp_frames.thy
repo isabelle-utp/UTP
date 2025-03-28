@@ -17,7 +17,7 @@ text \<open> The frame extension operator take a lens @{term a}, and a relation 
   of @{term P}. \<close>
 
 definition frame_ext :: "('s\<^sub>1 \<Longrightarrow> ('s\<^sub>2 :: scene_space)) \<Rightarrow> 's\<^sub>1 hrel \<Rightarrow> 's\<^sub>2 hrel" where
-  "frame_ext a P = frame \<lbrace>a\<rbrace>\<^sub>F (P \<up>\<^sub>2 a)"
+  "frame_ext a P = frame (lens_scene a) (P \<up>\<^sub>2 a)"
 
 abbreviation modifies :: "'s hrel \<Rightarrow> 's scene \<Rightarrow> bool" where
 "modifies P a \<equiv> P is frame a"
@@ -46,14 +46,14 @@ syntax
 
 translations
   "_frame a P" == "CONST frame a P"
-  "\<lbrace>A\<rbrace>:[P]" <= "_frame \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F P"
+(*  "\<lbrace>A\<rbrace>:[P]" <= "_frame \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F P" *)
   "_frame_ext a P" == "CONST frame_ext a P"
   "_modifies P a" == "CONST modifies P a"
-  "P mods \<lbrace>A\<rbrace>" <= "_modifies P \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F"
+(*  "P mods \<lbrace>A\<rbrace>" <= "_modifies P \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F" *)
   "_not_modifies P a" == "CONST not_modifies P a"
-  "P nmods \<lbrace>A\<rbrace>" <= "_not_modifies P \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F"
+(*  "P nmods \<lbrace>A\<rbrace>" <= "_not_modifies P \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F" *)
   "_not_uses P a" == "CONST not_uses P a"
-  "P nuses \<lbrace>A\<rbrace>" <= "_not_uses P \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F"
+(*  "P nuses \<lbrace>A\<rbrace>" <= "_not_uses P \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F" *)
 
 lemma nmods_iff [pred]: "P nmods A \<longleftrightarrow> (\<forall> s s'. P (s, s') \<longrightarrow> s \<approx>\<^sub>S s' on A)"
   by (pred_auto)
@@ -93,8 +93,10 @@ lemma frame_all [frame]: "\<Sigma>:[P] = P"
 lemma frame_none [frame]: "\<emptyset>:[P] = (P \<and> II)"
   by (pred_auto add: scene_override_commute)
 
+(*
 translations
   "\<lbrace>A\<rbrace> \<sharp> P" <= "_unrest \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F P"
+*)
 
 lemma skip_uses_nothing: "idem_scene A \<Longrightarrow> II nuses A"
   by (pred_simp)
