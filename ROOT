@@ -1,4 +1,4 @@
-session "UTP2" = "Shallow-Expressions-Z" +
+session "UTP2" = "Shallow_Expressions_Z" +
   sessions
     Abstract_Prog_Syntax
     Z_Toolkit
