@@ -97,6 +97,16 @@ lemma wp_false [wp]: "p wp False = false"
 theorem wp_skip_r [wp]: "II wp r = r"
   by pred_auto
 
+subsection \<open> Total Correctness Hoare Logic \<close>
+
+definition thoare_rel_r :: "('s\<^sub>1 \<Rightarrow> bool) \<Rightarrow> ('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>1 \<Rightarrow> 's\<^sub>2 \<Rightarrow> bool) \<Rightarrow> bool" where
+[pred]: "thoare_rel_r P C Q = (\<forall> s. P s \<longrightarrow> (\<forall> s'. C (s, s') \<longrightarrow> Q s s') \<and> (\<exists> s'. C (s, s')))"
+
+adhoc_overloading thoare_rel \<rightleftharpoons> thoare_rel_r
+
+lemma thoare_rel_r_alt_def: "H[P] C [Q] = (H{P} C {Q} \<and> `P \<longrightarrow> C wp True`)"
+  by pred_auto
+
 subsection \<open> Weakest liberal precondition \<close>
 
 definition wlp_pred :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>2 \<Rightarrow> bool) \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" where

@@ -8,7 +8,10 @@ subsection \<open> Sequence Laws \<close>
 
 lemma seq_hoare_r: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{s\<^bold>} ; \<^bold>{s\<^bold>}Q\<^sub>2\<^bold>{r\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{r\<^bold>}"
   by (pred_auto)
- 
+
+lemma seq_thoare_r: "\<lbrakk> H[p]Q\<^sub>1[s] ; H[s]Q\<^sub>2[r] \<rbrakk> \<Longrightarrow> H[p]Q\<^sub>1 ;; Q\<^sub>2[r]"
+  by (pred_auto, meson)
+
 lemma seq_hoare_invariant [hoare_safe]: "\<lbrakk> \<^bold>{p\<^bold>}Q\<^sub>1\<^bold>{p\<^bold>} ; \<^bold>{p\<^bold>}Q\<^sub>2\<^bold>{p\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}Q\<^sub>1 ;; Q\<^sub>2\<^bold>{p\<^bold>}"
   using seq_hoare_r by blast
 
@@ -30,9 +33,16 @@ subsection \<open> Assignment Laws \<close>
 
 lemma assigns_hoare_r [hoare_safe]: "`p \<longrightarrow> \<sigma> \<dagger> q` \<Longrightarrow> \<^bold>{p\<^bold>}\<langle>\<sigma>\<rangle>\<^sub>a\<^bold>{q\<^bold>}"
   by pred_auto
-  
+
+lemma assigns_thoare_r [hoare_safe]: "`p \<longrightarrow> \<sigma> \<dagger> q` \<Longrightarrow> H[p]\<langle>\<sigma>\<rangle>\<^sub>a[q]"
+  by pred_auto
+
 lemma assigns_backward_hoare_r: 
   "\<^bold>{\<sigma> \<dagger> p\<^bold>}\<langle>\<sigma>\<rangle>\<^sub>a\<^bold>{p\<^bold>}"
+  by pred_auto
+
+lemma assigns_backward_thoare_r: 
+  "H[\<sigma> \<dagger> p]\<langle>\<sigma>\<rangle>\<^sub>a[p]"
   by pred_auto
 
 lemma assign_floyd_hoare_r:
