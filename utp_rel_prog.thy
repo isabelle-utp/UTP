@@ -222,11 +222,11 @@ theorem while_infinite: "P ;; true = true \<Longrightarrow> while\<^sub>\<bottom
 text \<open> While loop can be expressed using Kleene star \<close>
 
 lemma while_star_form:
-  "while b do P od = (P \<lhd> b \<rhd> II)\<^sup>\<star> ;; \<questiondown>(\<not>b)?"
+  "while_top b P = (P \<lhd> b \<rhd> II)\<^sup>\<star> ;; \<questiondown>(\<not>b)?"
 proof -
   have 1: "Continuous (\<lambda>X. P ;; X \<lhd> b \<rhd> II)"
     by (pred_auto)
-  have "while b do P od = (\<Sqinter>i. ((\<lambda>X. P ;; X \<lhd> b \<rhd> II) ^^ i) false)"
+  have "while_top b P = (\<Sqinter>i. ((\<lambda>X. P ;; X \<lhd> b \<rhd> II) ^^ i) false)"
     by (simp add: "1" sup_continuous_Continuous sup_continuous_lfp while_top_def top_false)
   also have "... = ((\<lambda>X. P ;; X \<lhd> b \<rhd> II) ^^ 0) false \<sqinter> (\<Sqinter>i. ((\<lambda>X. P ;; X \<lhd> b \<rhd> II) ^^ (i+1)) false)"
     by (subst Sup_power_expand, simp)
@@ -254,13 +254,13 @@ proof -
 qed
 
 lemma while_star_test_form:
-  "while b do P od = (\<questiondown>b? ;; P)\<^sup>\<star> ;; \<questiondown>\<not>b?"
+  "while_top b P = (\<questiondown>b? ;; P)\<^sup>\<star> ;; \<questiondown>\<not>b?"
   apply (pred_auto add: while_star_form ustar_pred)
   apply (force elim:rtranclp_induct simp add: rtranclp.rtrancl_into_rtrancl)+
   done
 
 lemma while_chain_form:
- "while b do P od = 
+ "while_top b P = 
     (\<lambda> (s, s'). ((s = s' \<or> 
                   (\<exists>xs. xs \<noteq> [] \<and> (\<forall> i<length xs. b ((s # xs) ! i) \<and> P ((s # xs) ! i, xs ! i)) \<and> s' = List.last xs)) \<and>
                  \<not> b s'))"
