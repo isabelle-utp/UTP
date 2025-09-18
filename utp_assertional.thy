@@ -11,17 +11,7 @@ text \<open> The main definition is heterogeneous, and allows the postcondition 
 definition hoare_rel_r :: "('s\<^sub>1 \<Rightarrow> bool) \<Rightarrow> ('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>1 \<Rightarrow> 's\<^sub>2 \<Rightarrow> bool) \<Rightarrow> bool" where
 [pred]: "hoare_rel_r P C Q = (\<forall> s s'. P s \<and> C (s, s') \<longrightarrow> Q s s')"
 
-abbreviation hoare_r :: "('s \<Rightarrow> bool) \<Rightarrow> 's hrel \<Rightarrow> ('s \<Rightarrow> bool) \<Rightarrow> bool" where
-"hoare_r P C Q \<equiv> hoare_rel_r P C (\<lambda> x. Q)"
-
-syntax 
-  "_hoare" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(2H{_} /_) /{_}")
-  "_hoare" :: "logic \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(2\<^bold>{_\<^bold>} /_) /\<^bold>{_\<^bold>}")
-
-translations
-  "H{P} C {Q}" => "CONST hoare_rel_r (P)\<^sub>e C (\<lambda> _ghost_old. (Q)\<^sub>e)"
-  "H{P} C {Q}" <= "CONST hoare_rel_r (P)\<^sub>e C (\<lambda> old. (Q)\<^sub>e)"
-  "H{P} C {Q}" <= "CONST hoare_r (P)\<^sub>e C (Q)\<^sub>e"
+adhoc_overloading hoare_rel \<rightleftharpoons> hoare_rel_r
 
 lemma hoare_r_def: "\<^bold>{P\<^bold>} C \<^bold>{Q\<^bold>} \<longleftrightarrow> (P\<^sup>< \<longrightarrow> Q\<^sup>>)\<^sub>e \<sqsubseteq> C"
   by pred_auto
@@ -73,8 +63,8 @@ lemma hoare_r_conseq: "\<lbrakk> \<^bold>{p\<^sub>2\<^bold>}S\<^bold>{q\<^sub>2\
 lemma hoare_r_cut:
   assumes "\<^bold>{b\<^bold>}P\<^bold>{b\<^bold>}" "\<^bold>{b \<and> c\<^bold>}P\<^bold>{c\<^bold>}"
   shows "\<^bold>{b \<and> c\<^bold>}P\<^bold>{b \<and> c\<^bold>}"
-  using assms by pred_auto
-
+  by (simp add: assms(1,2) hoare_r_conj hoare_r_weaken_pre(1))
+  
 lemma hoare_r_cut_simple: 
   assumes "\<^bold>{b\<^bold>}P\<^bold>{b\<^bold>}" "\<^bold>{c\<^bold>}P\<^bold>{c\<^bold>}"
   shows "\<^bold>{b \<and> c\<^bold>}P\<^bold>{b \<and> c\<^bold>}"
@@ -126,7 +116,7 @@ lemma wlp_seq [wp]: "(P ;; Q) wlp b = P wlp (Q wlp b)"
 lemma wlp_true [wp]: "p wlp True = (True)\<^sub>e"
   by pred_auto
 
-lemma wlp_conj [wp]: "(P wlp (b \<and> c))\<^sub>e = ((P wlp b)\<^sub>e \<and> (P wlp c)\<^sub>e)"
+lemma wlp_conj [wp]: "P wlp (b \<and> c) = ((P wlp b)\<^sub>e \<and> (P wlp c)\<^sub>e)"
   by (pred_auto)
 
 theorem wlp_cond [wp]: "((P \<lhd> b \<rhd> Q) wlp r) = ((b \<longrightarrow> P wlp r) \<and> (\<not> b \<longrightarrow> Q wlp r))\<^sub>e"
