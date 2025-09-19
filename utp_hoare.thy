@@ -51,6 +51,12 @@ lemma assign_floyd_hoare_r:
   using assms
   by (pred_auto, metis lens_override_def lens_override_idem)
 
+lemma assign_floyd_thoare_r:
+  assumes "vwb_lens x"
+  shows "H[p] x := e [\<exists> v . p\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk> \<and> $x = e\<lbrakk>\<guillemotleft>v\<guillemotright>/x\<rbrakk>]"
+  using assms
+  by (pred_auto, metis lens_override_def lens_override_idem)
+
 lemma assigns_init_hoare [hoare_safe]:
   "\<lbrakk> vwb_lens x; $x \<sharp> p; $x \<sharp> v; \<^bold>{$x = v \<and> p\<^bold>}S\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}(x := v) ;; S\<^bold>{q\<^bold>}"
   by pred_auto (metis mwb_lens_weak vwb_lens_mwb weak_lens.put_get)
@@ -59,20 +65,37 @@ lemma assigns_init_hoare_general [hoare_safe]:
   "\<lbrakk> vwb_lens x; \<And> x\<^sub>0. \<^bold>{$x = v\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk> \<and> p\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk>\<^bold>}S\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}x := v ;; S\<^bold>{q\<^bold>}"
   by (rule seq_hoare_r, rule assign_floyd_hoare_r, simp, pred_auto)
 
+lemma assigns_init_thoare_general [hoare_safe]:
+  "\<lbrakk> vwb_lens x; \<And> x\<^sub>0. H[$x = v\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk> \<and> p\<lbrakk>\<guillemotleft>x\<^sub>0\<guillemotright>/x\<rbrakk>]S[q] \<rbrakk> \<Longrightarrow> H[p] x := v ;; S [q]"
+  by (rule seq_thoare_r, rule assign_floyd_thoare_r, simp, pred_auto)
+
 lemma assigns_final_hoare [hoare_safe]:
   "\<^bold>{p\<^bold>}S\<^bold>{\<sigma> \<dagger> q\<^bold>} \<Longrightarrow> \<^bold>{p\<^bold>}S ;; \<langle>\<sigma>\<rangle>\<^sub>a\<^bold>{q\<^bold>}"
+  by (pred_auto)
+
+lemma assigns_final_thoare [hoare_safe]:
+  "H[p]S[\<sigma> \<dagger> q] \<Longrightarrow> H[p]S ;; \<langle>\<sigma>\<rangle>\<^sub>a[q]"
   by (pred_auto)
 
 lemma skip_hoare_r [hoare_safe]: "\<^bold>{p\<^bold>}II\<^bold>{p\<^bold>}"
   by pred_auto
 
+lemma skip_thoare_r [hoare_safe]: "H[p]II[p]"
+  by pred_auto
+
 lemma skip_hoare_impl_r [hoare_safe]: "`p \<longrightarrow> q` \<Longrightarrow> \<^bold>{p\<^bold>}II\<^bold>{q\<^bold>}"
+  by pred_auto  
+
+lemma skip_thoare_impl_r [hoare_safe]: "`p \<longrightarrow> q` \<Longrightarrow> H[p]II[q]"
   by pred_auto  
 
 subsection \<open> Conditional Laws \<close>
 
 lemma cond_hoare_r [hoare_safe]: "\<lbrakk> \<^bold>{b \<and> p\<^bold>}S\<^bold>{q\<^bold>} ; \<^bold>{\<not>b \<and> p\<^bold>}T\<^bold>{q\<^bold>} \<rbrakk> \<Longrightarrow> \<^bold>{p\<^bold>}S \<lhd> b \<rhd> T\<^bold>{q\<^bold>}"
   by pred_auto
+
+lemma cond_thoare_r [hoare_safe]: "\<lbrakk> H[b \<and> p] S [q] ; H[\<not>b \<and> p]T[q] \<rbrakk> \<Longrightarrow> H[p]S \<lhd> b \<rhd> T[q]"
+  by (pred_auto, blast)
 
 lemma cond_hoare_r_wp: 
   assumes "\<^bold>{p'\<^bold>}S\<^bold>{q\<^bold>}" and "\<^bold>{p''\<^bold>}T\<^bold>{q\<^bold>}"
@@ -87,6 +110,11 @@ lemma cond_hoare_r_sp:
 lemma hoare_ndet [hoare_safe]: 
   assumes "\<^bold>{p\<^bold>}P\<^bold>{q\<^bold>}" "\<^bold>{p\<^bold>}Q\<^bold>{q\<^bold>}"
   shows "\<^bold>{p\<^bold>}(P \<sqinter> Q)\<^bold>{q\<^bold>}"
+  using assms by (pred_auto)
+
+lemma thoare_ndet [hoare_safe]: 
+  assumes "H[p]P[q]" "H[p]Q[q]"
+  shows "H[p](P \<sqinter> Q)[q]"
   using assms by (pred_auto)
 
 lemma hoare_disj [hoare_safe]: 

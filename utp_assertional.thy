@@ -107,6 +107,9 @@ adhoc_overloading thoare_rel \<rightleftharpoons> thoare_rel_r
 lemma thoare_rel_r_alt_def: "H[P] C [Q] = (H{P} C {Q} \<and> `P \<longrightarrow> C wp True`)"
   by pred_auto
 
+lemma thoare_r_conseq: "\<lbrakk> H[p\<^sub>2]S[q\<^sub>2]; `p\<^sub>1 \<longrightarrow> p\<^sub>2`; `q\<^sub>2 \<longrightarrow> q\<^sub>1` \<rbrakk> \<Longrightarrow> H[p\<^sub>1]S[q\<^sub>1]"
+  by pred_auto
+
 subsection \<open> Weakest liberal precondition \<close>
 
 definition wlp_pred :: "('s\<^sub>1, 's\<^sub>2) urel \<Rightarrow> ('s\<^sub>2 \<Rightarrow> bool) \<Rightarrow> ('s\<^sub>1 \<Rightarrow> bool)" where
