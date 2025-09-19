@@ -1,7 +1,7 @@
 subsection \<open> Hoare Logic \<close>
 
 theory utp_hoare
-imports utp_assertional utp_rel_prog
+imports utp_assertional utp_rel_prog utp_wp
 begin              
 
 subsection \<open> Sequence Laws \<close>
@@ -260,6 +260,58 @@ next
       by (pred_auto, (metis (mono_tags, lifting) SEXP_apply hoare_rel_r_def induct_step)+)
   qed
   then show ?case by simp
+qed
+
+lemma while_thoare_r [hoare_safe]:
+  fixes V :: "'s \<Rightarrow> 'a::wellorder"
+  assumes "\<And> z. H[P \<and> B \<and> V = \<guillemotleft>z\<guillemotright>] S [P \<and> V < \<guillemotleft>z\<guillemotright>]"
+  shows "H[P] while B do S od [\<not> B \<and> P]"
+proof -
+  from assms have "\<^bold>{P \<and> B\<^bold>} S \<^bold>{P\<^bold>}"
+    by (auto simp add: hoare_rel_r_def thoare_rel_r_alt_def)
+  hence partial: "\<^bold>{P\<^bold>} while B do S od \<^bold>{\<not> B \<and> P\<^bold>}"
+    using while_hoare_r by blast
+  from assms have S_term: "`B \<and> P \<longrightarrow> pre S`"
+    by (simp add: pre_def thoare_rel_r_def)
+  have wS_term: "`P \<longrightarrow> (while B do S od) wp True`"
+  proof (rule tautI, simp, rule impI)
+    fix s
+    assume P: "P s"
+    show "(while B do S od wp True) s"
+    proof (cases "B s")
+      case False
+      then show ?thesis
+        by (force simp add: wp_while)
+    next
+      case True
+      with P have "\<exists> xs. xs \<noteq> [] \<and> (\<forall> i<length xs. B ((s # xs) ! i) \<and> S ((s # xs) ! i, xs ! i)) \<and> \<not> B(last xs) \<and> P (last xs)"
+      proof (induct "V(s)" arbitrary: s rule: less_induct)
+        case less
+        with assms(1) obtain s' where s': "S (s, s')" "P s'" "V s' < V s"
+          by (force simp add: pred)
+        show ?case
+        proof (cases "B s'")
+          case False
+          then show ?thesis
+            by (metis add.right_neutral add_Suc_right last_single_element less.prems(2) less_Suc0 list.size(3,4) not_Cons_self2 nth_Cons_0 s'(1,2))
+        next
+          case True
+          obtain xs where xs:"xs \<noteq> []" "\<forall> i<length xs. B ((s' # xs) ! i) \<and> S ((s' # xs) ! i, xs ! i)" "\<not> B(last xs)" "P (last xs)"
+            using True less.hyps s'(2,3) by blast
+          show ?thesis 
+          proof
+            show "\<not> (s' # xs) = [] \<and> (\<forall>i. i < length (s' # xs) \<longrightarrow> B ((s # s' # xs) ! i) \<and> S ((s # s' # xs) ! i, (s' # xs) ! i)) \<and> \<not> B (last (s' # xs)) \<and> P (last (s' # xs))"
+              using less.prems(2) less_Suc_eq_0_disj s'(1) xs(1,2,3,4) by force
+          qed
+        qed
+      qed
+
+      then show ?thesis
+        by (auto simp add: wp_while)
+    qed
+  qed
+  show ?thesis
+    using partial thoare_rel_r_alt_def wS_term by blast
 qed
 
 subsection \<open> Verification Condition Generation \<close>
