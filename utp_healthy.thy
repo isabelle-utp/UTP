@@ -26,6 +26,8 @@ lemma Healthy_if: "P is H \<Longrightarrow> (H P = P)"
 lemma Healthy_intro: "H(P) = P \<Longrightarrow> P is H"
   by (simp add: Healthy_def)
 
+lemmas HealthyI = Healthy_intro
+
 abbreviation Healthy_carrier :: "'\<alpha> health \<Rightarrow> '\<alpha> pred set" ("\<lbrakk>_\<rbrakk>\<^sub>H")
 where "\<lbrakk>H\<rbrakk>\<^sub>H \<equiv> {P. P is H}"
 
@@ -117,6 +119,9 @@ lemma Healthy_Idempotent [closure]:
 lemma Healthy_range: "Idempotent H \<Longrightarrow> range H = \<lbrakk>H\<rbrakk>\<^sub>H"
   by (auto simp add: image_def Healthy_if Healthy_Idempotent, metis Healthy_if)
 
+lemma IdempotentI: "\<lbrakk> \<And> P. H(H(P)) = H(P) \<rbrakk> \<Longrightarrow> Idempotent H"
+  by (simp add: Idempotent_def)
+
 lemma Idempotent_id [simp]: "Idempotent id"
   by (simp add: Idempotent_def)
 
@@ -128,6 +133,9 @@ lemma Idempotent_image: "Idempotent f \<Longrightarrow> f ` (f ` A) = (f ` A)"
   by (metis (mono_tags, lifting) Idempotent_def image_cong image_image)
 
 named_theorems mono
+
+lemma MonotonicI: "\<lbrakk> \<And> P Q. P \<sqsubseteq> Q \<Longrightarrow> H(P) \<sqsubseteq> H(Q) \<rbrakk> \<Longrightarrow> Monotonic H"
+  by (fact pred_ref_monoI)
 
 lemma Monotonic_refine: "Monotonic F \<longleftrightarrow> (\<forall> P Q. P \<sqsubseteq> Q \<longrightarrow> F(P) \<sqsubseteq> F(Q))"
   by (metis monoE monoI pred_ref_iff_le)
