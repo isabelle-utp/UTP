@@ -1,7 +1,7 @@
 section \<open> Frames \<close>
 
 theory utp_frames
-  imports utp_rel_prog
+  imports utp_modification
 begin
 
 subsection \<open> Operators \<close>

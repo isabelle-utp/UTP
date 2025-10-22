@@ -1,7 +1,7 @@
 subsection \<open> Hoare Logic \<close>
 
 theory utp_hoare
-imports utp_assertional utp_rel_prog utp_wp
+imports utp_assertional utp_rel_prog utp_wp utp_modification
 begin              
 
 subsection \<open> Sequence Laws \<close>
@@ -341,6 +341,10 @@ proof -
   show ?thesis
     using partial thoare_rel_r_alt_def wS_term by blast
 qed
+
+lemma hoare_r_nmods:
+  "C nmods I \<Longrightarrow> H{I} C {I}"
+  by (metis (mono_tags, lifting) hoare_rel_r_def not_modifies_def)
 
 subsection \<open> Verification Condition Generation \<close>
 
