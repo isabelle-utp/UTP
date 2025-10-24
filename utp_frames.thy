@@ -19,12 +19,6 @@ text \<open> The frame extension operator take a lens @{term a}, and a relation 
 definition frame_ext :: "('s\<^sub>1 \<Longrightarrow> ('s\<^sub>2 :: scene_space)) \<Rightarrow> 's\<^sub>1 hrel \<Rightarrow> 's\<^sub>2 hrel" where
   "frame_ext a P = frame (lens_scene a) (P \<up>\<^sub>2 a)"
 
-abbreviation modifies :: "'s hrel \<Rightarrow> 's scene \<Rightarrow> bool" where
-"modifies P a \<equiv> P is frame a"
-
-abbreviation not_modifies :: "'s hrel \<Rightarrow> 's scene \<Rightarrow> bool" where
-"not_modifies P a \<equiv> P is frame (-a)"
-
 text \<open> Variable restriction - assign arbitrary values to a scene, effectively forbidding the 
   relation from using its value\<close>
 
@@ -37,26 +31,13 @@ abbreviation not_uses :: "'s hrel \<Rightarrow> 's scene \<Rightarrow> bool" whe
 syntax 
   "_frame" :: "salpha \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]")
   "_frame_ext" :: "svid \<Rightarrow> logic \<Rightarrow> logic" ("_:[_]\<^sub>\<up>")
-  \<comment> \<open> Modifies Predicate \<close>
-  "_modifies"     :: "logic \<Rightarrow> salpha \<Rightarrow> logic" (infix "mods" 30)
-  \<comment> \<open> Not Modifies Predicate \<close>
-  "_not_modifies" :: "logic \<Rightarrow> salpha \<Rightarrow> logic" (infix "nmods" 30)
   \<comment> \<open> Not Uses Predicate \<close>
   "_not_uses"     :: "logic \<Rightarrow> salpha \<Rightarrow> logic" (infix "nuses" 30)
 
 translations
   "_frame a P" == "CONST frame a P"
-(*  "\<lbrace>A\<rbrace>:[P]" <= "_frame \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F P" *)
   "_frame_ext a P" == "CONST frame_ext a P"
-  "_modifies P a" == "CONST modifies P a"
-(*  "P mods \<lbrace>A\<rbrace>" <= "_modifies P \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F" *)
-  "_not_modifies P a" == "CONST not_modifies P a"
-(*  "P nmods \<lbrace>A\<rbrace>" <= "_not_modifies P \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F" *)
   "_not_uses P a" == "CONST not_uses P a"
-(*  "P nuses \<lbrace>A\<rbrace>" <= "_not_uses P \<lbrakk>\<lbrace>A\<rbrace>\<^sub>F\<rbrakk>\<^sub>F" *)
-
-lemma nmods_iff [pred]: "P nmods A \<longleftrightarrow> (\<forall> s s'. P (s, s') \<longrightarrow> s \<approx>\<^sub>S s' on A)"
-  by (pred_auto)
 
 lemma nuses_iff [pred]: 
   assumes "idem_scene A"
@@ -218,9 +199,11 @@ declare sublens_def [lens_defs]
 
 subsection \<open> Modification laws \<close>
 
-lemma "idem_scene x \<Longrightarrow> (rrestr x P) nmods x"
+(*
+lemma "vwb_lens x \<Longrightarrow> (rrestr x P) nmods $x"
   by (pred_auto)
      (metis scene_override_idem scene_override_overshadow_right)
+*)
 
 subsection \<open> Frames as lenses \<close>
 

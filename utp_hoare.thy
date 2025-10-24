@@ -342,6 +342,9 @@ proof -
     using partial thoare_rel_r_alt_def wS_term by blast
 qed
 
+text \<open> An invariant can always be proved by demonstrating that none of the variables of the 
+  invariant are modified by the program. \<close>
+
 lemma hoare_r_nmods:
   "C nmods I \<Longrightarrow> H{I} C {I}"
   by (metis (mono_tags, lifting) hoare_rel_r_def not_modifies_def)
