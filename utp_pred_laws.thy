@@ -33,4 +33,14 @@ lemma ex_pred_simps [simp]:
   "(\<exists> x \<Zspot> true) = true" "(\<exists> x \<Zspot> false) = false"
   by (pred_auto+)
 
+lemma INFs_combine:
+  fixes P :: "'i \<Rightarrow> 'j \<Rightarrow> 'a pred"
+  shows "(\<Squnion>i\<in>I. \<Squnion>j\<in>J. P i j) = (\<Squnion>(i,j)\<in>I\<times>J. P i j)"
+  by pred_auto
+
+lemma SUPs_combine:
+  fixes P :: "'i \<Rightarrow> 'j \<Rightarrow> 'a pred"
+  shows "(\<Sqinter>i\<in>I. \<Sqinter>j\<in>J. P i j) = (\<Sqinter>(i,j)\<in>I\<times>J. P i j)"
+  by pred_auto
+
 end
