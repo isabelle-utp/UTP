@@ -453,6 +453,29 @@ lemma SUP_atLeastAtMost_first:
 lemma upower_seqr_iter: "P \<^bold>^ n = (;; Q : replicate n P \<bullet> Q)"
   by (induct n, simp_all add: power.power.power_Suc)
 
+lemma power_SUP:
+  "(\<Sqinter>x\<in>A. P x)\<^bold>^j = (\<Sqinter>xs\<in>{ys. set ys \<subseteq> A \<and> length ys = j}. seqr_iter xs P)"
+proof (induct j)
+  case 0
+  then show ?case by simp
+next
+  case (Suc j)
+  then show ?case
+  proof -
+    have "\<Sqinter> (P ` A) \<^bold>^ Suc j = \<Sqinter> (P ` A) ;; \<Sqinter> (P ` A) \<^bold>^ j"
+      by (meson power.power.power_Suc)
+    also have "... = \<Sqinter> (P ` A) ;; (\<Sqinter>xs\<in>{ys. set ys \<subseteq> A \<and> length ys = j}. seqr_iter xs P)"
+      by (simp add: Suc del:SUP_apply Sup_apply)
+    also have "... = (\<Sqinter>xs\<in>{ys. set ys \<subseteq> A \<and> length ys = j}. \<Sqinter>x\<in>A. seqr_iter (x # xs) P)"
+      by (simp add: seq_SUP_distl seq_SUP_distr)
+    also have "... = (\<Sqinter>(xs,x)\<in>{ys. set ys \<subseteq> A \<and> length ys = j}\<times>A. seqr_iter (x # xs) P)"
+      by (simp add: SUPs_combine)
+    also have "... = (\<Sqinter>xs\<in>{ys. set ys \<subseteq> A \<and> length ys = Suc j}. seqr_iter xs P)"
+      by (simp add: lists_length_Suc_eq image_comp prod.case_eq_if)
+    finally show ?thesis .
+  qed
+qed
+
 subsection \<open> Relation Algebra Laws \<close>
 
 theorem seqr_disj_cancel: "((P\<^sup>- ;; (\<not>(P ;; Q))) \<or> (\<not>Q)) = (\<not>Q)"
