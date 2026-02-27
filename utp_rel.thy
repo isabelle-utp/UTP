@@ -120,8 +120,8 @@ text \<open> We set up iterated sequential composition which iterates an indexed
 definition seqr_iter :: "'a list \<Rightarrow> ('a \<Rightarrow> 'b hrel) \<Rightarrow> 'b hrel" where
 [pred]: "seqr_iter xs P = foldr (\<lambda> i Q. P(i) ;; Q) xs II"
 
-syntax "_seqr_iter" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3;; _ : _ \<bullet>/ _)" [0, 0, 10] 10)
-translations ";; x : l \<bullet> P" \<rightleftharpoons> "(CONST seqr_iter) l (\<lambda>x. P)"
+syntax "_seqr_iter" :: "pttrn \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" ("(3;; _ \<leftarrow> _./ _)" [0, 0, 10] 10)
+translations ";; x \<leftarrow> l. P" \<rightleftharpoons> "(CONST seqr_iter) l (\<lambda>x. P)"
 
 text \<open> We also define the alphabetised skip operator that identifies all input and output variables
   in the given alphabet scene. All other variables are unrestricted. We also set up syntax for it. \<close>

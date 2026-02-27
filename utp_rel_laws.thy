@@ -291,10 +291,10 @@ lemma ex_lens_split_impl_unrest2  [pred_ex_simps]:
 
 subsection \<open> Iterated Sequential Composition Laws \<close>
   
-lemma iter_seqr_nil [simp]: "(;; i : [] \<bullet> P(i)) = II"
+lemma iter_seqr_nil [simp]: "(;; i \<leftarrow> []. P(i)) = II"
   by (simp add: seqr_iter_def)
     
-lemma iter_seqr_cons [simp]: "(;; i : (x # xs) \<bullet> P(i)) = P(x) ;; (;; i : xs \<bullet> P(i))"
+lemma iter_seqr_cons [simp]: "(;; i \<leftarrow> (x # xs). P(i)) = P(x) ;; (;; i \<leftarrow> xs. P(i))"
   by (simp add: seqr_iter_def)
 
 subsection \<open> Quantale Laws \<close>
@@ -450,11 +450,11 @@ lemma SUP_atLeastAtMost_first:
   shows "(\<Sqinter>i\<in>{m..n}. P(i)) = P(m) \<sqinter> (\<Sqinter>i\<in>{Suc m..n}. P(i))"
   by (metis SUP_insert assms atLeastAtMost_insertL)
 
-lemma upower_seqr_iter: "P \<^bold>^ n = (;; Q : replicate n P \<bullet> Q)"
+lemma upower_seqr_iter: "P \<^bold>^ n = (;; Q \<leftarrow> replicate n P. Q)"
   by (induct n, simp_all add: power.power.power_Suc)
 
 lemma power_SUP:
-  "(\<Sqinter>x\<in>A. P x)\<^bold>^j = (\<Sqinter>xs\<in>{ys. set ys \<subseteq> A \<and> length ys = j}. seqr_iter xs P)"
+  "(\<Sqinter>x\<in>A. P x)\<^bold>^j = (\<Sqinter>xs\<in>{ys. set ys \<subseteq> A \<and> length ys = j}. ;; x \<leftarrow> xs. P x)"
 proof (induct j)
   case 0
   then show ?case by simp
