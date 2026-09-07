@@ -45,6 +45,16 @@ text \<open> A merge predicate is a relation whose input has three parts: the pr
   variables of the left predicate, and the output of the right predicate. \<close>
   
 type_synonym '\<alpha> merge = "(('\<alpha>, '\<alpha>, '\<alpha>) mrg, '\<alpha>) urel"
+
+text \<open> merge_eval M s p q z checks whether M allows final state z, given prior state s and
+  branch results p and q. It builds the merge input record from s, p, and q. \<close>
+
+abbreviation merge_eval ::
+  "'\<alpha> merge \<Rightarrow> '\<alpha> \<Rightarrow> '\<alpha> \<Rightarrow> '\<alpha> \<Rightarrow> '\<alpha> \<Rightarrow> bool"
+where
+"merge_eval M s p q z \<equiv>
+  M ((\<lparr>mrg_prior\<^sub>v = s, mrg_left\<^sub>v = p, mrg_right\<^sub>v = q, \<dots> = ()\<rparr>
+      :: ('\<alpha>, '\<alpha>, '\<alpha>) mrg), z)"
   
 text \<open> skip is the merge predicate which ignores the output of both parallel predicates \<close>
 
@@ -280,5 +290,16 @@ lemma skip_merge_swap: "swap\<^sub>m ;; skip\<^sub>m = skip\<^sub>m"
 
 lemma par_sep_swap: "P \<parallel>\<^sub>s Q ;; swap\<^sub>m = Q \<parallel>\<^sub>s P"
   by (pred_auto)
+
+lemma par_by_merge_comm:
+  assumes swap: "swap\<^sub>m ;; M = M"
+  shows "P \<parallel>\<^bsub>M\<^esub> Q = Q \<parallel>\<^bsub>M\<^esub> P"
+proof -
+  have "Q \<parallel>\<^bsub>M\<^esub> P = ((P \<parallel>\<^sub>s Q) ;; swap\<^sub>m) ;; M"
+    by (simp only: par_by_merge_def par_sep_swap)
+  also have "... = P \<parallel>\<^bsub>M\<^esub> Q"
+    by (simp only: seqr_assoc swap par_by_merge_def)
+  finally show ?thesis ..
+qed
 
 end
