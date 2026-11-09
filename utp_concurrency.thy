@@ -49,13 +49,20 @@ type_synonym '\<alpha> merge = "(('\<alpha>, '\<alpha>, '\<alpha>) mrg, '\<alpha
 text \<open> merge_eval M s p q z checks whether M allows final state z, given prior state s and
   branch results p and q. It builds the merge input record from s, p, and q. \<close>
 
+(* M(x,p,q,z) abbreviates M evaluated at merge input (x,p,q) and output z. *)
 abbreviation merge_eval ::
-  "'\<alpha> merge \<Rightarrow> '\<alpha> \<Rightarrow> '\<alpha> \<Rightarrow> '\<alpha> \<Rightarrow> '\<alpha> \<Rightarrow> bool"
+  "(('a, 'b, 'c) mrg, 'd) urel \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> bool"
 where
 "merge_eval M s p q z \<equiv>
   M ((\<lparr>mrg_prior\<^sub>v = s, mrg_left\<^sub>v = p, mrg_right\<^sub>v = q, \<dots> = ()\<rparr>
-      :: ('\<alpha>, '\<alpha>, '\<alpha>) mrg), z)"
-  
+      :: ('a, 'b, 'c) mrg), z)"
+
+text \<open> mergeable:
+  M allows some final state for every prior state s and branch results p and q. \<close>
+
+abbreviation mergeable :: "'\<alpha> merge \<Rightarrow> bool" where
+"mergeable M \<equiv> (\<forall>s p q. \<exists>z. merge_eval M s p q z)"
+
 text \<open> skip is the merge predicate which ignores the output of both parallel predicates \<close>
 
 definition skip\<^sub>m :: "'\<alpha> merge" where
@@ -71,7 +78,8 @@ text \<open> A symmetric merge is one for which swapping the order of the merged
   has no effect. We represent this by the following healthiness condition that states that
   @{term "swap\<^sub>m"} is a left-unit. \<close>
 
-abbreviation SymMerge :: "'\<alpha> merge \<Rightarrow> '\<alpha> merge" where
+abbreviation SymMerge ::
+  "(('\<alpha>, '\<beta>, '\<beta>) mrg, '\<gamma>) urel \<Rightarrow> (('\<alpha>, '\<beta>, '\<beta>) mrg, '\<gamma>) urel" where
 "SymMerge(M) \<equiv> (swap\<^sub>m ;; M)"
 
 subsection \<open> Separating Simulations \<close>
@@ -188,7 +196,9 @@ text \<open> Associativity of a merge means that if we construct a three way mer
   the two way merge in an appropriate way.
 \<close>
   
-definition ThreeWayMerge :: "'\<alpha> merge \<Rightarrow> (('\<alpha>, '\<alpha>, ('\<alpha>, '\<alpha>, '\<alpha>) mrg) mrg, '\<alpha>) urel" ("\<^bold>M3'(_')") where
+definition ThreeWayMerge ::
+  "(('\<alpha>, '\<beta>, '\<beta>) mrg, '\<beta>) urel \<Rightarrow> (('\<alpha>, '\<beta>, ('\<alpha>, '\<beta>, '\<beta>) mrg) mrg, '\<beta>) urel"
+  ("\<^bold>M3'(_')") where
 [pred, rel]: "ThreeWayMerge M = (($0:\<^bold>v\<^sup>> = $0:\<^bold>v\<^sup>< \<and> $1:\<^bold>v\<^sup>> = $1:0:\<^bold>v\<^sup>< \<and> $<:\<^bold>v\<^sup>> = $<:\<^bold>v\<^sup><)\<^sub>e ;; M ;; U0 \<and> ($1:\<^bold>v\<^sup>> = $1:1:\<^bold>v\<^sup>< \<and> $<:\<^bold>v\<^sup>> = $<:\<^bold>v\<^sup><)\<^sub>e) ;; M"
   
 text \<open> The next definition rotates the inputs to a three way merge to the left one place. \<close>
@@ -197,7 +207,7 @@ abbreviation rotate\<^sub>m where "rotate\<^sub>m \<equiv> (0:\<^bold>v,1:0:\<^b
 
 text \<open> Finally, a merge is associative if rotating the inputs does not effect the output. \<close>
   
-definition AssocMerge :: "'\<alpha> merge \<Rightarrow> bool" where
+definition AssocMerge :: "(('\<alpha>, '\<beta>, '\<beta>) mrg, '\<beta>) urel \<Rightarrow> bool" where
 [pred, rel]: "AssocMerge M = (rotate\<^sub>m ;; \<^bold>M3(M) = \<^bold>M3(M))"
     
 subsection \<open> Parallel Operators \<close>
