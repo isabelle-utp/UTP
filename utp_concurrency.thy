@@ -317,6 +317,14 @@ lemma par_by_merge_skip:
   shows "P \<parallel>\<^bsub>skip\<^sub>m\<^esub> Q = II"
   using assms by (pred_auto)
 
+subsection \<open> Symmetry of Parallel by Merge \<close>
+
+(* M is SymMerge \<longleftrightarrow> \<forall>x p q z. M(x,p,q,z) \<longleftrightarrow> M(x,q,p,z) *)
+lemma SymMerge_eval:
+  "M is SymMerge \<longleftrightarrow>
+    (\<forall>x p q z. merge_eval M x p q z = merge_eval M x q p z)"
+  by (simp add: Healthy_def' fun_eq_iff; pred_auto; blast)
+
 lemma skip_merge_swap: "swap\<^sub>m ;; skip\<^sub>m = skip\<^sub>m"
   by (pred_auto)
 
@@ -324,14 +332,9 @@ lemma par_sep_swap: "P \<parallel>\<^sub>s Q ;; swap\<^sub>m = Q \<parallel>\<^s
   by (pred_auto)
 
 lemma par_by_merge_comm:
-  assumes swap: "swap\<^sub>m ;; M = M"
+  assumes sym: "M is SymMerge"
   shows "P \<parallel>\<^bsub>M\<^esub> Q = Q \<parallel>\<^bsub>M\<^esub> P"
-proof -
-  have "Q \<parallel>\<^bsub>M\<^esub> P = ((P \<parallel>\<^sub>s Q) ;; swap\<^sub>m) ;; M"
-    by (simp only: par_by_merge_def par_sep_swap)
-  also have "... = P \<parallel>\<^bsub>M\<^esub> Q"
-    by (simp only: seqr_assoc swap par_by_merge_def)
-  finally show ?thesis ..
-qed
+  by (rule ext, clarify; simp only: par_by_merge_eval;
+      use sym[unfolded SymMerge_eval] in blast)
 
 end
