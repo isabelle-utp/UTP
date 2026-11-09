@@ -68,6 +68,11 @@ text \<open> skip is the merge predicate which ignores the output of both parall
 definition skip\<^sub>m :: "'\<alpha> merge" where
 [pred, rel]: "skip\<^sub>m = ($\<^bold>v\<^sup>> = $<:\<^bold>v\<^sup><)\<^sub>e"
 
+(* skip\<^sub>m(x,p,q,z) \<longleftrightarrow> z = x *)
+lemma skip_merge_eval:
+  "merge_eval skip\<^sub>m s0 l r z \<longleftrightarrow> z = s0"
+  by pred_auto
+
 text \<open> swap is a predicate that the swaps the left and right indices; it is used to specify
         commutativity of the parallel operator \<close>
 
@@ -273,9 +278,26 @@ lemma lit_pbm_subst [usubst]:
 
 subsection \<open> Parallel-by-merge laws \<close>
 
+(* (P \<parallel>[M] Q)(x,z) \<longleftrightarrow> \<exists>p q. P(x,p) \<and> Q(x,q) \<and> M(x,p,q,z) *)
+lemma par_by_merge_eval:
+  "(P \<parallel>\<^bsub>M\<^esub> Q) (x,z) \<longleftrightarrow> (\<exists>p q. P (x,p) \<and> Q (x,q) \<and> merge_eval M x p q z)"
+  by pred_auto
+
+lemma par_by_merge_Sup_distl:
+  "P \<parallel>\<^bsub>M\<^esub> (\<Sqinter> A) = (\<Sqinter> Q\<in>A. P \<parallel>\<^bsub>M\<^esub> Q)"
+  by pred_auto
+
+lemma par_by_merge_Sup_distr:
+  "(\<Sqinter> A) \<parallel>\<^bsub>M\<^esub> Q = (\<Sqinter> P\<in>A. P \<parallel>\<^bsub>M\<^esub> Q)"
+  by pred_auto
+
 lemma par_by_merge_false [simp]:
   "P \<parallel>\<^bsub>false\<^esub> Q = false"
   by (pred_auto)
+
+lemma par_by_merge_true:
+  "P \<parallel>\<^bsub>true\<^esub> Q = ((P ;; true) \<and> (Q ;; true))"
+  by pred_auto
 
 lemma par_by_merge_left_false [simp]:
   "false \<parallel>\<^bsub>M\<^esub> Q = false"
