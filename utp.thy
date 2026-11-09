@@ -12,6 +12,7 @@ theory utp
     utp_sp
     utp_wprespec
     utp_concurrency
+    utp_concurrency_assoc
     utp_theory
 begin 
 
